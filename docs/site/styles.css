@@ -1220,17 +1220,15 @@ main > section {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Fixed light "art-canvas" tile in BOTH themes (theme-independent) so the
-     pixel-art robots read consistently — some renders carry their own light
-     backdrop, so a uniform light tile avoids bright/dark mismatch in dark mode.
-     #f7f8fc is the light-theme neutral-50 value, pinned here intentionally. */
+  /* Theme-aware art tile: the trimmed PNGs are truly transparent, so the
+     robots float on a card surface that follows the theme (light/dark). */
   background:
     radial-gradient(
       70% 70% at 50% 35%,
       color-mix(in oklab, var(--color-brand-primary) 12%, transparent),
       transparent 70%
     ),
-    #f7f8fc;
+    var(--color-neutral-100);
   border: 1px solid var(--color-neutral-300);
   border-radius: var(--radius-xl);
   padding: var(--space-6);
