@@ -119,6 +119,9 @@ export function extractOneLiner(body: string): string {
     if (!line) continue;
     if (line.startsWith("#")) continue;
     if (line.startsWith("**Full changelog")) continue;
+    // Skip raw HTML lines (e.g. <details>/<summary> wrappers) — they render
+    // as an empty, broken disclosure if surfaced as a one-liner.
+    if (line.startsWith("<")) continue;
     if (line.startsWith("- ")) return line.slice(2).trim();
     return line;
   }
@@ -151,6 +154,14 @@ const HTML_TEMPLATE = (body: string, version: string) =>
     <link rel="alternate" type="text/markdown" href="/llms.txt" />
     <link rel="stylesheet" href="/styles.css" />
 
+    <!-- Apply the saved theme before first paint to avoid a flash. -->
+    <script>
+      try {
+        var t = localStorage.getItem("theme");
+        if (t) document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -160,37 +171,91 @@ const HTML_TEMPLATE = (body: string, version: string) =>
   </head>
 
   <body>
-    <header class="site-header">
-      <a href="/" class="brand" aria-label="Specflow home">
-        <span class="brand-mark" aria-hidden="true"></span>
-        <span class="brand-name">Specflow</span>
-      </a>
-      <nav class="site-nav" aria-label="Primary">
-        <a href="/">Home</a>
-        <a href="https://github.com/mkrlabs/specflow">GitHub</a>
-        <a class="nav-cloud" href="https://specflow.makerlabs.app">Cloud →</a>
-      </nav>
+    <header class="band band-header">
+      <div class="wrap site-header">
+        <a href="/" class="brand" aria-label="Specflow home">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <span class="brand-name">Specflow</span>
+        </a>
+        <nav class="site-nav" aria-label="Primary">
+          <a href="/">Home</a>
+          <a href="https://github.com/mkrlabs/specflow">GitHub</a>
+          <a class="nav-cloud" href="https://specflow.makerlabs.app">Cloud →</a>
+        </nav>
+      </div>
     </header>
 
     <main>
-      <section>
-        <p class="doc-header">
-          ← <a href="/">Specflow home</a> · Documentation
-        </p>
-        <article class="markdown-body">
+      <section class="band band-docs">
+        <div class="wrap">
+          <div class="doc-col">
+            <p class="doc-header">
+              ← <a href="/">Specflow home</a> · Documentation
+            </p>
+            <article class="markdown-body">
 ${body}
-        </article>
+            </article>
+          </div>
+        </div>
       </section>
     </main>
 
-    <footer class="site-footer">
-      <p>
-        Specflow
-        <a href="${REPO_URL}/releases/tag/v${version}">v${version}</a>
-        · <a href="/llms.txt">llms.txt</a>
-        · <a href="${REPO_URL}">github.com/mkrlabs/specflow</a>
-      </p>
+    <footer class="band band-footer">
+      <div class="wrap site-footer">
+        <p>
+          Specflow
+          <a href="${REPO_URL}/releases/tag/v${version}">v${version}</a>
+          · <a href="/llms.txt">llms.txt</a>
+          · <a href="${REPO_URL}">github.com/mkrlabs/specflow</a>
+        </p>
+        <button
+          type="button"
+          class="theme-toggle"
+          id="theme-toggle"
+          aria-label="Toggle dark and light theme"
+        >
+          <span class="theme-toggle-icon" aria-hidden="true"></span>
+          <span class="theme-toggle-label">Dark</span>
+        </button>
+      </div>
     </footer>
+
+    <script>
+      // Footer dark / light theme toggle (mirrors the landing page).
+      (() => {
+        const root = document.documentElement;
+        const btn = document.getElementById("theme-toggle");
+        if (!btn) return;
+        const mql = window.matchMedia("(prefers-color-scheme: dark)");
+        const iconEl = btn.querySelector(".theme-toggle-icon");
+        const labelEl = btn.querySelector(".theme-toggle-label");
+        const ICON_SUN =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+        const ICON_MOON =
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
+        const effective = () =>
+          root.dataset.theme || (mql.matches ? "dark" : "light");
+        const renderToggle = () => {
+          if (effective() === "dark") {
+            iconEl.innerHTML = ICON_SUN;
+            labelEl.textContent = "Light";
+          } else {
+            iconEl.innerHTML = ICON_MOON;
+            labelEl.textContent = "Dark";
+          }
+        };
+        renderToggle();
+        btn.addEventListener("click", () => {
+          const next = effective() === "dark" ? "light" : "dark";
+          root.dataset.theme = next;
+          try {
+            localStorage.setItem("theme", next);
+          } catch (e) {}
+          renderToggle();
+        });
+        mql.addEventListener("change", renderToggle);
+      })();
+    </script>
   </body>
 </html>
 `;
