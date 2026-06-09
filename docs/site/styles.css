@@ -26,6 +26,7 @@
   --color-neutral-300: #c8ccdf;
   --color-neutral-700: #4a4e6a;
   --color-neutral-900: #16182e;
+  --footer-bg: #eceef6;
 
   /* Semantic */
   --color-success: #10b981;
@@ -87,8 +88,12 @@
   --font-pixel: "Press Start 2P", "JetBrains Mono", ui-monospace, monospace;
 }
 
+/* Dark theme token values. Defined once here and reused by two selectors:
+   the OS-preference media query (unless the user forced light via the footer
+   toggle) and the explicit [data-theme="dark"] override. Keep the two blocks
+   below in sync. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-brand-primary: #818cf8;
     --color-brand-accent: #fdba74;
     --color-neutral-0: #0c0c10;
@@ -101,13 +106,31 @@
     --color-warning: #fbbf24;
     --color-danger: #f87171;
     --color-info: #60a5fa;
-
-    /* Dark mode: lighter teal pops against the dark page bg.
-       #368F8B on #13131a = 5.10:1 vs page, 5.65:1 vs near-black label. */
     --color-btn-primary-bg: #368f8b;
     --color-btn-primary-fg: #0c0c10;
     --color-btn-primary-border: #368f8b;
+    /* Footer is the darkest band of all in dark mode (below neutral-0). */
+    --footer-bg: #08080b;
   }
+}
+
+:root[data-theme="dark"] {
+  --color-brand-primary: #818cf8;
+  --color-brand-accent: #fdba74;
+  --color-neutral-0: #0c0c10;
+  --color-neutral-50: #13131a;
+  --color-neutral-100: #1c1c27;
+  --color-neutral-300: #3a3a52;
+  --color-neutral-700: #9b9fc0;
+  --color-neutral-900: #f0f1fa;
+  --color-success: #34d399;
+  --color-warning: #fbbf24;
+  --color-danger: #f87171;
+  --color-info: #60a5fa;
+  --color-btn-primary-bg: #368f8b;
+  --color-btn-primary-fg: #0c0c10;
+  --color-btn-primary-border: #368f8b;
+  --footer-bg: #08080b;
 }
 
 /* ---------------------------------------------------------------
@@ -235,7 +258,7 @@ code {
 }
 
 .band-roster {
-  background: color-mix(in oklab, var(--color-brand-accent) 8%, var(--color-neutral-50));
+  background: var(--color-neutral-100);
   padding-top: var(--space-24);
   padding-bottom: var(--space-24);
 }
@@ -253,7 +276,7 @@ code {
 }
 
 .band-footer {
-  background: var(--color-neutral-50);
+  background: var(--footer-bg);
   border-top: 1px solid var(--color-neutral-300);
 }
 
@@ -793,15 +816,62 @@ code {
  * --------------------------------------------------------------- */
 
 .site-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
   padding-top: var(--space-8);
   padding-bottom: var(--space-8);
   font-size: 14px;
   color: var(--color-neutral-700);
 }
 
+@media (min-width: 768px) {
+  .site-footer {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
 .site-footer p {
   margin: 0;
   text-align: center;
+}
+
+/* Footer theme toggle */
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  height: 36px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-neutral-300);
+  border-radius: var(--radius-full);
+  background: transparent;
+  color: var(--color-neutral-700);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color var(--motion-micro) var(--motion-ease),
+    border-color var(--motion-micro) var(--motion-ease);
+}
+
+.theme-toggle:hover {
+  color: var(--color-neutral-900);
+  border-color: var(--color-brand-primary);
+}
+
+.theme-toggle-icon {
+  display: inline-flex;
+}
+
+.theme-toggle-icon svg {
+  width: 16px;
+  height: 16px;
 }
 
 .site-footer a {
@@ -1201,6 +1271,13 @@ code {
   }
 }
 
+.step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
 .step-num {
   display: inline-flex;
   align-items: center;
@@ -1258,24 +1335,13 @@ code {
   display: flex;
   align-items: center;
   justify-content: center;
-  /* Theme-aware art tile: the trimmed PNGs are truly transparent, so the
-     robots float on a card surface that follows the theme (light/dark). */
-  background:
-    radial-gradient(
-      70% 70% at 50% 35%,
-      color-mix(in oklab, var(--color-brand-primary) 12%, transparent),
-      transparent 70%
-    ),
-    var(--color-neutral-100);
-  border: 1px solid var(--color-neutral-300);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-6);
+  /* No tile/wrapper — the trimmed transparent robots float directly on the
+     section band. */
 }
 
 .feature-media img {
   width: 100%;
-  max-width: 360px;
+  max-width: 420px;
   height: auto;
 }
 
@@ -1347,19 +1413,7 @@ code {
   flex-direction: column;
   align-items: center;
   gap: var(--space-2);
-  background: var(--color-neutral-100);
-  border: 1px solid var(--color-neutral-300);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-  padding: var(--space-6) var(--space-4);
-  transition:
-    box-shadow var(--motion-panel) var(--motion-ease),
-    border-color var(--motion-panel) var(--motion-ease);
-}
-
-.roster-card:hover {
-  box-shadow: var(--shadow-md);
-  border-color: color-mix(in oklab, var(--color-brand-primary) 60%, transparent);
+  padding: var(--space-4) var(--space-2);
 }
 
 .roster-card .sprite {
@@ -1459,8 +1513,9 @@ code {
 }
 
 .trust-grid li {
-  border-top: 2px solid color-mix(in oklab, var(--color-brand-primary) 50%, transparent);
-  padding-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
 .trust-grid strong {
