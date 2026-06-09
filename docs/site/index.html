@@ -47,6 +47,7 @@
         <span class="brand-name">Specflow</span>
       </a>
       <nav class="site-nav" aria-label="Primary">
+        <a href="#agents">Agents</a>
         <a href="/docs/">Docs</a>
         <a href="https://github.com/mkrlabs/specflow">GitHub</a>
         <a class="nav-cloud" href="https://specflow.makerlabs.app">Cloud →</a>
@@ -54,6 +55,7 @@
     </header>
 
     <main>
+      <!-- ===================== HERO ===================== -->
       <section class="hero" aria-labelledby="hero-title">
         <div class="hero-copy">
           <p class="eyebrow">9 agents · 8 harnesses · 1 curl · v__SPECFLOW_VERSION__</p>
@@ -102,132 +104,245 @@
           </p>
         </div>
 
-        <div class="hero-cast" aria-hidden="true">
-          <figure>
-            <img
-              class="sprite sprite-product-owner"
-              src="/assets/agents/product-owner.png"
-              alt=""
-            />
-            <figcaption>Product Owner</figcaption>
-          </figure>
-          <figure>
-            <img class="sprite sprite-developer" src="/assets/agents/developer.png" alt="" />
-            <figcaption>Developer</figcaption>
-          </figure>
-          <figure>
-            <img class="sprite sprite-qa-tester" src="/assets/agents/qa-tester.png" alt="" />
-            <figcaption>QA Tester</figcaption>
-          </figure>
-          <figure>
-            <img
-              class="sprite sprite-code-reviewer"
-              src="/assets/agents/code-reviewer.png"
-              alt=""
-            />
-            <figcaption>Code Reviewer</figcaption>
-          </figure>
-          <figure>
-            <img
-              class="sprite sprite-security-auditor"
-              src="/assets/agents/security-auditor.png"
-              alt=""
-            />
-            <figcaption>Security Auditor</figcaption>
-          </figure>
-          <figure>
-            <img class="sprite sprite-devops-sre" src="/assets/agents/devops-sre.png" alt="" />
-            <figcaption>DevOps / SRE</figcaption>
-          </figure>
-          <figure>
-            <img
-              class="sprite sprite-specflow-expert"
-              src="/assets/agents/specflow-expert.png"
-              alt=""
-            />
-            <figcaption>Specflow Expert</figcaption>
-          </figure>
-          <figure>
-            <img class="sprite sprite-architect" src="/assets/agents/architect.png" alt="" />
-            <figcaption>Architect</figcaption>
-          </figure>
-          <figure>
-            <img
-              class="sprite sprite-review-coordinator"
-              src="/assets/agents/review-coordinator.png"
-              alt=""
-            />
-            <figcaption>Review Coordinator</figcaption>
-          </figure>
+        <div class="hero-art" aria-hidden="true">
+          <img
+            class="hero-art-img"
+            src="/assets/hero-team.png"
+            alt=""
+            width="1600"
+            height="893"
+            fetchpriority="high"
+          />
         </div>
       </section>
 
-      <section class="pillars" aria-labelledby="pillars-title">
-        <h2 id="pillars-title" class="section-title">What lands in your repo</h2>
+      <!-- ===================== HARNESS BAND ===================== -->
+      <section class="harness-band" aria-labelledby="harness-title">
+        <h2 id="harness-title" class="band-kicker">Speaks every major coding harness</h2>
+        <ul class="harness-chips">
+          <li>Claude Code</li>
+          <li>Cursor</li>
+          <li>Codex CLI</li>
+          <li>Windsurf</li>
+          <li>GitHub Copilot CLI</li>
+          <li>OpenCode</li>
+          <li>Antigravity</li>
+        </ul>
+      </section>
 
-        <ol class="pillar-grid">
-          <li class="card">
-            <span class="card-num">7</span>
-            <h3>Coding harnesses</h3>
+      <!-- ===================== HOW IT WORKS ===================== -->
+      <section class="steps" aria-labelledby="steps-title">
+        <h2 id="steps-title" class="section-title">From one command to a shipped feature</h2>
+        <ol class="step-grid">
+          <li class="step">
+            <span class="step-num">1</span>
+            <h3>Install &amp; init</h3>
             <p>
-              The same agent definitions, slash-commands, and backlog templates emitted in the shape
-              your harness expects: Claude Code, Cursor, Codex, Windsurf, Copilot, OpenCode,
-              Antigravity.
+              One <code>curl</code> drops the binary; <code>specflow init</code> scaffolds agents,
+              slash-commands, and the backlog into your repo — shaped for your harness.
             </p>
           </li>
-          <li class="card">
-            <span class="card-num">9</span>
-            <h3>Named agents</h3>
+          <li class="step">
+            <span class="step-num">2</span>
+            <h3>Specify</h3>
             <p>
-              <code>product-owner</code>, <code>developer</code>, <code>qa-tester</code>,
-              <code>code-reviewer</code>, <code>security-auditor</code>,
-              <code>devops-sre</code>, <code>specflow-expert</code>, <code>architect</code>,
-              <code>review-coordinator</code> — each with a clear remit and tool allow-list.
+              <code>/specflow specify</code> auto-chains spec → clarify → plan → tasks,
+              pausing only when it genuinely needs a decision from you.
             </p>
           </li>
-          <li class="card">
-            <span class="card-num">1</span>
-            <h3>Opinionated workflow</h3>
+          <li class="step">
+            <span class="step-num">3</span>
+            <h3>Review</h3>
             <p>
-              Auto-chained <code>/specflow</code> router, GitHub-Project-backed backlog, review
-              phase before merge, release skill, and a <code>llms.txt</code> route so your harness
-              can read the docs verbatim.
+              A dedicated review phase runs code, security, and test reviewers plus the quality
+              gates — format, lint, typecheck, tests — before anything merges.
+            </p>
+          </li>
+          <li class="step">
+            <span class="step-num">4</span>
+            <h3>Ship</h3>
+            <p>
+              Merge on green, with the release skill and a GitHub-Project-backed backlog keeping the
+              whole team in sync.
             </p>
           </li>
         </ol>
       </section>
 
-      <section class="cloud" aria-labelledby="cloud-title">
-        <div class="cloud-inner">
-          <p class="eyebrow">Specflow Cloud</p>
-          <h2 id="cloud-title" class="section-title">Run it headless. Answer from your phone.</h2>
-          <p class="cloud-lede">
-            The CLI puts a coordinated agent team in your repo. <strong>Specflow Cloud</strong>
-            takes it remote: run an agent unattended on a VM, and when it reaches a checkpoint — a
-            clarification, a plan to approve, a merge to sign off — it opens a <em>gate</em> you
-            answer from anywhere. The agent picks up where it left off. You were never at the
-            terminal.
-          </p>
-          <ul class="cloud-points">
-            <li>
-              <strong>Remote-control gates</strong> — approve plans, answer questions, and sign
-              off merges from your phone while the run continues headless.
-            </li>
-            <li>
-              <strong>Hosted backlog &amp; team roles</strong> — a cloud Kanban with org / billing
-              roles, no GitHub Project to wire up.
-            </li>
-            <li>
-              <strong>Built on the same CLI</strong> — <code>specflow cloud login</code> links
-              your project; everything you already scaffolded just works.
-            </li>
-          </ul>
-          <div class="cta-row cloud-cta">
-            <a class="btn btn-primary" href="https://specflow.makerlabs.app">Start free →</a>
-            <a class="btn btn-ghost" href="https://specflow.makerlabs.app"
-            >specflow.makerlabs.app</a>
+      <!-- ===================== FEATURE SPLITS ===================== -->
+      <section class="features" aria-labelledby="features-title">
+        <h2 id="features-title" class="sr-only">What Specflow does</h2>
+
+        <div class="feature-row">
+          <div class="feature-media">
+            <img
+              src="/assets/feature-scaffold.png"
+              alt=""
+              width="720"
+              height="720"
+              loading="lazy"
+            />
+          </div>
+          <div class="feature-copy">
+            <p class="eyebrow">Scaffold</p>
+            <h3>A whole agent team, scaffolded into your repo</h3>
+            <p>
+              Nine named agents — each with a clear remit and a tool allow-list — land as plain
+              files your harness already understands. No service to run, no LLM calls of its own:
+              Specflow just sets the table so your harness can drive a structured workflow.
+            </p>
+            <a class="btn btn-ghost feature-link" href="/docs/">See what lands in your repo →</a>
           </div>
         </div>
+
+        <div class="feature-row reverse">
+          <div class="feature-media">
+            <img src="/assets/feature-review.png" alt="" width="720" height="720" loading="lazy" />
+          </div>
+          <div class="feature-copy">
+            <p class="eyebrow">Review</p>
+            <h3>A review phase and quality gates before every merge</h3>
+            <p>
+              The <code>review</code> phase coordinates code, security, and test reviewers, then
+              runs format, lint, typecheck, and tests as hard gates. An implement → review → fix
+              → re-review loop keeps shipping honest — green before merge, every time.
+            </p>
+            <a class="btn btn-ghost feature-link" href="/docs/">How the review phase works →</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== AGENT ROSTER ===================== -->
+      <section class="roster" id="agents" aria-labelledby="roster-title">
+        <h2 id="roster-title" class="section-title">Meet the cast</h2>
+        <p class="section-lede">
+          Nine specialists, each with a single job and a scoped tool allow-list — so every step of
+          the workflow has an owner.
+        </p>
+        <ul class="roster-grid">
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/product-owner.png" alt="" loading="lazy" />
+            <figcaption>Product Owner</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/developer.png" alt="" loading="lazy" />
+            <figcaption>Developer</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/qa-tester.png" alt="" loading="lazy" />
+            <figcaption>QA Tester</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/code-reviewer.png" alt="" loading="lazy" />
+            <figcaption>Code Reviewer</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/security-auditor.png" alt="" loading="lazy" />
+            <figcaption>Security Auditor</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/devops-sre.png" alt="" loading="lazy" />
+            <figcaption>DevOps / SRE</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/specflow-expert.png" alt="" loading="lazy" />
+            <figcaption>Specflow Expert</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/architect.png" alt="" loading="lazy" />
+            <figcaption>Architect</figcaption>
+          </li>
+          <li class="roster-card">
+            <img class="sprite" src="/assets/agents/review-coordinator.png" alt="" loading="lazy" />
+            <figcaption>Review Coordinator</figcaption>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ===================== CLOUD ===================== -->
+      <section class="cloud" aria-labelledby="cloud-title">
+        <div class="cloud-inner">
+          <div class="cloud-art" aria-hidden="true">
+            <img src="/assets/feature-cloud.png" alt="" width="720" height="720" loading="lazy" />
+          </div>
+          <div class="cloud-copy">
+            <p class="eyebrow">Specflow Cloud</p>
+            <h2 id="cloud-title" class="section-title cloud-title">
+              Run it headless. Answer from your phone.
+            </h2>
+            <p class="cloud-lede">
+              The CLI puts a coordinated agent team in your repo. <strong>Specflow Cloud</strong>
+              takes it remote: run an agent unattended on a VM, and when it reaches a checkpoint —
+              a clarification, a plan to approve, a merge to sign off — it opens a <em>gate</em>
+              you answer from anywhere. The agent picks up where it left off. You were never at the
+              terminal.
+            </p>
+            <ul class="cloud-points">
+              <li>
+                <strong>Remote-control gates</strong> — approve plans, answer questions, and sign
+                off merges from your phone while the run continues headless.
+              </li>
+              <li>
+                <strong>Hosted backlog &amp; team roles</strong> — a cloud Kanban with org /
+                billing roles, no GitHub Project to wire up.
+              </li>
+              <li>
+                <strong>Built on the same CLI</strong> — <code>specflow cloud login</code> links
+                your project; everything you already scaffolded just works.
+              </li>
+            </ul>
+            <div class="cta-row">
+              <a class="btn btn-primary" href="https://specflow.makerlabs.app">Start free →</a>
+              <a class="btn btn-ghost" href="https://specflow.makerlabs.app"
+              >specflow.makerlabs.app</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===================== TRUST BAND ===================== -->
+      <section class="trust" aria-labelledby="trust-title">
+        <h2 id="trust-title" class="sr-only">Why teams trust Specflow</h2>
+        <ul class="trust-grid">
+          <li>
+            <strong>Open source</strong>
+            <span>Public on GitHub — read every line the CLI ships.</span>
+          </li>
+          <li>
+            <strong>Built on GitHub Spec Kit</strong>
+            <span>An enhanced fork of <code>specify</code>, not a black box.</span>
+          </li>
+          <li>
+            <strong>No LLM of its own</strong>
+            <span>Specflow scaffolds files; your harness does the thinking.</span>
+          </li>
+          <li>
+            <strong>One native binary</strong>
+            <span>No Python, no runtime. <code>curl</code>, verify SHA256, done.</span>
+          </li>
+        </ul>
+        <div class="trust-cta">
+          <button type="button" class="btn btn-primary" data-copy-target="install-snippet-2">
+            <span class="btn-icon" aria-hidden="true"><svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect width="13" height="13" x="9" y="9" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg></span>
+            <span class="btn-label">Copy install command</span>
+          </button>
+          <a class="btn btn-secondary" href="/docs/">Read the docs</a>
+        </div>
+        <pre
+          class="codeblock trust-snippet"
+          id="install-snippet-2"
+        ><code>curl -fsSL https://raw.githubusercontent.com/mkrlabs/specflow/main/install.sh | bash</code></pre>
       </section>
     </main>
 
@@ -246,7 +361,8 @@
       // Inline because the page has only a couple of small interactions and
       // a separate script file would just be ceremony.
 
-      // Copy-to-clipboard for the install snippet.
+      // Copy-to-clipboard for the install snippet(s). Delegated, so it covers
+      // every [data-copy-target] button (hero + trust band) with one handler.
       //
       // Inline SVG icons (Lucide — MIT). Keeping them as JS string constants
       // rather than DOM clones because we toggle them on success/failure and
@@ -280,7 +396,7 @@
         });
       });
 
-      // Lede harness rotator. Cycles through the 8 supported harness display
+      // Lede harness rotator. Cycles through the supported harness display
       // names every 2s with a fade transition. Static fallback for reduced-motion.
       (() => {
         const rotator = document.querySelector(".harness-rotator");

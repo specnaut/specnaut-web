@@ -808,8 +808,10 @@ block. The release pipeline extracts these into a structured `### Adoption guide
 GitHub Release; `specflow-expert review-upgrade` plays them back in the user's project after
 `specflow upgrade`.
 
-See the [CONTRIBUTING guide](https://github.com/mkrlabs/specflow/blob/main/CONTRIBUTING.md#agent-adoption)
-for the convention and examples. The CI workflow `pr_adoption_lint.yml` in the CLI repo enforces presence.
+See the
+[CONTRIBUTING guide](https://github.com/mkrlabs/specflow/blob/main/CONTRIBUTING.md#agent-adoption)
+for the convention and examples. The CI workflow `pr_adoption_lint.yml` in the CLI repo enforces
+presence.
 
 ### Release notes shape
 

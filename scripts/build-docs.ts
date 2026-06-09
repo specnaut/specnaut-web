@@ -168,6 +168,7 @@ const HTML_TEMPLATE = (body: string, version: string) =>
       <nav class="site-nav" aria-label="Primary">
         <a href="/">Home</a>
         <a href="https://github.com/mkrlabs/specflow">GitHub</a>
+        <a class="nav-cloud" href="https://specflow.makerlabs.app">Cloud →</a>
       </nav>
     </header>
 
