@@ -1,12 +1,12 @@
-# Specflow
+# Specnaut
 
-> Specflow is an enhanced fork of the
+> Specnaut is an enhanced fork of the
 > [`specify` CLI from GitHub Spec Kit](https://github.com/github/spec-kit), distributed as a single
 > native binary (no Python prerequisites). It scaffolds the files your AI coding harness consumes —
 > SpecKit slash-commands, spec / plan / tasks templates, a constitution, agents, and a backlog
 > system — directly into an existing project, in one command.
 
-Specflow does **not** call any LLM and does **not** orchestrate any agent at runtime. Your AI
+Specnaut does **not** call any LLM and does **not** orchestrate any agent at runtime. Your AI
 harness (Claude Code, Cursor, Codex, GitHub Copilot CLI, Windsurf, OpenCode, Antigravity) is what
 reads the generated files and acts on them.
 
@@ -19,7 +19,7 @@ convention.
 The fastest path on macOS or Linux:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/mkrlabs/specflow/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh | bash
 ```
 
 The installer downloads the platform binary, verifies the SHA256 checksum, and places it in
@@ -41,108 +41,108 @@ curl -fsSL https://.../install.sh | PREFIX=$HOME/.local/bin bash
 Or via Homebrew (macOS / Linux):
 
 ```bash
-brew tap mkrlabs/tap
-brew install specflow
+brew tap specnaut/tap
+brew install specnaut
 ```
 
 Manual download: pick the binary for your OS/arch from
-[GitHub Releases](https://github.com/mkrlabs/specflow/releases), `chmod +x`, place it on your
+[GitHub Releases](https://github.com/specnaut/specnaut-cli/releases), `chmod +x`, place it on your
 `$PATH`. On macOS clear the quarantine attribute with
-`xattr -d com.apple.quarantine /path/to/specflow`.
+`xattr -d com.apple.quarantine /path/to/specnaut`.
 
 ### Install as a plugin / extension (five harnesses)
 
-If you want Specflow's skills and sub-agents available across **all your projects** without running
-`specflow init`, install Specflow as a plugin / extension in your harness. Specflow ships adapters
+If you want Specnaut's skills and sub-agents available across **all your projects** without running
+`specnaut init`, install Specnaut as a plugin / extension in your harness. Specnaut ships adapters
 for five harnesses with the same skill content across all of them — the bundled router skill, the
 phase docs, the bootstrap skill, the sub-agents, and the SessionStart hook (where supported).
 
 | Harness                | Install command                                                                                                          |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| **Claude Code**        | `/plugin install mkrlabs/specflow-plugin`                                                                                |
-| **Codex CLI / App**    | `/plugins` → search "specflow" → install (once the marketplace listing lands; see Notes)                                 |
-| **Cursor**             | `/add-plugin mkrlabs/specflow`                                                                                           |
-| **OpenCode**           | Add `"plugin": ["specflow@git+https://github.com/mkrlabs/specflow.git"]` to `opencode.json`                              |
-| **GitHub Copilot CLI** | `copilot plugin marketplace add mkrlabs/specflow-marketplace`<br/>`copilot plugin install specflow@specflow-marketplace` |
+| **Claude Code**        | `/plugin install specnaut/specnaut-cli-plugin`                                                                                |
+| **Codex CLI / App**    | `/plugins` → search "specnaut" → install (once the marketplace listing lands; see Notes)                                 |
+| **Cursor**             | `/add-plugin specnaut/specnaut-cli`                                                                                           |
+| **OpenCode**           | Add `"plugin": ["specnaut@git+https://github.com/specnaut/specnaut-cli.git"]` to `opencode.json`                              |
+| **GitHub Copilot CLI** | `copilot plugin marketplace add specnaut/specnaut-cli-marketplace`<br/>`copilot plugin install specnaut@specnaut-marketplace` |
 
 The skill content is identical across harnesses; only the surface conventions differ (slash-command
 prefix, auto-activation mechanism, tool naming). See the per-harness tool-mapping references at
-`plugin/skills/using-specflow/references/<harness>-tools.md` for the equivalent of every Claude Code
+`plugin/skills/using-specnaut/references/<harness>-tools.md` for the equivalent of every Claude Code
 tool on each harness.
 
 #### Claude Code — slash-command prefix
 
 ```
-/specflow-plugin:specflow specify "<feature description>"
-/specflow-plugin:specflow plan
+/specnaut-plugin:specnaut specify "<feature description>"
+/specnaut-plugin:specnaut plan
 ```
 
 Slightly verbose, but unambiguous (the plugin's slash-commands are namespaced and the consolidated
-router itself is named `specflow`). If you scaffold project-local with `specflow init` instead, you
-get the shorter `/specflow specify "..."` form.
+router itself is named `specnaut`). If you scaffold project-local with `specnaut init` instead, you
+get the shorter `/specnaut specify "..."` form.
 
 To test a local checkout of the plugin without publishing:
 
 ```bash
-claude --plugin-dir /path/to/specflow/plugin
+claude --plugin-dir /path/to/specnaut/plugin
 ```
 
 #### Auto-activation across harnesses
 
-Specflow ships a `using-specflow` bootstrap skill loaded automatically at session start on every
+Specnaut ships a `using-specnaut` bootstrap skill loaded automatically at session start on every
 harness that supports it (via plugin/hooks/hooks.json on Claude Code, plugin/hooks/hooks-cursor.json
-on Cursor, the `experimental.chat.messages.transform` hook in `.opencode/plugins/specflow.js` on
-OpenCode). The bootstrap skill teaches the agent Specflow's skill registry, agent registry, and
-routing principles so you don't need to invoke `/specflow` explicitly — typing "plan this issue" or
+on Cursor, the `experimental.chat.messages.transform` hook in `.opencode/plugins/specnaut.js` on
+OpenCode). The bootstrap skill teaches the agent Specnaut's skill registry, agent registry, and
+routing principles so you don't need to invoke `/specnaut` explicitly — typing "plan this issue" or
 "review my work" is enough for the right skill to fire.
 
 #### Notes on Codex CLI and the shared marketplace
 
-Codex CLI and Copilot CLI distribute plugins through marketplaces. Specflow has two adapter targets
+Codex CLI and Copilot CLI distribute plugins through marketplaces. Specnaut has two adapter targets
 that need a one-time human setup before the marketplace listings are live:
 
 - **Codex CLI** — `.codex-plugin/plugin.json` ships in this repo; the
-  `scripts/sync-to-codex-plugin.sh` script (fires on every release tag) mirrors the Specflow plugin
-  content into `mkrlabs/plugins` (a fork of `openai/plugins`). Until that fork is rebased into
+  `scripts/sync-to-codex-plugin.sh` script (fires on every release tag) mirrors the Specnaut plugin
+  content into `specnaut/plugins` (a fork of `openai/plugins`). Until that fork is rebased into
   upstream and the `CODEX_SYNC_TOKEN` PAT is provisioned (see issues #298–#300), the sync emits a
   workflow warning and skips — same fail-safe pattern as the Homebrew tap bump.
 - **Copilot CLI + shared marketplace** — `.claude-plugin/marketplace.json` lives in
-  `mkrlabs/specflow-marketplace` (a separate repo). `scripts/sync-to-marketplace.sh` bumps the
+  `specnaut/specnaut-cli-marketplace` (a separate repo). `scripts/sync-to-marketplace.sh` bumps the
   version on every release. Until the marketplace repo + `MARKETPLACE_SYNC_TOKEN` are provisioned
   (see issues #309–#310), the sync skips with a warning.
 
-**Plugin vs `specflow init`** — they complement each other:
+**Plugin vs `specnaut init`** — they complement each other:
 
-| Aspect                             | Binary (`specflow init`)    | Plugin (`/plugin install`)          |
+| Aspect                             | Binary (`specnaut init`)    | Plugin (`/plugin install`)          |
 | ---------------------------------- | --------------------------- | ----------------------------------- |
 | Scope                              | Project-local (`.claude/`)  | User-scope (all projects)           |
-| Slash-command style                | `/specflow specify` (short) | `/specflow-plugin:specflow specify` |
+| Slash-command style                | `/specnaut specify` (short) | `/specnaut-plugin:specnaut specify` |
 | Customizable per-project           | Yes                         | No (user-scope, shared)             |
-| Backlog skill, hooks, `.specflow/` | Yes                         | No (project-stateful — binary-only) |
-| Kept in sync                       | `specflow upgrade`          | `/plugin update`                    |
+| Backlog skill, hooks, `.specnaut/` | Yes                         | No (project-stateful — binary-only) |
+| Kept in sync                       | `specnaut upgrade`          | `/plugin update`                    |
 
 Most teams use both: the plugin provides discoverability and keeps the agents up-to-date across all
-projects; `specflow init` provides the short slash-commands and project-local customization.
+projects; `specnaut init` provides the short slash-commands and project-local customization.
 
 ## Quickstart
 
 ### Create a new project
 
 ```bash
-specflow init my-project
+specnaut init my-project
 cd my-project
 ```
 
 This scaffolds a tree configured for the **Claude Code** harness by default (`.claude/`,
-`.specflow/`, `AGENTS.md`, `.specflow/backlog.md`, …). Open the project in your harness — that's
+`.specnaut/`, `AGENTS.md`, `.specnaut/backlog.md`, …). Open the project in your harness — that's
 where you'll run the rest.
 
-### Step 1 after `init`: run `/specflow constitution`
+### Step 1 after `init`: run `/specnaut constitution`
 
-`/specflow constitution` is the expected first action after `specflow init`. It scaffolds your
+`/specnaut constitution` is the expected first action after `specnaut init`. It scaffolds your
 project's guiding principles (architecture, quality gates, ways of working) into
-`.specflow/memory/constitution.md` so the rest of the pipeline (`/specflow specify`,
-`/specflow plan`, `/specflow tasks`, `/specflow implement`) has something to anchor on.
+`.specnaut/memory/constitution.md` so the rest of the pipeline (`/specnaut specify`,
+`/specnaut plan`, `/specnaut tasks`, `/specnaut implement`) has something to anchor on.
 
 The generated constitution comes pre-populated with four opinionated baseline blocks (all
 user-tunable): **Engineering methodology** (TDD / DDD / SOLID-DRY-KISS-YAGNI /
@@ -150,29 +150,29 @@ Boy-Scout-escalation), **Architecture layers** (hexagonal default: `domain/` / `
 `infrastructure/` / `presentation/`), **Back-end patterns** (Repository, service objects, DI through
 constructors, thin controllers, errors as domain types, pure domain), and **Front-end patterns**
 (view/logic separation, no business rules in templates, smart vs dumb components, single source of
-truth for state, typed API client, accessibility mandatory). New projects via `specflow init`
-inherit all four blocks automatically. `specflow upgrade` delivers updated agents and skills but
+truth for state, typed API client, accessibility mandatory). New projects via `specnaut init`
+inherit all four blocks automatically. `specnaut upgrade` delivers updated agents and skills but
 does **not** rewrite an existing constitution — to adopt the new baselines in an existing project,
 rebase your constitution manually.
 
 Refine the generated constitution and the root `AGENTS.md` for your stack, then move on to
-`/specflow specify "<feature description>"` for your first feature.
+`/specnaut specify "<feature description>"` for your first feature.
 
-### Add Specflow to an existing project
+### Add Specnaut to an existing project
 
 ```bash
 cd my-existing-project
-specflow init --here
+specnaut init --here
 ```
 
-Specflow merges its `.gitignore` block into your existing file (non-destructively, fenced with
-`# --- Specflow: gitignore ---` markers). Other specflow-managed files use upgrade-aware semantics:
-if you customize a generated file, `specflow upgrade` will preserve it unless you pass `--force`.
+Specnaut merges its `.gitignore` block into your existing file (non-destructively, fenced with
+`# --- Specnaut: gitignore ---` markers). Other specnaut-managed files use upgrade-aware semantics:
+if you customize a generated file, `specnaut upgrade` will preserve it unless you pass `--force`.
 
-**Declaring a file preserved across a forced refresh.** `specflow upgrade` auto-preserves a file
-whose hash diverged, but `specflow init --force` would otherwise overwrite every managed file. To
+**Declaring a file preserved across a forced refresh.** `specnaut upgrade` auto-preserves a file
+whose hash diverged, but `specnaut init --force` would otherwise overwrite every managed file. To
 keep a customized file (e.g. a tailored `.claude/agents/product-owner.md`) even through a forced
-refresh, list it in a version-controllable `.specflow/preserve.yml` manifest:
+refresh, list it in a version-controllable `.specnaut/preserve.yml` manifest:
 
 ```yaml
 preserved:
@@ -180,7 +180,7 @@ preserved:
 ```
 
 Both `init --force` and `upgrade` then leave that file untouched and print one notice per preserved
-path — never a silent skip. The file stays lock-tracked, so `specflow diff` keeps showing how it has
+path — never a silent skip. The file stays lock-tracked, so `specnaut diff` keeps showing how it has
 drifted from the evolving bundle. A project with no `preserve.yml` behaves exactly as before. To
 deliberately discard a customization and restore the bundled version for one run, add
 `--reset-preserved` (it overrides every declaration for that run and reports each override; it is
@@ -191,33 +191,33 @@ Pass `--dry-run` to preview the plan without touching disk — combined with `--
 files would be overwritten and which would be merged, but writes nothing. `--dry-run` is the trump
 card: it wins over `--force`.
 
-**Inside a monorepo workspace?** When the target sits inside an enclosing Specflow workspace (an
-ancestor with `.specflow/` whose `deno.json` `workspace` list declares the target as a member),
-`specflow init` and `specflow upgrade` provision `.specflow/` as usual but skip the agentic files
+**Inside a monorepo workspace?** When the target sits inside an enclosing Specnaut workspace (an
+ancestor with `.specnaut/` whose `deno.json` `workspace` list declares the target as a member),
+`specnaut init` and `specnaut upgrade` provision `.specnaut/` as usual but skip the agentic files
 (`.claude/skills`, `.claude/agents`, `.claude/commands`) — those are inherited from the parent, so
 no copy is scattered into the sub-repo. To force full provisioning anyway, drop an empty
-`.specflow/standalone.yml` marker in the target.
+`.specnaut/standalone.yml` marker in the target.
 
-### What's in `.specflow/installed.lock` and should I commit it?
+### What's in `.specnaut/installed.lock` and should I commit it?
 
-`specflow init` writes a small YAML file at `.specflow/installed.lock`. It records the harness you
-chose, the templates version installed, and a SHA-256 + install timestamp for every file Specflow
+`specnaut init` writes a small YAML file at `.specnaut/installed.lock`. It records the harness you
+chose, the templates version installed, and a SHA-256 + install timestamp for every file Specnaut
 emitted. It contains no secrets — only file paths, content hashes, and version strings.
 
-**Commit it.** `specflow upgrade` reads this lock to know which harness to map templates to, to
+**Commit it.** `specnaut upgrade` reads this lock to know which harness to map templates to, to
 detect files you have customized (so it doesn't clobber them), and to drop orphaned files that are
-no longer part of the bundle. `specflow check --project` also surfaces the harness, templates
+no longer part of the bundle. `specnaut check --project` also surfaces the harness, templates
 version, and backlog backend from this file (and warns when `backlog-config.yml` has empty required
 fields for the github / gitlab backends). Without the lock, both commands degrade gracefully but
-cannot do their real job — `specflow upgrade` will refuse and ask you to re-run
-`specflow init --here --force` to rebuild the lock from scratch.
+cannot do their real job — `specnaut upgrade` will refuse and ask you to re-run
+`specnaut init --here --force` to rebuild the lock from scratch.
 
 ### Pick a different harness
 
 ```bash
-specflow init my-project --ai cursor
-specflow init my-project --ai antigravity
-specflow init my-project --ai codex
+specnaut init my-project --ai cursor
+specnaut init my-project --ai antigravity
+specnaut init my-project --ai codex
 # … etc.
 ```
 
@@ -227,9 +227,9 @@ Seven harness targets are supported: `claude` (default), `cursor`, `codex`, `win
 ### Pick a backlog backend
 
 ```bash
-specflow init my-project --backlog github
-specflow init my-project --backlog gitlab
-specflow init my-project --backlog local      # default
+specnaut init my-project --backlog github
+specnaut init my-project --backlog gitlab
+specnaut init my-project --backlog local      # default
 ```
 
 Three backends are supported: `local` (default), `github`, `gitlab`. See
@@ -238,21 +238,21 @@ and how the PO agent talks to it.
 
 #### Pre-fill the backlog config with `--backlog-url`
 
-When the chosen backend is `github` or `gitlab`, `specflow init` can take the project's Kanban URL
-up front and write a fully-populated `.specflow/backlog-config.yml` — no manual edit needed before
+When the chosen backend is `github` or `gitlab`, `specnaut init` can take the project's Kanban URL
+up front and write a fully-populated `.specnaut/backlog-config.yml` — no manual edit needed before
 running `/backlog`. Pass the project URL via `--backlog-url`:
 
 ```bash
 # GitHub org-owned project
-specflow init --here --ai claude --backlog github \
+specnaut init --here --ai claude --backlog github \
   --backlog-url https://github.com/orgs/myorg/projects/1
 
 # GitHub user-owned project
-specflow init --here --ai claude --backlog github \
+specnaut init --here --ai claude --backlog github \
   --backlog-url https://github.com/users/alice/projects/12
 
 # GitLab (gitlab.com or self-hosted)
-specflow init --here --ai claude --backlog gitlab \
+specnaut init --here --ai claude --backlog gitlab \
   --backlog-url https://gitlab.com/mygroup/myproject
 ```
 
@@ -266,7 +266,7 @@ For GitHub, the `repo:` field of the populated config is derived from `git remot
 (both HTTPS and SSH remote shapes are recognised). Pass `--backlog-repo <owner>/<name>` to override
 that derivation when the project lives across multiple repos or the local remote isn't `origin`.
 
-Without `--backlog-url` on a TTY, `specflow init` interactively prompts for the URL after the
+Without `--backlog-url` on a TTY, `specnaut init` interactively prompts for the URL after the
 backend picker. **In non-TTY mode (CI / scripted setup) `--backlog-url` is required when `--backlog`
 is `github` or `gitlab`** — omitting it exits with code `2` and a clear error message. The
 non-clobber invariant still holds: re-running `init` against a project with an existing
@@ -275,29 +275,29 @@ non-clobber invariant still holds: re-running `init` against a project with an e
 ### Run `init` non-interactively (CI / scripts)
 
 When you pass both `--ai` and `--backlog` (and `--backlog-url` when the backend is remote), no
-interactive prompt is shown — `specflow init` runs fully unattended, which is what you want in CI or
+interactive prompt is shown — `specnaut init` runs fully unattended, which is what you want in CI or
 scripted setup:
 
 ```bash
 # Local backend — zero-config, just the two flags
-specflow init my-project --ai claude --backlog local
+specnaut init my-project --ai claude --backlog local
 
 # GitHub backend — --backlog-url is required in non-TTY mode
-specflow init my-project --ai claude --backlog github \
+specnaut init my-project --ai claude --backlog github \
   --backlog-url https://github.com/orgs/myorg/projects/1
 
 # GitLab backend — same shape
-specflow init --here --no-git --ai cursor --backlog gitlab \
+specnaut init --here --no-git --ai cursor --backlog gitlab \
   --backlog-url https://gitlab.com/mygroup/myproject
 ```
 
-Without those flags, `specflow init` shows an arrow-key picker (↑/↓ to move, space/enter to select)
+Without those flags, `specnaut init` shows an arrow-key picker (↑/↓ to move, space/enter to select)
 when stdin is a TTY, and falls back to a numeric prompt — or the defaults — when stdin is piped.
 
 ### Pick a versioning scheme
 
-`specflow init` asks which scheme to use for the bundled `/specflow tag-version` and
-`/specflow release-version` commands. Two options:
+`specnaut init` asks which scheme to use for the bundled `/specnaut tag-version` and
+`/specnaut release-version` commands. Two options:
 
 - **SemVer** (`v1.2.3`) — recommended for libraries / SDKs whose consumers reason about breaking
   changes by version number.
@@ -305,7 +305,7 @@ when stdin is a TTY, and falls back to a numeric prompt — or the defaults — 
   number is just a release identifier. No major/minor/patch guesswork; the letter suffix handles
   same-day re-tags.
 
-Specflow pre-selects a sensible default by scanning the project for SemVer signals:
+Specnaut pre-selects a sensible default by scanning the project for SemVer signals:
 
 - **Library publishing markers** — `package.json` `exports`, `pyproject.toml` `[project]` /
   `[tool.poetry]`, `Cargo.toml` `[lib]`, `composer.json` `type=library`.
@@ -315,67 +315,67 @@ Specflow pre-selects a sensible default by scanning the project for SemVer signa
   mis-suggested.
 - **CHANGELOG.md** — Keep-a-Changelog style headers (`## [1.2.0]`, `## v1.2.0`, `## 1.2.0`).
 
-Any one signal flips the suggestion to SemVer. When zero signals are found, Specflow suggests
+Any one signal flips the suggestion to SemVer. When zero signals are found, Specnaut suggests
 date-based. The user can always override at the picker. The choice is persisted by **rewriting the
 scaffolded skill** itself (the unchosen scheme's blocks are stripped at scaffold time), so the
-on-disk `.specflow/scripts/release/tag.sh` only contains the chosen scheme's logic. To switch
-schemes later, re-run `specflow init` and pick the other option.
+on-disk `.specnaut/scripts/release/tag.sh` only contains the chosen scheme's logic. To switch
+schemes later, re-run `specnaut init` and pick the other option.
 
 Pass `--scheme semver|date` to bypass the picker in non-TTY mode.
 
 ### Other commands
 
 ```bash
-specflow check                    # diagnose your environment
-specflow check --project          # also diagnose the current specflow project
+specnaut check                    # diagnose your environment
+specnaut check --project          # also diagnose the current specnaut project
                                   #   (warns if the plugin was uninstalled after migration)
-specflow upgrade                  # update templates to the binary's version
-                                  #   (when specflow-plugin is installed + harness=claude:
+specnaut upgrade                  # update templates to the binary's version
+                                  #   (when specnaut-plugin is installed + harness=claude:
                                   #    vanilla agent/command files are auto-migrated to the plugin)
-specflow upgrade --dry-run        # preview the upgrade plan
-specflow upgrade --force          # apply destructive changes (backs up customizations)
-specflow upgrade --reset-preserved  # ignore .specflow/preserve.yml for this run (reports each override)
-specflow diff                     # show how managed files diverge from the bundle (read-only)
-specflow diff --only-customised   # restrict the diff to files you actually changed
-specflow init --here --force --reset-preserved  # forced refresh that overrides preserve declarations
-specflow reconcile --status       # list files pending post-upgrade reconciliation (JSON)
-specflow reconcile <path> --accept-upstream  # take new template version (backs up local)
-specflow reconcile <path> --accept-current   # keep local version (re-stamps lock SHA)
-specflow self-update              # upgrade the binary itself
-specflow self-update --check      # only report whether an update is available
-specflow --version                # print version
-specflow --help                   # full usage
+specnaut upgrade --dry-run        # preview the upgrade plan
+specnaut upgrade --force          # apply destructive changes (backs up customizations)
+specnaut upgrade --reset-preserved  # ignore .specnaut/preserve.yml for this run (reports each override)
+specnaut diff                     # show how managed files diverge from the bundle (read-only)
+specnaut diff --only-customised   # restrict the diff to files you actually changed
+specnaut init --here --force --reset-preserved  # forced refresh that overrides preserve declarations
+specnaut reconcile --status       # list files pending post-upgrade reconciliation (JSON)
+specnaut reconcile <path> --accept-upstream  # take new template version (backs up local)
+specnaut reconcile <path> --accept-current   # keep local version (re-stamps lock SHA)
+specnaut self-update              # upgrade the binary itself
+specnaut self-update --check      # only report whether an update is available
+specnaut --version                # print version
+specnaut --help                   # full usage
 ```
 
 ### Bundled tag + release commands
 
-Every scaffolded project ships two router commands under `/specflow`:
+Every scaffolded project ships two router commands under `/specnaut`:
 
-- **`/specflow tag-version`** — creates an annotated git tag using the project's versioning scheme.
+- **`/specnaut tag-version`** — creates an annotated git tag using the project's versioning scheme.
   Bumps automatically (latest tag → next). For SemVer, `--bump major|minor|patch` controls the
   direction (default `patch`); for date-based, the letter suffix increments. Pushes to `origin` if a
   remote is configured, else stays local. Pass `--no-push` to skip.
-- **`/specflow release-version`** — generates **categorized release notes** for a tag (default:
+- **`/specnaut release-version`** — generates **categorized release notes** for a tag (default:
   latest) covering every commit since the previous tag. The output is the release-body Markdown, one
   section per non-empty Conventional Commits bucket (Features / Bug Fixes / Performance / Refactors
   / Documentation / Tests / Build & CI / Chores / Style / Other). Pipe the output into
   `gh release create` / `glab release create` to publish.
 
-The scripts live at `.specflow/scripts/release/{tag,release}.sh` — the same path across all 8
+The scripts live at `.specnaut/scripts/release/{tag,release}.sh` — the same path across all 8
 harnesses.
 
 For **GitHub**-hosted projects, the bundled `release-github.sh` wrapper is the one-command path:
 
 ```bash
-bash .specflow/scripts/release/release-github.sh           # latest tag, auto-baseline, publish
-bash .specflow/scripts/release/release-github.sh --draft   # create as draft
+bash .specnaut/scripts/release/release-github.sh           # latest tag, auto-baseline, publish
+bash .specnaut/scripts/release/release-github.sh --draft   # create as draft
 ```
 
 For **GitLab**-hosted projects, `release-gitlab.sh` mirrors the same contract:
 
 ```bash
-bash .specflow/scripts/release/release-gitlab.sh           # latest tag
-bash .specflow/scripts/release/release-gitlab.sh v1.2.3    # specific tag
+bash .specnaut/scripts/release/release-gitlab.sh           # latest tag
+bash .specnaut/scripts/release/release-gitlab.sh v1.2.3    # specific tag
 ```
 
 Both wrappers compute the baseline as **the previous tag with a published release attached** (not
@@ -388,8 +388,8 @@ For **local-only** projects (no remote, or you just want a Markdown artifact), t
 `release-local.sh` wrapper writes the categorized body to a file:
 
 ```bash
-bash .specflow/scripts/release/release-local.sh             # latest tag → RELEASE_NOTES_<tag>.md
-bash .specflow/scripts/release/release-local.sh --out NOTES.md v1.2.3
+bash .specnaut/scripts/release/release-local.sh             # latest tag → RELEASE_NOTES_<tag>.md
+bash .specnaut/scripts/release/release-local.sh --out NOTES.md v1.2.3
 ```
 
 No remote API calls, no auth — paste the output into any release UI, attach to a deploy email, or
@@ -422,24 +422,24 @@ Some harnesses also ship harness-specific helper files alongside the core scaffo
 
 ## Project-specific skill overlays
 
-Specflow's skill folders are plain markdown — anything you put under your harness's `skills/`
+Specnaut's skill folders are plain markdown — anything you put under your harness's `skills/`
 directory (e.g. `.claude/skills/<name>/`, `.cursor/skills/<name>/`) is a skill, full stop. To make
-the common "override an upstream skill" pattern discoverable, Specflow recognises two optional
+the common "override an upstream skill" pattern discoverable, Specnaut recognises two optional
 fields in `SKILL.md` frontmatter:
 
 | Field                    | Meaning                                                                                                                                                 |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `alias_of: <skill-name>` | This skill is a thin wrapper that delegates to the named upstream skill. Dotted notation (e.g. `specflow.tag-version`) makes the distribution explicit. |
+| `alias_of: <skill-name>` | This skill is a thin wrapper that delegates to the named upstream skill. Dotted notation (e.g. `specnaut.tag-version`) makes the distribution explicit. |
 | `overlays:`              | A list of pre/post hooks. Each entry carries `when: before \| after` and `path: ./scripts/<file>.sh` relative to the SKILL.md.                          |
 
-The Specflow binary itself **never resolves or dispatches** aliases / overlays — the harness (Claude
-Code, Cursor, Codex, …) is responsible for honouring the frontmatter at invocation time. Specflow's
+The Specnaut binary itself **never resolves or dispatches** aliases / overlays — the harness (Claude
+Code, Cursor, Codex, …) is responsible for honouring the frontmatter at invocation time. Specnaut's
 role is to standardise the contract.
 
 To see what's installed and which aliases / overlays are active:
 
 ```bash
-/specflow list-skills
+/specnaut list-skills
 ```
 
 The phase walks your harness's skills directory, parses every SKILL.md frontmatter, and renders a
@@ -447,31 +447,31 @@ The phase walks your harness's skills directory, parses every SKILL.md frontmatt
 `KIND = skill`; aliases show `KIND = alias` and the target.
 
 A reference example lives at
-[`templates/core/skills/alias-example/SKILL.md`](https://github.com/mkrlabs/specflow/blob/main/templates/core/skills/alias-example/SKILL.md)
-in the Specflow source tree. It is **not** installed by `specflow init` — copy it manually when you
+[`templates/core/skills/alias-example/SKILL.md`](https://github.com/specnaut/specnaut-cli/blob/main/templates/core/skills/alias-example/SKILL.md)
+in the Specnaut source tree. It is **not** installed by `specnaut init` — copy it manually when you
 want to introduce your first alias.
 
-## What makes Specflow different from upstream Spec Kit
+## What makes Specnaut different from upstream Spec Kit
 
-Specflow is a fork of the official `specify` CLI with the following additions:
+Specnaut is a fork of the official `specify` CLI with the following additions:
 
 ### 1. Auto-chained pipeline
 
 The generated `specify` skill chains `clarify → plan → tasks → analyze → implement → review → merge`
 in a single session. Upstream stops at every step and asks the human to invoke the next one.
-Specflow only stops twice: when clarification is genuinely required, and once before merging.
+Specnaut only stops twice: when clarification is genuinely required, and once before merging.
 
-The chain is invoked through the bundled `/specflow` skill:
+The chain is invoked through the bundled `/specnaut` skill:
 
 ```
-/specflow specify "<feature description>"
+/specnaut specify "<feature description>"
 ```
 
 When the idea is still fuzzy and you can't yet write that one-line description, start one phase
 earlier with the optional **step 0**:
 
 ```
-/specflow brainstorm "<rough idea>"
+/specnaut brainstorm "<rough idea>"
 ```
 
 `brainstorm` runs a discovery dialogue (one question at a time, 2–3 approaches, design approval),
@@ -490,14 +490,14 @@ Two checkpoints inside the chain:
 
 #### Linking a feature to a backlog issue
 
-Pass `--issue <id>` to `/specflow specify` (or to the bundled `create-new-feature.sh`) to record the
-originating backlog issue in `.specflow/feature.json`:
+Pass `--issue <id>` to `/specnaut specify` (or to the bundled `create-new-feature.sh`) to record the
+originating backlog issue in `.specnaut/feature.json`:
 
 ```
-/specflow specify "Fix the off-by-one in pagination" --issue 42
+/specnaut specify "Fix the off-by-one in pagination" --issue 42
 ```
 
-After `/specflow merge` fast-forwards the branch onto `main` and you push, the merge phase reads
+After `/specnaut merge` fast-forwards the branch onto `main` and you push, the merge phase reads
 `feature.json.linked_issue`, runs `cascade-check.sh` (github / gitlab) to confirm no sub-issues
 block the close, asks `Close issue #42 on the board now? (yes/no)`, and on `yes` flips the project
 column to `Done` via `move.sh` then dispatches the `product-owner` agent to post a close comment
@@ -509,7 +509,7 @@ with the merged commit range and `gh issue close --reason completed`. The board 
 To opt out of the chain entirely (run only `specify` and stop):
 
 ```
-/specflow specify --manual "<feature description>"
+/specnaut specify --manual "<feature description>"
 ```
 
 #### Mid-chain re-entry
@@ -518,17 +518,17 @@ Any phase other than `specify` can also enter the chain when invoked mid-flow �
 workflows:
 
 - **Manual review between early phases** — read `spec.md` after `specify` lands, then
-  `/specflow clarify N` resumes the chain through `plan → tasks → … → STOP #2`.
+  `/specnaut clarify N` resumes the chain through `plan → tasks → … → STOP #2`.
 - **Context-budget recovery** — open a fresh session after compaction and run
-  `/specflow implement N` to pick up the tail (`→ review → STOP #2`).
+  `/specnaut implement N` to pick up the tail (`→ review → STOP #2`).
 
-The default is **context-aware**: if downstream artefacts under `.specflow/specs/<feature>/` are
+The default is **context-aware**: if downstream artefacts under `.specnaut/specs/<feature>/` are
 missing, the chain fires; if they exist, the invocation is treated as a single-phase re-run (so
 regenerating `plan.md` doesn't accidentally cascade through the rest). Two explicit overrides when
 the default guesses wrong:
 
-- `/specflow <phase> N --continue` — force the chain regardless of artefact state.
-- `/specflow <phase> N --once` — force one-shot regardless.
+- `/specnaut <phase> N --continue` — force the chain regardless of artefact state.
+- `/specnaut <phase> N --once` — force one-shot regardless.
 
 #### Lite chain (small-feature shortcut)
 
@@ -546,7 +546,7 @@ Selection happens once, in `phases/specify.md`:
   `AGENTS.md`, verb hints like `write` / `document`, subject hints like `doc` / `paragraph`, brief
   length, suppressors like `API` / `migration` / `auth`). On a positive score the user is prompted
   once: `This brief looks small — run the lite chain? [Y/n]`.
-- The chosen shape persists to `.specflow/feature.json` as `workflow_shape: "lite" | "full"`.
+- The chosen shape persists to `.specnaut/feature.json` as `workflow_shape: "lite" | "full"`.
   Downstream phases consult it at every chain transition. Backward-compat: absent field treated as
   `"full"`.
 
@@ -555,11 +555,11 @@ ambiguities and records them in the spec's Assumptions section. STOP #2 (pre-mer
 identically to the full chain.
 
 ```
-/specflow specify --lite "Document the OSS/proprio boundary in AGENTS.md"
-/specflow specify --full "Add OAuth2 login"   # opt out of auto-detected lite
+/specnaut specify --lite "Document the OSS/proprio boundary in AGENTS.md"
+/specnaut specify --full "Add OAuth2 login"   # opt out of auto-detected lite
 ```
 
-The `/specflow-auto` slash command is kept for one release as a deprecation alias and will be
+The `/specnaut-auto` slash command is kept for one release as a deprecation alias and will be
 removed in the next major version.
 
 ### 2. `review` phase post-implement
@@ -580,7 +580,7 @@ output (direct-implementation path). If the block is absent, empty, or still con
 placeholders, the agent halts and returns `BLOCKED` with reason
 `awaiting:product-owner-domain-brief`. The `implement` phase skill enforces the same gate — it reads
 the section at step 3 and surfaces the same BLOCKED report with a recommendation to run
-`/specflow clarify` first. The `clarify` phase cannot advance while the Domain Model is incomplete,
+`/specnaut clarify` first. The `clarify` phase cannot advance while the Domain Model is incomplete,
 and `specify` step 5.7 is responsible for populating the full block (Bounded context, Vocabulary,
 Entities, Value objects, Invariants, Out of scope) rather than just listing key entities.
 
@@ -611,8 +611,8 @@ non-obvious design decision, in the idiomatic format for the language.
 
 A Product Owner agent gates every mutation, and supports three backends:
 
-- **Local Markdown** (`--backlog local`, default) — index at `.specflow/backlog.md`, task files at
-  `.specflow/backlog/NNN-slug.md` (typed frontmatter: id, title, category, priority, complexity,
+- **Local Markdown** (`--backlog local`, default) — index at `.specnaut/backlog.md`, task files at
+  `.specnaut/backlog/NNN-slug.md` (typed frontmatter: id, title, category, priority, complexity,
   status, parent, depends_on, spec, tags, created). Sub-tasks reference their parent via
   `parent: "#NNN"`.
 - **GitHub Issues + Projects** (`--backlog github`) — the agent talks directly to the backend via
@@ -629,14 +629,14 @@ A Product Owner agent gates every mutation, and supports three backends:
   `parent::#NNN` scoped label (Free-tier compatible — native GitLab Epics are Premium-only).
   Otherwise the model mirrors the GitHub backend (no local mirror, no sync command).
 
-The user picks one backend per project. The chosen backend is recorded in `.specflow/installed.lock`
+The user picks one backend per project. The chosen backend is recorded in `.specnaut/installed.lock`
 so the PO knows which one to use without auto-detection.
 
-**Semantic label bootstrap.** For GitHub and GitLab backends, `specflow init` scaffolds
-`.specflow/scripts/backlog/ensure-labels.sh`. Run it once to seed seven canonical labels —
+**Semantic label bootstrap.** For GitHub and GitLab backends, `specnaut init` scaffolds
+`.specnaut/scripts/backlog/ensure-labels.sh`. Run it once to seed seven canonical labels —
 `security`, `refactor`, `docs`, `tech-debt`, `dx`, `performance`, `dependency` — into the remote
 repo. Idempotent; never edits or deletes existing labels. The GitHub default `bug` label is verified
-but never re-created. The full reference lives in `.specflow/LABELS.md` next to the install —
+but never re-created. The full reference lives in `.specnaut/LABELS.md` next to the install —
 including a guidance note for local backend users on tagging via task-file frontmatter.
 
 **Mandatory classification — every groomed item is sized, prioritised, typed, and labelled.** The PO
@@ -644,7 +644,7 @@ classifies every item it creates or clarifies along four axes — Size, Priority
 `Bug` / `Feature`), and at least one label — before the item is done; classification is a gate, not
 optional polish. On a GitHub project with native `Priority` / `Size` single-select fields and native
 Issue Types, the bundled
-`.specflow/scripts/backlog/set-field.sh <issue> <Priority|Size|IssueType> <value>` writes each to
+`.specnaut/scripts/backlog/set-field.sh <issue> <Priority|Size|IssueType> <value>` writes each to
 its native field or type — and the PO **never** also applies a `priority:*` / `size:*` / `type:*`
 label on an item that already carries the native value. Labels are a strict fallback for projects or
 orgs without the native field/type; they are not a peer signal. `set-field.sh` exit codes tell the
@@ -683,7 +683,7 @@ Create a child on any backend with the bundled `add.sh --parent <num>` flag — 
 link, attaches to the project/board, and refuses (exit 3) when the named parent doesn't exist:
 
 ```bash
-.specflow/scripts/backlog/add.sh "Child title" "Child body" "" --parent 42
+.specnaut/scripts/backlog/add.sh "Child title" "Child body" "" --parent 42
 ```
 
 The bundled `cascade-check.sh <num>` (github + gitlab) is the close gate — exits 11 with the open
@@ -706,50 +706,50 @@ for the breakdown — the PO surfaces it on its own.
 
 ### 5. Claude Code plugin distribution
 
-Specflow ships a first-class Claude Code plugin (`specflow-plugin`) available via the Claude Code
+Specnaut ships a first-class Claude Code plugin (`specnaut-plugin`) available via the Claude Code
 marketplace:
 
 ```
-/plugin install mkrlabs/specflow-plugin
+/plugin install specnaut/specnaut-cli-plugin
 ```
 
-The plugin gives any Claude Code user instant access to the full Specflow slash-command suite and
-sub-agents — no binary, no `specflow init` required. The plugin assets (the consolidated `specflow`
+The plugin gives any Claude Code user instant access to the full Specnaut slash-command suite and
+sub-agents — no binary, no `specnaut init` required. The plugin assets (the consolidated `specnaut`
 router skill with 19 phase docs including the five `audit-*` axes — `security` / `performance` /
 `accessibility` from Epic #302 and `architecture` / `dependencies` from Epic #320, the
-`specflow-review` auto-invoke alias, the deprecated `specflow-auto` alias, and 15 sub-agents
+`specnaut-review` auto-invoke alias, the deprecated `specnaut-auto` alias, and 15 sub-agents
 including the manual-only `performance-auditor`, `a11y-auditor`, `architecture-auditor`, and
-`dependency-auditor` introduced with the audit family) are namespaced under `/specflow-plugin:*` so
+`dependency-auditor` introduced with the audit family) are namespaced under `/specnaut-plugin:*` so
 they coexist with project-local copies without collision.
 
-When both the plugin and the binary are in use, `specflow upgrade` detects the plugin and
+When both the plugin and the binary are in use, `specnaut upgrade` detects the plugin and
 auto-migrates vanilla on-disk agents and command files (backed up, then deleted — the plugin serves
-them going forward). `specflow check --project` warns when covered files are missing and the plugin
+them going forward). `specnaut check --project` warns when covered files are missing and the plugin
 is not installed, with a recovery hint.
 
-### 6. Bundled `specflow-expert` agent
+### 6. Bundled `specnaut-expert` agent
 
-Every scaffold ships a `specflow-expert` agent that knows Specflow itself — its commands, harnesses,
-backlog backends, and what changed between releases. It auto-triggers on Specflow-related questions
-("how does specflow X", "what is /specflow Y", "quoi de neuf") so users on a Specflow-scaffolded
+Every scaffold ships a `specnaut-expert` agent that knows Specnaut itself — its commands, harnesses,
+backlog backends, and what changed between releases. It auto-triggers on Specnaut-related questions
+("how does specnaut X", "what is /specnaut Y", "quoi de neuf") so users on a Specnaut-scaffolded
 project can ask the harness about the tool without copy-pasting docs. It uses a vendored knowledge
 snapshot for offline / deterministic answers and `WebFetch` against
-<https://specflow.makerlabs.dev/llms.txt> + the GitHub Releases API for live "what's new" queries.
-Manual dispatch via `/specflow-expert <question>` is also supported.
+<https://specnaut.com/llms.txt> + the GitHub Releases API for live "what's new" queries.
+Manual dispatch via `/specnaut-expert <question>` is also supported.
 
-The agent also handles **bug reports**: ask "report this as a bug" (or hit a Specflow failure) and
-it pre-fills a structured GitHub issue against `mkrlabs/specflow` with a 6-section template (Summary
+The agent also handles **bug reports**: ask "report this as a bug" (or hit a Specnaut failure) and
+it pre-fills a structured GitHub issue against `specnaut/specnaut-cli` with a 6-section template (Summary
 / Repro / Observed / Expected / Environment / Logs), auto-populating the environment block from
-`.specflow/installed.lock` + `specflow --version` + `uname -srm`, scrubbing common token shapes
+`.specnaut/installed.lock` + `specnaut --version` + `uname -srm`, scrubbing common token shapes
 (GitHub PATs, GitLab PATs, Anthropic / OpenAI keys, AWS access keys), and handing you a pre-filled
-`https://github.com/mkrlabs/specflow/issues/new?…` URL to review and submit. The agent never
+`https://github.com/specnaut/specnaut-cli/issues/new?…` URL to review and submit. The agent never
 auto-submits — you always see the body before clicking.
 
 ### 7. Bundled `security-auditor` agent — two modes
 
 Every scaffold also ships a `security-auditor` agent with two dispatch shapes:
 
-1. **PR review** — spawned by the `review-coordinator` during `/specflow review`. Audits the diff
+1. **PR review** — spawned by the `review-coordinator` during `/specnaut review`. Audits the diff
    against eight rules (secrets in source, input validation, authz, injection, path traversal, SSRF,
    silent catches, internal-ID exposure) and emits a `FINDING` / `VERDICT` report.
 2. **Alert triage** — invoked by the maintainer's `/release` flow when the `security-preflight`
@@ -783,7 +783,7 @@ auto-select from `DESIGN.md` state:
 The agent is **manual-dispatch only** (`disable-model-invocation: true`) — design decisions are
 intentional and the agent never auto-runs. It produces Markdown, never code; the developer agent is
 what translates `DESIGN.md` into a Tailwind theme, CSS vars, or component library. `DESIGN.md` is
-NOT scaffolded by `specflow init`; it materialises on the agent's first invocation when the user
+NOT scaffolded by `specnaut init`; it materialises on the agent's first invocation when the user
 actually wants a design system, so backend-only and CLI-only projects don't carry stub spec files
 they never read.
 
@@ -805,11 +805,11 @@ they never read.
 
 Every `feat:` PR body must include an `## Agent adoption` section with a `` ```prompt `` fenced
 block. The release pipeline extracts these into a structured `### Adoption guide` block on the
-GitHub Release; `specflow-expert review-upgrade` plays them back in the user's project after
-`specflow upgrade`.
+GitHub Release; `specnaut-expert review-upgrade` plays them back in the user's project after
+`specnaut upgrade`.
 
 See the
-[CONTRIBUTING guide](https://github.com/mkrlabs/specflow/blob/main/CONTRIBUTING.md#agent-adoption)
+[CONTRIBUTING guide](https://github.com/specnaut/specnaut-cli/blob/main/CONTRIBUTING.md#agent-adoption)
 for the convention and examples. The CI workflow `pr_adoption_lint.yml` in the CLI repo enforces
 presence.
 
@@ -832,7 +832,7 @@ GitHub Releases bodies are auto-generated by `scripts/gen-changelog.ts` and foll
 ```
 ````
 
-Consumed by `specflow-expert review-upgrade` (Phase 4 of the upgrade adoption flow).
+Consumed by `specnaut-expert review-upgrade` (Phase 4 of the upgrade adoption flow).
 
 4. `### Internal / chores` — `chore:` / `refactor:` / `docs:` / `test:` etc., collapsed under a
    `<details>` block.
@@ -843,12 +843,12 @@ the GitHub Release body.
 
 ## Upgrades & adoption
 
-`specflow upgrade` updates templates in place and prints a handoff line inviting the user to review
-what changed via the `specflow-expert` agent.
+`specnaut upgrade` updates templates in place and prints a handoff line inviting the user to review
+what changed via the `specnaut-expert` agent.
 
 ### Files written
 
-- `.specflow/upgrade-pending.json` — a marker recording the upgrade range:
+- `.specnaut/upgrade-pending.json` — a marker recording the upgrade range:
 
 ```json
 {
@@ -859,72 +859,72 @@ what changed via the `specflow-expert` agent.
 ```
 
 Written on every successful apply. On chained upgrades, the existing marker's `from` is preserved.
-Consumed by `specflow-expert review-upgrade` and by `specflow reconcile`. Deleted by the agent at
+Consumed by `specnaut-expert review-upgrade` and by `specnaut reconcile`. Deleted by the agent at
 the end of a successful review.
 
-- `.specflow/upgrade-staging/<path>` — for every file the upgrade preserved (i.e., on-disk version
+- `.specnaut/upgrade-staging/<path>` — for every file the upgrade preserved (i.e., on-disk version
   was customized vs. lock SHA), the upstream (bundled-template) version is written here under the
   same relative path. The on-disk project file is untouched. The staging directory is the source for
-  `specflow reconcile` (see below).
+  `specnaut reconcile` (see below).
 
 Both are gitignored (`templates/core/root/.gitignore` ships the lines).
 
 ### Handoff line
 
-`specflow upgrade` ends with:
+`specnaut upgrade` ends with:
 
 ```
 ✓ upgraded to templates 1.4.0 → 1.6.0
 
 → Walk through what's new with your AI:
-`@specflow-expert review-upgrade`
+`@specnaut-expert review-upgrade`
 ```
 
-An AI agent that sees `.specflow/upgrade-pending.json` in a project should proactively suggest
-running `@specflow-expert review-upgrade`.
+An AI agent that sees `.specnaut/upgrade-pending.json` in a project should proactively suggest
+running `@specnaut-expert review-upgrade`.
 
-### `specflow reconcile`
+### `specnaut reconcile`
 
-Per-file post-upgrade reconciliation. Run after `specflow upgrade` for each file that was preserved
+Per-file post-upgrade reconciliation. Run after `specnaut upgrade` for each file that was preserved
 (customized locally — see the `Upgrades & adoption` section for context).
 
 ```
-specflow reconcile --status
+specnaut reconcile --status
 Print JSON listing files currently pending reconciliation. Reads
-`.specflow/upgrade-staging/`. Output:
+`.specnaut/upgrade-staging/`. Output:
 {
   "pending": [".claude/agents/developer.md", ...],
-  "stagingDir": ".specflow/upgrade-staging" | null
+  "stagingDir": ".specnaut/upgrade-staging" | null
 }
 
-specflow reconcile <path> --accept-upstream
+specnaut reconcile <path> --accept-upstream
 Take the new template version for <path>. Backs up the local file to
-`<path>.specflow.bak`, copies upstream content from
-`.specflow/upgrade-staging/<path>` into place, and updates the lock
+`<path>.specnaut.bak`, copies upstream content from
+`.specnaut/upgrade-staging/<path>` into place, and updates the lock
 SHA. Removes the staging entry.
 
-specflow reconcile <path> --accept-current
+specnaut reconcile <path> --accept-current
 Keep the local customized version. Re-stamps the lock SHA to match
 on-disk content, so the next upgrade does not re-flag this file as
 preserved. Removes the staging entry.
 ```
 
-`specflow-expert review-upgrade` is the recommended way to walk through reconciliation interactively
+`specnaut-expert review-upgrade` is the recommended way to walk through reconciliation interactively
 — it surfaces a `keep / take / merge / view / skip` choice per file and dispatches the `developer`
 subagent for intelligent merges.
 
-### `specflow-expert review-upgrade`
+### `specnaut-expert review-upgrade`
 
-Dispatching `@specflow-expert review-upgrade` triggers a 7-step guided workflow inside the
-`specflow-expert` agent:
+Dispatching `@specnaut-expert review-upgrade` triggers a 7-step guided workflow inside the
+`specnaut-expert` agent:
 
-1. **Read marker** — reads `.specflow/upgrade-pending.json`; exits with instructions if absent.
+1. **Read marker** — reads `.specnaut/upgrade-pending.json`; exits with instructions if absent.
 2. **Fetch releases** — fetches GitHub Release bodies for every tag in `(from, to]` and parses each
    `### Adoption guide` section into structured adoption prompts. Falls back to the vendored
    snapshot if the GitHub API is unreachable.
 3. **Present plan** — shows releases in range, adoption prompts count, and files pending
-   reconciliation (`specflow reconcile --status`). Offers to create a branch
-   `specflow-upgrade-v{to}` for review-as-PR.
+   reconciliation (`specnaut reconcile --status`). Offers to create a branch
+   `specnaut-upgrade-v{to}` for review-as-PR.
 4. **Walk adoption prompts** — presents each prompt one by one with four options: `[a]` run it
    (dispatches `developer` agent), `[s]` skip, `[c]` show raw prompt, `[q]` quit.
 5. **Reconcile customized files** — for each file pending reconciliation, shows a diff summary and
@@ -939,7 +939,7 @@ Trigger keyword: `review-upgrade` in the dispatch message.
 ## Repository
 
 Source, releases, and issue tracker:
-**[github.com/mkrlabs/specflow](https://github.com/mkrlabs/specflow)**.
+**[github.com/specnaut/specnaut-cli](https://github.com/specnaut/specnaut-cli)**.
 
 The `AGENTS.md` file at the repo root is the canonical context document for any future Claude Code,
 Codex, or other agent session contributing to the project itself.

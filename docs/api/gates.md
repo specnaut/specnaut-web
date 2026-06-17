@@ -1,7 +1,7 @@
-# Specflow Cloud API — Gates (`/api/v1`)
+# Specnaut Cloud API — Gates (`/api/v1`)
 
 > **Status:** versioned public contract (`v1`). This document is the single source of truth for the
-> **gate** wire format. Both the Specflow CLI and the Specflow Cloud backend implement exactly what
+> **gate** wire format. Both the Specnaut CLI and the Specnaut Cloud backend implement exactly what
 > is written here. Issue: #356.
 
 A **gate** is a remotely-resolvable blocking point. When a headless agent can't proceed without a
@@ -205,7 +205,7 @@ error string (constitution § I).
 
 ## Boundary (constitution § I)
 
-This document is the **only** coupling between the public OSS CLI (`mkrlabs/specflow`) and the
+This document is the **only** coupling between the public OSS CLI (`specnaut/specnaut-cli`) and the
 proprietary Cloud half. It exposes only the versioned public wire format. No Cloud-internal
 identifier, table, function, or error string appears here, and both halves implement it without
 either half's internals crossing the line.

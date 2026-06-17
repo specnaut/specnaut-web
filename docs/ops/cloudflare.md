@@ -1,4 +1,4 @@
-# Cloudflare configuration — `specflow.makerlabs.dev`
+# Cloudflare configuration — `specnaut.com`
 
 Operational notes for the docs site's Cloudflare setup. Update this file whenever the zone
 configuration changes.
@@ -11,13 +11,13 @@ configuration changes.
 | Zone ID  | `f9cb36b13418b65c6dc5195b0cb12bfb`                              |
 | Account  | MakerLabs (`bd857b121518642d0965231d074c3f0d`)                  |
 | Plan     | Free                                                            |
-| Hostname | `specflow.makerlabs.dev` (custom domain on top of GitHub Pages) |
+| Hostname | `specnaut.com` (custom domain on top of GitHub Pages) |
 
 ## AI crawler allow-list (resolves #145)
 
 The Cloudflare Bot Management → **AI Crawlers** panel governs per-bot identity-based access. By
 default these crawlers are blocked by Bot Fight Mode, which broke automated LLM-style fetchers
-reading `https://specflow.makerlabs.dev/llms.txt` (the file's whole purpose is LLM consumption per
+reading `https://specnaut.com/llms.txt` (the file's whole purpose is LLM consumption per
 [llmstxt.org](https://llmstxt.org)).
 
 The following AI crawlers are explicitly **Allow**ed at the zone level:
@@ -42,14 +42,14 @@ Fight Mode rules.
 
 Two paths were considered (per the devops-sre advisory on #145):
 
-1. **WAF Custom Rule** scoped to `(http.host eq "specflow.makerlabs.dev")` that skips bot
+1. **WAF Custom Rule** scoped to `(http.host eq "specnaut.com")` that skips bot
    challenges. Narrower (zone has other subdomains in theory), but requires expression maintenance
    and bot-product code knowledge.
 2. **AI Crawlers panel allow-list** (chosen). Identity-based rather than expression-based.
    Cloudflare maintains the crawler list as new AI products ship — we don't need to track UA strings
    ourselves.
 
-The trade-off: this allow-list applies to the whole `makerlabs.dev` zone, not just `specflow.*`.
+The trade-off: this allow-list applies to the whole `makerlabs.dev` zone, not just `specnaut.*`.
 Acceptable today because the zone serves docs only — there is no other public hostname that would
 need bot protection against AI crawlers.
 
@@ -64,7 +64,7 @@ for ua in \
   "Mozilla/5.0 (compatible; GPTBot/1.0; +https://openai.com/gptbot)" \
   ""; do
   echo -n "${ua:0:30}…  "
-  curl -fsI -A "$ua" https://specflow.makerlabs.dev/llms.txt 2>&1 | head -1
+  curl -fsI -A "$ua" https://specnaut.com/llms.txt 2>&1 | head -1
 done
 ```
 
@@ -77,7 +77,7 @@ cache propagation delay.
 
 ## DNS
 
-The `specflow` CNAME points at GitHub Pages (`mkrlabs.github.io.`). The custom domain is enforced
+The `specnaut` CNAME points at GitHub Pages (`specnaut.github.io.`). The custom domain is enforced
 server-side via the `docs-dist/CNAME` file emitted by `scripts/build-docs.ts` on every docs deploy —
 see the file's docstring for why the artifact CNAME is the source of truth.
 

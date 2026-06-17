@@ -6,7 +6,7 @@ on:
     branches: ["main"]
   workflow_dispatch:
   # Daily rebuild so the displayed CLI version, version.json, and the
-  # "Recent releases" section track new mkrlabs/specflow releases without a
+  # "Recent releases" section track new specnaut/specnaut-cli releases without a
   # manual trigger (this repo has no CLI source to push on a release).
   schedule:
     - cron: "0 6 * * *"
