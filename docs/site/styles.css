@@ -1,5 +1,5 @@
 /* ============================================================
- * Specflow landing — vanilla CSS implementing DESIGN.md tokens.
+ * Specnaut landing — vanilla CSS implementing DESIGN.md tokens.
  * ============================================================ */
 
 :root {
@@ -705,7 +705,7 @@ code {
 .sprite-devops-sre {
   animation-delay: -2.0s;
 }
-.sprite-specflow-expert {
+.sprite-specnaut-expert {
   animation-delay: -2.4s;
 }
 .sprite-architect {
@@ -1115,7 +1115,7 @@ code {
   color: var(--color-neutral-900);
 }
 
-/* -- Specflow Cloud funnel band (growth CTA) ----------------------------- */
+/* -- Specnaut Cloud funnel band (growth CTA) ----------------------------- */
 .nav-cloud {
   font-weight: 600;
   color: var(--color-btn-primary-bg);

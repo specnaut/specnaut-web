@@ -2,7 +2,7 @@
  * Builds the GitHub Pages site:
  *
  *   docs/site/**            → docs-dist/**            (static landing, copied verbatim;
- *                                                      `__SPECFLOW_VERSION__` substituted in HTML)
+ *                                                      `__SPECNAUT_VERSION__` substituted in HTML)
  *   docs/llms.md            → docs-dist/docs/index.html  (HTML rendering, GFM + embedded CSS)
  *                           → docs-dist/llms.txt          (raw markdown copy, llmstxt.org convention)
  *
@@ -22,9 +22,9 @@ const OUT_DIR = "docs-dist";
 const OUT_HTML = `${OUT_DIR}/docs/index.html`;
 const OUT_MD = `${OUT_DIR}/llms.txt`;
 const OUT_CNAME = `${OUT_DIR}/CNAME`;
-const TITLE = "Specflow — documentation";
-const REPO_URL = "https://github.com/mkrlabs/specflow";
-const VERSION_PLACEHOLDER = "__SPECFLOW_VERSION__";
+const TITLE = "Specnaut — documentation";
+const REPO_URL = "https://github.com/specnaut/specnaut-cli";
+const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
 
 async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
   const raw = await Deno.readTextFile(denoJsonPath);
@@ -34,15 +34,15 @@ async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
 }
 
 /**
- * Resolve the Specflow CLI version to display. This site repo (`specflow-web`)
+ * Resolve the Specnaut CLI version to display. This site repo (`specnaut-web`)
  * carries no CLI source, so the authoritative version is the latest published
- * release of `mkrlabs/specflow` — also what `version.json` must report for the
- * `specflow-expert` agent's installed-vs-latest comparison. Falls back to the
+ * release of `specnaut/specnaut-cli` — also what `version.json` must report for the
+ * `specnaut-expert` agent's installed-vs-latest comparison. Falls back to the
  * local `deno.json` version for offline / local builds so the build never
  * fails on a network hiccup.
  */
 export async function resolveVersion(): Promise<string> {
-  const url = "https://api.github.com/repos/mkrlabs/specflow/releases/latest";
+  const url = "https://api.github.com/repos/specnaut/specnaut-cli/releases/latest";
   try {
     const res = await fetch(url, {
       headers: { Accept: "application/vnd.github+json" },
@@ -75,7 +75,7 @@ export async function resolveVersion(): Promise<string> {
  * runners — sufficient for the build cadence.
  */
 export async function fetchRecentReleases(count = 5): Promise<string> {
-  const url = `https://api.github.com/repos/mkrlabs/specflow/releases?per_page=${count}`;
+  const url = `https://api.github.com/repos/specnaut/specnaut-cli/releases?per_page=${count}`;
   let releases: Array<{ tag_name: string; body: string }>;
   try {
     const res = await fetch(url, {
@@ -134,9 +134,9 @@ export function extractOneLiner(body: string): string {
  * subsequent workflow deploys (build_type=workflow ignores the repo
  * settings UI alone — the artifact's CNAME file is the source of truth).
  *
- * The CNAME on OVH (`specflow → mkrlabs.github.io.`) routes traffic here.
+ * The CNAME on OVH (`specnaut → specnaut.github.io.`) routes traffic here.
  */
-const CUSTOM_DOMAIN = "specflow.makerlabs.dev";
+const CUSTOM_DOMAIN = "specnaut.com";
 
 const HTML_TEMPLATE = (body: string, version: string) =>
   `<!DOCTYPE html>
@@ -147,10 +147,10 @@ const HTML_TEMPLATE = (body: string, version: string) =>
     <meta name="color-scheme" content="light dark" />
 
     <title>${TITLE}</title>
-    <meta name="description" content="Specflow — enhanced spec-kit CLI with auto-chained workflow, review phase, and backlog. Distributed as a single native binary." />
-    <meta name="specflow-version" content="${version}" />
+    <meta name="description" content="Specnaut — enhanced spec-kit CLI with auto-chained workflow, review phase, and backlog. Distributed as a single native binary." />
+    <meta name="specnaut-version" content="${version}" />
 
-    <link rel="canonical" href="https://specflow.makerlabs.dev/docs/" />
+    <link rel="canonical" href="https://specnaut.com/docs/" />
     <link rel="alternate" type="text/markdown" href="/llms.txt" />
     <link rel="stylesheet" href="/styles.css" />
 
@@ -173,14 +173,14 @@ const HTML_TEMPLATE = (body: string, version: string) =>
   <body>
     <header class="band band-header">
       <div class="wrap site-header">
-        <a href="/" class="brand" aria-label="Specflow home">
+        <a href="/" class="brand" aria-label="Specnaut home">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name">Specflow</span>
+          <span class="brand-name">Specnaut</span>
         </a>
         <nav class="site-nav" aria-label="Primary">
           <a href="/">Home</a>
-          <a href="https://github.com/mkrlabs/specflow">GitHub</a>
-          <a class="nav-cloud" href="https://specflow.makerlabs.app">Cloud →</a>
+          <a href="https://github.com/specnaut/specnaut-cli">GitHub</a>
+          <a class="nav-cloud" href="https://app.specnaut.com">Cloud →</a>
         </nav>
       </div>
     </header>
@@ -190,7 +190,7 @@ const HTML_TEMPLATE = (body: string, version: string) =>
         <div class="wrap">
           <div class="doc-col">
             <p class="doc-header">
-              ← <a href="/">Specflow home</a> · Documentation
+              ← <a href="/">Specnaut home</a> · Documentation
             </p>
             <article class="markdown-body">
 ${body}
@@ -203,10 +203,10 @@ ${body}
     <footer class="band band-footer">
       <div class="wrap site-footer">
         <p>
-          Specflow
+          Specnaut
           <a href="${REPO_URL}/releases/tag/v${version}">v${version}</a>
           · <a href="/llms.txt">llms.txt</a>
-          · <a href="${REPO_URL}">github.com/mkrlabs/specflow</a>
+          · <a href="${REPO_URL}">github.com/specnaut/specnaut-cli</a>
         </p>
         <button
           type="button"
@@ -262,7 +262,7 @@ ${body}
 
 /**
  * Recursively walk `siteDir` and mirror every file into `outDir`, preserving
- * sub-directory structure. HTML files have `__SPECFLOW_VERSION__` substituted
+ * sub-directory structure. HTML files have `__SPECNAUT_VERSION__` substituted
  * so the static landing can show the current release version without a build
  * step of its own.
  *
@@ -346,9 +346,9 @@ export async function buildDocs(opts: {
     : sourceMarkdown;
   const rendered = render(enrichedMarkdown, { allowIframes: false });
   const html = HTML_TEMPLATE(rendered, version);
-  const markdown = `<!-- Specflow v${version} — ${REPO_URL} -->\n\n${enrichedMarkdown}`;
+  const markdown = `<!-- Specnaut v${version} — ${REPO_URL} -->\n\n${enrichedMarkdown}`;
 
-  // Lightweight machine-readable endpoint consumed by the `specflow-expert`
+  // Lightweight machine-readable endpoint consumed by the `specnaut-expert`
   // agent to compare the user's installed version against the latest
   // released one. `released_at` is the build timestamp — accurate within
   // the day since pages.yml redeploys on every docs change (and can be

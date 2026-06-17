@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
 
-    <title>Specflow — a coordinated team of AI agents across 8 harnesses</title>
+    <title>Specnaut — a coordinated team of AI agents across 8 harnesses</title>
     <meta
       name="description"
-      content="Specflow scaffolds 9 named AI agents — product-owner, developer, qa-tester, code-reviewer, security-auditor, devops-sre, specflow-expert, architect, review-coordinator — across 7 coding harnesses (Claude Code, Cursor, Codex, Windsurf, Copilot, OpenCode, Antigravity). One curl, one binary, no Python."
+      content="Specnaut scaffolds 9 named AI agents — product-owner, developer, qa-tester, code-reviewer, security-auditor, devops-sre, specnaut-expert, architect, review-coordinator — across 7 coding harnesses (Claude Code, Cursor, Codex, Windsurf, Copilot, OpenCode, Antigravity). One curl, one binary, no Python."
     />
-    <meta name="specflow-version" content="__SPECFLOW_VERSION__" />
+    <meta name="specnaut-version" content="__SPECNAUT_VERSION__" />
 
-    <link rel="canonical" href="https://specflow.makerlabs.dev/" />
+    <link rel="canonical" href="https://specnaut.com/" />
     <link rel="alternate" type="text/markdown" href="/llms.txt" />
     <link rel="stylesheet" href="/styles.css" />
 
@@ -25,20 +25,20 @@
     </script>
 
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://specflow.makerlabs.dev/" />
-    <meta property="og:title" content="Specflow — a coordinated team of AI agents" />
+    <meta property="og:url" content="https://specnaut.com/" />
+    <meta property="og:title" content="Specnaut — a coordinated team of AI agents" />
     <meta
       property="og:description"
-      content="9 named AI agents · 8 coding harnesses · 1 curl. Specflow installs a structured multi-agent workflow into any repo."
+      content="9 named AI agents · 8 coding harnesses · 1 curl. Specnaut installs a structured multi-agent workflow into any repo."
     />
-    <meta property="og:image" content="https://specflow.makerlabs.dev/assets/og-card.png" />
+    <meta property="og:image" content="https://specnaut.com/assets/og-card.png" />
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Specflow — a coordinated team of AI agents" />
+    <meta name="twitter:title" content="Specnaut — a coordinated team of AI agents" />
     <meta
       name="twitter:description"
       content="9 named AI agents · 8 coding harnesses · 1 curl."
     />
-    <meta name="twitter:image" content="https://specflow.makerlabs.dev/assets/og-card.png" />
+    <meta name="twitter:image" content="https://specnaut.com/assets/og-card.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -51,15 +51,15 @@
   <body>
     <header class="band band-header">
       <div class="wrap site-header">
-        <a href="/" class="brand" aria-label="Specflow home">
+        <a href="/" class="brand" aria-label="Specnaut home">
           <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name">Specflow</span>
+          <span class="brand-name">Specnaut</span>
         </a>
         <nav class="site-nav" aria-label="Primary">
           <a href="#agents">Agents</a>
           <a href="/docs/">Docs</a>
-          <a href="https://github.com/mkrlabs/specflow">GitHub</a>
-          <a class="nav-cloud" href="https://specflow.makerlabs.app">Cloud →</a>
+          <a href="https://github.com/specnaut/specnaut-cli">GitHub</a>
+          <a class="nav-cloud" href="https://app.specnaut.com">Cloud →</a>
         </nav>
       </div>
     </header>
@@ -69,12 +69,12 @@
       <section class="band band-hero" aria-labelledby="hero-title">
         <div class="wrap hero">
           <div class="hero-copy">
-            <p class="eyebrow">9 agents · 8 harnesses · 1 curl · v__SPECFLOW_VERSION__</p>
+            <p class="eyebrow">9 agents · 8 harnesses · 1 curl · v__SPECNAUT_VERSION__</p>
             <h1 id="hero-title">
               A coordinated AI agent team, in your project.
             </h1>
             <p class="lede">
-              Specflow scaffolds the files your AI coding harness consumes — slash-commands,
+              Specnaut scaffolds the files your AI coding harness consumes — slash-commands,
               spec/plan/tasks templates, agents, and a backlog system — across
               <strong class="harness-rotator" aria-hidden="true">Claude Code</strong><span
                 class="sr-only"
@@ -101,7 +101,7 @@
                 <span class="btn-label">Copy install command</span>
               </button>
               <a class="btn btn-secondary" href="/docs/">Read the docs</a>
-              <a class="btn btn-ghost" href="https://github.com/mkrlabs/specflow">
+              <a class="btn btn-ghost" href="https://github.com/specnaut/specnaut-cli">
                 GitHub →
               </a>
             </div>
@@ -109,7 +109,7 @@
             <pre
               class="codeblock"
               id="install-snippet"
-            ><code>curl -fsSL https://raw.githubusercontent.com/mkrlabs/specflow/main/install.sh | bash</code></pre>
+            ><code>curl -fsSL https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh | bash</code></pre>
             <p class="cta-note">
               macOS or Linux · verifies SHA256 · drops the binary into <code
               >/usr/local/bin</code>.
@@ -154,7 +154,7 @@
               <span class="step-num">1</span>
               <h3>Install &amp; init</h3>
               <p>
-                One <code>curl</code> drops the binary; <code>specflow init</code> scaffolds agents,
+                One <code>curl</code> drops the binary; <code>specnaut init</code> scaffolds agents,
                 slash-commands, and the backlog into your repo — shaped for your harness.
               </p>
             </li>
@@ -162,7 +162,7 @@
               <span class="step-num">2</span>
               <h3>Specify</h3>
               <p>
-                <code>/specflow specify</code> auto-chains spec → clarify → plan → tasks,
+                <code>/specnaut specify</code> auto-chains spec → clarify → plan → tasks,
                 pausing only when it genuinely needs a decision from you.
               </p>
             </li>
@@ -189,7 +189,7 @@
       <!-- ===================== FEATURE SPLITS ===================== -->
       <section class="band band-features" aria-labelledby="features-title">
         <div class="wrap features">
-          <h2 id="features-title" class="sr-only">What Specflow does</h2>
+          <h2 id="features-title" class="sr-only">What Specnaut does</h2>
 
           <div class="feature-row">
             <div class="feature-media">
@@ -207,7 +207,7 @@
               <p>
                 Nine named agents — each with a clear remit and a tool allow-list — land as
                 plain files your harness already understands. No service to run, no LLM calls of its
-                own: Specflow just sets the table so your harness can drive a structured workflow.
+                own: Specnaut just sets the table so your harness can drive a structured workflow.
               </p>
               <a class="btn btn-ghost feature-link" href="/docs/"
               >See what lands in your repo →</a>
@@ -272,8 +272,8 @@
               <figcaption>DevOps / SRE</figcaption>
             </li>
             <li class="roster-card">
-              <img class="sprite" src="/assets/agents/specflow-expert.png" alt="" loading="lazy" />
-              <figcaption>Specflow Expert</figcaption>
+              <img class="sprite" src="/assets/agents/specnaut-expert.png" alt="" loading="lazy" />
+              <figcaption>Specnaut Expert</figcaption>
             </li>
             <li class="roster-card">
               <img class="sprite" src="/assets/agents/architect.png" alt="" loading="lazy" />
@@ -299,12 +299,12 @@
             <img src="/assets/feature-cloud.png" alt="" width="572" height="516" loading="lazy" />
           </div>
           <div class="cloud-copy">
-            <p class="eyebrow">Specflow Cloud</p>
+            <p class="eyebrow">Specnaut Cloud</p>
             <h2 id="cloud-title" class="section-title cloud-title">
               Run it headless. Answer from your phone.
             </h2>
             <p class="cloud-lede">
-              The CLI puts a coordinated agent team in your repo. <strong>Specflow Cloud</strong>
+              The CLI puts a coordinated agent team in your repo. <strong>Specnaut Cloud</strong>
               takes it remote: run an agent unattended on a VM, and when it reaches a checkpoint —
               a clarification, a plan to approve, a merge to sign off — it opens a <em>gate</em>
               you answer from anywhere. The agent picks up where it left off. You were never at the
@@ -320,14 +320,14 @@
                 billing roles, no GitHub Project to wire up.
               </li>
               <li>
-                <strong>Built on the same CLI</strong> — <code>specflow cloud login</code> links
+                <strong>Built on the same CLI</strong> — <code>specnaut cloud login</code> links
                 your project; everything you already scaffolded just works.
               </li>
             </ul>
             <div class="cta-row">
-              <a class="btn btn-primary" href="https://specflow.makerlabs.app">Start free →</a>
-              <a class="btn btn-ghost" href="https://specflow.makerlabs.app"
-              >specflow.makerlabs.app</a>
+              <a class="btn btn-primary" href="https://app.specnaut.com">Start free →</a>
+              <a class="btn btn-ghost" href="https://app.specnaut.com"
+              >app.specnaut.com</a>
             </div>
           </div>
         </div>
@@ -336,7 +336,7 @@
       <!-- ===================== TRUST BAND ===================== -->
       <section class="band band-trust" aria-labelledby="trust-title">
         <div class="wrap trust">
-          <h2 id="trust-title" class="sr-only">Why teams trust Specflow</h2>
+          <h2 id="trust-title" class="sr-only">Why teams trust Specnaut</h2>
           <ul class="trust-grid">
             <li>
               <strong>Open source</strong>
@@ -348,7 +348,7 @@
             </li>
             <li>
               <strong>No LLM of its own</strong>
-              <span>Specflow scaffolds files; your harness does the thinking.</span>
+              <span>Specnaut scaffolds files; your harness does the thinking.</span>
             </li>
             <li>
               <strong>One native binary</strong>
@@ -376,7 +376,7 @@
           <pre
             class="codeblock trust-snippet"
             id="install-snippet-2"
-          ><code>curl -fsSL https://raw.githubusercontent.com/mkrlabs/specflow/main/install.sh | bash</code></pre>
+          ><code>curl -fsSL https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh | bash</code></pre>
         </div>
       </section>
     </main>
@@ -384,12 +384,12 @@
     <footer class="band band-footer">
       <div class="wrap site-footer">
         <p>
-          Specflow
-          <a href="https://github.com/mkrlabs/specflow/releases/tag/v__SPECFLOW_VERSION__"
-          >v__SPECFLOW_VERSION__</a>
+          Specnaut
+          <a href="https://github.com/specnaut/specnaut-cli/releases/tag/v__SPECNAUT_VERSION__"
+          >v__SPECNAUT_VERSION__</a>
           · <a href="/llms.txt">llms.txt</a>
           · <a href="/docs/">docs</a>
-          · <a href="https://github.com/mkrlabs/specflow">github.com/mkrlabs/specflow</a>
+          · <a href="https://github.com/specnaut/specnaut-cli">github.com/specnaut/specnaut-cli</a>
         </p>
         <button
           type="button"
