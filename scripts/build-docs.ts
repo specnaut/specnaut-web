@@ -2,7 +2,8 @@
  * Builds the GitHub Pages site:
  *
  *   docs/site/**            → docs-dist/**            (static landing, copied verbatim;
- *                                                      `__SPECNAUT_VERSION__` substituted in HTML)
+ *                                                      `__SPECNAUT_VERSION__` / `__SPECNAUT_APP_URL__` /
+ *                                                      `__SPECNAUT_APP_HOST__` substituted in HTML)
  *   docs/llms.md            → docs-dist/docs/index.html  (HTML rendering, GFM + embedded CSS)
  *                           → docs-dist/llms.txt          (raw markdown copy, llmstxt.org convention)
  *
@@ -25,6 +26,26 @@ const OUT_CNAME = `${OUT_DIR}/CNAME`;
 const TITLE = "Specnaut — documentation";
 const REPO_URL = "https://github.com/specnaut/specnaut-cli";
 const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
+
+/**
+ * Cloud app origin for the site's "Cloud →" / "Start free" / sign-in links.
+ * Single source of truth — defaults to production and is overridden at build
+ * time via the `SPECNAUT_APP_URL` env var. The local docker stack sets it to
+ * `http://app.specnaut.localhost` so the sign-in funnel can be exercised end to
+ * end locally; production builds leave it unset → output identical to before.
+ *
+ * `__SPECNAUT_APP_URL__` (full origin, link `href`) and `__SPECNAUT_APP_HOST__`
+ * (host only, visible label) are substituted in the static landing's HTML by
+ * `copyLandingSite`, mirroring the `__SPECNAUT_VERSION__` mechanism.
+ */
+const DEFAULT_APP_URL = "https://app.specnaut.com";
+const APP_URL_PLACEHOLDER = "__SPECNAUT_APP_URL__";
+const APP_HOST_PLACEHOLDER = "__SPECNAUT_APP_HOST__";
+
+/** Resolve the Cloud app origin for this build (env override → prod default). */
+export function resolveAppUrl(): string {
+  return Deno.env.get("SPECNAUT_APP_URL") ?? DEFAULT_APP_URL;
+}
 
 async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
   const raw = await Deno.readTextFile(denoJsonPath);
@@ -138,7 +159,7 @@ export function extractOneLiner(body: string): string {
  */
 const CUSTOM_DOMAIN = "specnaut.com";
 
-const HTML_TEMPLATE = (body: string, version: string) =>
+const HTML_TEMPLATE = (body: string, version: string, appUrl: string) =>
   `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -180,7 +201,7 @@ const HTML_TEMPLATE = (body: string, version: string) =>
         <nav class="site-nav" aria-label="Primary">
           <a href="/">Home</a>
           <a href="https://github.com/specnaut/specnaut-cli">GitHub</a>
-          <a class="nav-cloud" href="https://app.specnaut.com">Cloud →</a>
+          <a class="nav-cloud" href="${appUrl}">Cloud →</a>
         </nav>
       </div>
     </header>
@@ -273,7 +294,9 @@ export async function copyLandingSite(
   siteDir: string,
   outDir: string,
   version: string,
+  appUrl: string,
 ): Promise<string[]> {
+  const appHost = new URL(appUrl).host;
   let stat: Deno.FileInfo;
   try {
     stat = await Deno.stat(siteDir);
@@ -300,7 +323,10 @@ export async function copyLandingSite(
           const raw = await Deno.readTextFile(src);
           await Deno.writeTextFile(
             dest,
-            raw.replaceAll(VERSION_PLACEHOLDER, version),
+            raw
+              .replaceAll(VERSION_PLACEHOLDER, version)
+              .replaceAll(APP_URL_PLACEHOLDER, appUrl)
+              .replaceAll(APP_HOST_PLACEHOLDER, appHost),
           );
         } else {
           await Deno.copyFile(src, dest);
@@ -320,6 +346,7 @@ export async function buildDocs(opts: {
   siteDir?: string;
   outDir?: string;
   version?: string;
+  appUrl?: string;
   fetchReleases?: () => Promise<string>;
 } = {}): Promise<
   {
@@ -334,6 +361,7 @@ export async function buildDocs(opts: {
   const siteDir = opts.siteDir ?? SITE_DIR;
   const outDir = opts.outDir ?? OUT_DIR;
   const version = opts.version ?? await resolveVersion();
+  const appUrl = opts.appUrl ?? resolveAppUrl();
   const fetchReleases = opts.fetchReleases ?? (() => fetchRecentReleases());
   const outHtml = `${outDir}/docs/index.html`;
   const outMd = `${outDir}/llms.txt`;
@@ -345,7 +373,7 @@ export async function buildDocs(opts: {
     ? `${sourceMarkdown}\n\n${releaseSection}\n`
     : sourceMarkdown;
   const rendered = render(enrichedMarkdown, { allowIframes: false });
-  const html = HTML_TEMPLATE(rendered, version);
+  const html = HTML_TEMPLATE(rendered, version, appUrl);
   const markdown = `<!-- Specnaut v${version} — ${REPO_URL} -->\n\n${enrichedMarkdown}`;
 
   // Lightweight machine-readable endpoint consumed by the `specnaut-expert`
@@ -367,7 +395,7 @@ export async function buildDocs(opts: {
 
   // Mirror the static landing on top of `outDir` last so its `index.html`
   // shadows nothing — the rendered docs HTML lives in `outDir/docs/` now.
-  const siteFiles = await copyLandingSite(siteDir, outDir, version);
+  const siteFiles = await copyLandingSite(siteDir, outDir, version, appUrl);
 
   return { html, markdown, version, versionJson, siteFiles };
 }
