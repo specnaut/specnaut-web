@@ -230,9 +230,12 @@ Seven harness targets are supported: `claude` (default), `cursor`, `codex`, `win
 specnaut init my-project --backlog github
 specnaut init my-project --backlog gitlab
 specnaut init my-project --backlog local      # default
+specnaut init my-project --backlog cloud      # hosted Specnaut Cloud
 ```
 
-Three backends are supported: `local` (default), `github`, `gitlab`. See
+Four backends are supported: `local` (default), `github`, `gitlab`, and `cloud` — the hosted
+[Specnaut Cloud](https://app.specnaut.com) backend, which you connect to with `specnaut login` (see
+[Connect the CLI to Specnaut Cloud](#connect-the-cli-to-specnaut-cloud) below). See
 [Backlog as product source of truth](#3-backlog-as-product-source-of-truth) for what each one stores
 and how the PO agent talks to it.
 
@@ -271,6 +274,47 @@ backend picker. **In non-TTY mode (CI / scripted setup) `--backlog-url` is requi
 is `github` or `gitlab`** — omitting it exits with code `2` and a clear error message. The
 non-clobber invariant still holds: re-running `init` against a project with an existing
 `backlog-config.yml` does NOT overwrite it.
+
+### Connect the CLI to Specnaut Cloud
+
+[Specnaut Cloud](https://app.specnaut.com) is the optional **hosted backlog + remote-control
+backend**. To drive a project's backlog from the CLI against your Cloud account, scaffold with the
+`cloud` backend and then authenticate the machine — **`specnaut login`** is the one command to run:
+
+```bash
+specnaut init my-project --backlog cloud   # scaffold against the cloud backend
+specnaut login                             # authenticate this machine (alias for `specnaut cloud login`)
+```
+
+`specnaut login` runs a **browser device-authorization flow** (like `gh auth login`): it prints a
+one-time code + verification URL, opens your browser, waits for you to approve, then stores an access
++ refresh token securely and links the project to a Cloud project. Credentials go to the **OS
+keychain** when a keyring is reachable, otherwise a `0600` file at `~/.specnaut/credentials.json`;
+they are keyed by deployment URL, so one machine can hold tokens for several deployments.
+
+Before opening the browser, login **prints the target server and where the URL came from**, and asks
+for confirmation the first time you authenticate against a URL that came from a project's
+`.specnaut/backlog-config.yml` — a safeguard so a cloned repo cannot silently redirect your login:
+
+```
+  Connecting to:  https://your-deployment.convex.site
+  Source:         project config (.specnaut/backlog-config.yml)
+```
+
+Once connected, the Cloud CLI commands are:
+
+```bash
+specnaut login                 # authenticate this machine (alias for `specnaut cloud login`)
+specnaut cloud login           # authenticate + (re)select the linked project
+specnaut cloud orgs            # list the organizations your account belongs to
+specnaut cloud board           # show the linked project's board (tasks grouped by column)
+specnaut cloud token           # print a fresh access token to stdout (for scripts)
+specnaut cloud logout          # remove the stored credentials for the deployment
+```
+
+Add `--api-url <url>` to any of these to target a specific deployment. **Headless / CI:** set the
+`SPECNAUT_CLOUD_TOKEN` environment variable to a Cloud API token to skip the browser flow entirely —
+no keychain access is attempted, which is the supported path for CI and unattended VMs.
 
 ### Run `init` non-interactively (CI / scripts)
 
@@ -341,6 +385,11 @@ specnaut init --here --force --reset-preserved  # forced refresh that overrides 
 specnaut reconcile --status       # list files pending post-upgrade reconciliation (JSON)
 specnaut reconcile <path> --accept-upstream  # take new template version (backs up local)
 specnaut reconcile <path> --accept-current   # keep local version (re-stamps lock SHA)
+specnaut login                    # connect the CLI to Specnaut Cloud (see "Connect the CLI to Specnaut Cloud")
+specnaut cloud orgs               # list your Cloud organizations
+specnaut cloud board              # show the linked project's board
+specnaut cloud token              # print a fresh Cloud access token (for scripts)
+specnaut cloud logout             # clear stored Cloud credentials
 specnaut self-update              # upgrade the binary itself
 specnaut self-update --check      # only report whether an update is available
 specnaut --version                # print version
