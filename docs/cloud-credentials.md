@@ -1,7 +1,24 @@
 # Where Specnaut Cloud credentials are stored
 
-`specnaut cloud login` (#353) obtains an access token + refresh token for your Specnaut Cloud
-deployment. Those are secrets; this page explains where they are kept at rest and how to control it.
+`specnaut cloud login` (#353) — or its top-level alias **`specnaut login`** — obtains an access token
++ refresh token for your Specnaut Cloud deployment. Those are secrets; this page explains where they
+are kept at rest and how to control it. (To connect from scratch, run `specnaut init --backlog cloud`
+then `specnaut login`.)
+
+## Login discloses its target before authenticating
+
+Before opening the browser, login prints the deployment URL it is about to authenticate against and
+where that URL came from, and asks for confirmation the **first** time you authenticate against a URL
+supplied by a project's `.specnaut/backlog-config.yml` (#400) — so a cloned repo can't silently
+redirect your login at an attacker host:
+
+```
+  Connecting to:  https://your-deployment.convex.site
+  Source:         project config (.specnaut/backlog-config.yml)
+```
+
+An explicit `--api-url <url>`, an interactively-typed URL, and re-login to a deployment you've used
+before proceed without the prompt.
 
 ## Two backends, selected automatically
 
