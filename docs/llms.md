@@ -57,10 +57,10 @@ If you want Specnaut's skills and sub-agents available across **all your project
 for five harnesses with the same skill content across all of them — the bundled router skill, the
 phase docs, the bootstrap skill, the sub-agents, and the SessionStart hook (where supported).
 
-| Harness                | Install command                                                                                                          |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Harness                | Install command                                                                                                               |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | **Claude Code**        | `/plugin install specnaut/specnaut-cli-plugin`                                                                                |
-| **Codex CLI / App**    | `/plugins` → search "specnaut" → install (once the marketplace listing lands; see Notes)                                 |
+| **Codex CLI / App**    | `/plugins` → search "specnaut" → install (once the marketplace listing lands; see Notes)                                      |
 | **Cursor**             | `/add-plugin specnaut/specnaut-cli`                                                                                           |
 | **OpenCode**           | Add `"plugin": ["specnaut@git+https://github.com/specnaut/specnaut-cli.git"]` to `opencode.json`                              |
 | **GitHub Copilot CLI** | `copilot plugin marketplace add specnaut/specnaut-cli-marketplace`<br/>`copilot plugin install specnaut@specnaut-marketplace` |
@@ -73,13 +73,13 @@ tool on each harness.
 #### Claude Code — slash-command prefix
 
 ```
-/specnaut-plugin:specnaut specify "<feature description>"
-/specnaut-plugin:specnaut plan
+/specnaut-plugin:specnaut plan "<feature description>"
+/specnaut-plugin:specnaut tasks
 ```
 
 Slightly verbose, but unambiguous (the plugin's slash-commands are namespaced and the consolidated
 router itself is named `specnaut`). If you scaffold project-local with `specnaut init` instead, you
-get the shorter `/specnaut specify "..."` form.
+get the shorter `/specnaut plan "..."` form.
 
 To test a local checkout of the plugin without publishing:
 
@@ -113,13 +113,13 @@ that need a one-time human setup before the marketplace listings are live:
 
 **Plugin vs `specnaut init`** — they complement each other:
 
-| Aspect                             | Binary (`specnaut init`)    | Plugin (`/plugin install`)          |
-| ---------------------------------- | --------------------------- | ----------------------------------- |
-| Scope                              | Project-local (`.claude/`)  | User-scope (all projects)           |
-| Slash-command style                | `/specnaut specify` (short) | `/specnaut-plugin:specnaut specify` |
-| Customizable per-project           | Yes                         | No (user-scope, shared)             |
-| Backlog skill, hooks, `.specnaut/` | Yes                         | No (project-stateful — binary-only) |
-| Kept in sync                       | `specnaut upgrade`          | `/plugin update`                    |
+| Aspect                             | Binary (`specnaut init`)   | Plugin (`/plugin install`)          |
+| ---------------------------------- | -------------------------- | ----------------------------------- |
+| Scope                              | Project-local (`.claude/`) | User-scope (all projects)           |
+| Slash-command style                | `/specnaut plan` (short)   | `/specnaut-plugin:specnaut plan`    |
+| Customizable per-project           | Yes                        | No (user-scope, shared)             |
+| Backlog skill, hooks, `.specnaut/` | Yes                        | No (project-stateful — binary-only) |
+| Kept in sync                       | `specnaut upgrade`         | `/plugin update`                    |
 
 Most teams use both: the plugin provides discoverability and keeps the agents up-to-date across all
 projects; `specnaut init` provides the short slash-commands and project-local customization.
@@ -141,8 +141,9 @@ where you'll run the rest.
 
 `/specnaut constitution` is the expected first action after `specnaut init`. It scaffolds your
 project's guiding principles (architecture, quality gates, ways of working) into
-`.specnaut/memory/constitution.md` so the rest of the pipeline (`/specnaut specify`,
-`/specnaut plan`, `/specnaut tasks`, `/specnaut implement`) has something to anchor on.
+`.specnaut/memory/constitution.md` so the rest of the pipeline (`/specnaut plan`, `/specnaut tasks`,
+`/specnaut implement`) has something to anchor on — the plan phase gives every principle an explicit
+verdict.
 
 The generated constitution comes pre-populated with four opinionated baseline blocks (all
 user-tunable): **Engineering methodology** (TDD / DDD / SOLID-DRY-KISS-YAGNI /
@@ -156,7 +157,7 @@ does **not** rewrite an existing constitution — to adopt the new baselines in 
 rebase your constitution manually.
 
 Refine the generated constitution and the root `AGENTS.md` for your stack, then move on to
-`/specnaut specify "<feature description>"` for your first feature.
+`/specnaut plan "<feature description>"` for your first feature.
 
 ### Add Specnaut to an existing project
 
@@ -287,18 +288,20 @@ specnaut login                             # authenticate this machine (alias fo
 ```
 
 `specnaut login` runs a **browser device-authorization flow** (like `gh auth login`): it prints a
-one-time code + verification URL, opens your browser, waits for you to approve, then stores an access
-+ refresh token securely and links the project to a Cloud project. Credentials go to the **OS
-keychain** when a keyring is reachable, otherwise a `0600` file at `~/.specnaut/credentials.json`;
-they are keyed by deployment URL, so one machine can hold tokens for several deployments.
+one-time code + verification URL, opens your browser, waits for you to approve, then stores an
+access
+
+- refresh token securely and links the project to a Cloud project. Credentials go to the **OS
+  keychain** when a keyring is reachable, otherwise a `0600` file at `~/.specnaut/credentials.json`;
+  they are keyed by deployment URL, so one machine can hold tokens for several deployments.
 
 Before opening the browser, login **prints the target server and where the URL came from**, and asks
 for confirmation the first time you authenticate against a URL that came from a project's
 `.specnaut/backlog-config.yml` — a safeguard so a cloned repo cannot silently redirect your login:
 
 ```
-  Connecting to:  https://your-deployment.convex.site
-  Source:         project config (.specnaut/backlog-config.yml)
+Connecting to:  https://your-deployment.convex.site
+Source:         project config (.specnaut/backlog-config.yml)
 ```
 
 Once connected, the Cloud CLI commands are:
@@ -485,15 +488,9 @@ The Specnaut binary itself **never resolves or dispatches** aliases / overlays �
 Code, Cursor, Codex, …) is responsible for honouring the frontmatter at invocation time. Specnaut's
 role is to standardise the contract.
 
-To see what's installed and which aliases / overlays are active:
-
-```bash
-/specnaut list-skills
-```
-
-The phase walks your harness's skills directory, parses every SKILL.md frontmatter, and renders a
-`NAME · KIND · ALIAS OF · OVERLAYS · DESCRIPTION` table. Skills without `alias_of` show
-`KIND = skill`; aliases show `KIND = alias` and the target.
+The alias and overlay fields are declared in a skill's own frontmatter, so what is installed and
+what wraps what is readable directly from the files in your harness's skills directory. Skills
+without `alias_of` are plain skills; those with it name their target.
 
 A reference example lives at
 [`templates/core/skills/alias-example/SKILL.md`](https://github.com/specnaut/specnaut-cli/blob/main/templates/core/skills/alias-example/SKILL.md)
@@ -506,44 +503,77 @@ Specnaut is a fork of the official `specify` CLI with the following additions:
 
 ### 1. Auto-chained pipeline
 
-The generated `specify` skill chains `clarify → plan → tasks → analyze → implement → review → merge`
-in a single session. Upstream stops at every step and asks the human to invoke the next one.
-Specnaut only stops twice: when clarification is genuinely required, and once before merging.
-
-The chain is invoked through the bundled `/specnaut` skill:
+The generated `/specnaut` skill chains `plan → tasks → implement → review → merge` in a single
+session. Upstream stops at every step and asks the human to invoke the next one.
 
 ```
-/specnaut specify "<feature description>"
+/specnaut plan "<feature description>"
 ```
 
-When the idea is still fuzzy and you can't yet write that one-line description, start one phase
-earlier with the optional **step 0**:
+That one command carries you to a reviewed branch. When the idea is still fuzzy and you cannot yet
+write that one-line description, say so anyway — `plan` opens with a short discovery dialogue (one
+question at a time, 2–3 genuinely different shapes) and then writes the plan in the same turn. There
+is no separate step to remember.
 
-```
-/specnaut brainstorm "<rough idea>"
-```
+#### There are exactly two stops, and no third
 
-`brainstorm` runs a discovery dialogue (one question at a time, 2–3 approaches, design approval),
-then chains into `specify` with the agreed brief — so `brainstorm → specify → clarify → …` flows in
-one session. It reuses the bundled `brainstorming` skill for the dialogue; when your brief is
-already clear, skip it and start at `specify`.
+- **STOP 1 — the end of `plan`.** Always, not only when something is ambiguous. You are shown the
+  architecture _as a proposal with the alternatives that were rejected and why_, both audits'
+  findings separately, and the open questions one at a time. A single option presented as settled
+  gets approved by default, which is the same as not asking.
+- **STOP 2 — the review verdict**, which _is_ the merge request. There is no separate pre-merge
+  prompt: the summary (files changed, tests, open risks, business outcome) and `Ready to merge?` are
+  the same moment.
 
-Two checkpoints inside the chain:
+Every other boundary is crossed automatically, in the same turn. `merge` is never automatic — but if
+you already said to merge, that is your instruction and it is not re-collected.
 
-- **STOP #1 — clarify** runs after `clarify`. If `spec.md` still has `[NEEDS CLARIFICATION]`
-  markers, the model surfaces the top 3 questions and waits. Once you answer, the chain resumes
-  automatically. If there are no markers, the chain continues silently.
-- **STOP #2 — pre-merge** runs after `review`. The model summarises the work (files changed, tests,
-  open risks, business outcome) and asks `Ready to merge?` before invoking `merge`. Reply `yes` to
-  finish.
+Only a **CRITICAL or HIGH** finding buys another fix cycle; MEDIUM and LOW go to the backlog and the
+branch ships. Those cycles run inside STOP 2 without asking you again between each one.
+
+#### One planning document, and what makes it binding
+
+A feature produces exactly two files: `plan.md` and `tasks.md`. There is no `spec.md`,
+`research.md`, `data-model.md`, `quickstart.md` or `contracts/` — eight documents per feature was
+eight chances for two of them to disagree, and the disagreement was always found by whoever was
+implementing.
+
+`plan.md` has twelve mandatory sections, and the one the phase exists for is the **decision table**:
+
+| The decision            | Its single home               | What would duplicate it            |
+| :---------------------- | :---------------------------- | :--------------------------------- |
+| the rule, in your words | one file path — never a layer | the shapes a second spelling takes |
+
+Every requirement that is a rule gets a row. The third column is the one a reviewer greps for, and
+writing it is what makes you notice that a schema constraint and an application check are two
+spellings of one rule. **The table is binding on the implementer**: a decision may not move out of
+its home without the plan being amended first, so a review finding that a decision has two homes is
+a plan violation rather than a style opinion.
+
+#### The plan is audited before a line of code exists
+
+`plan` dispatches the `architecture-auditor` and `security-auditor` agents **on the plan itself**,
+in the same message so they run concurrently. They judge different things: the architect asks
+whether a rule has one home, the security seat asks whether that home is reachable by someone who
+should not reach it.
+
+Their findings go **into `plan.md`** — either the plan changes, or it records why the objection was
+accepted. A clean verdict is written down _with its coverage_, because a clean verdict is worth
+exactly what it covered.
+
+This is what replaced the old cross-artefact consistency check. With one document there are no
+artefacts left to hold in agreement, and the trade is a good one: architecture found at review time
+is architecture rebuilt, whereas a plan-time finding costs an edit. Security findings are the most
+expensive class to fix late — a missing authorization gate is one line, but a data model that made
+the gate impossible is a migration, a backfill and every caller.
 
 #### Linking a feature to a backlog issue
 
-Pass `--issue <id>` to `/specnaut specify` (or to the bundled `create-new-feature.sh`) to record the
+Pass `--issue <id>` to `/specnaut plan` (or to the bundled `create-new-feature.sh`) to record the
 originating backlog issue in `.specnaut/feature.json`:
 
 ```
-/specnaut specify "Fix the off-by-one in pagination" --issue 42
+/specnaut plan "Fix the off-by-one in pagination" --issue 42
 ```
 
 After `/specnaut merge` fast-forwards the branch onto `main` and you push, the merge phase reads
@@ -555,61 +585,24 @@ with the merged commit range and `gh issue close --reason completed`. The board 
 
 `--issue` is opt-in; existing feature trees without the field skip the auto-close silently.
 
-To opt out of the chain entirely (run only `specify` and stop):
+#### Running a single phase
+
+`--manual` is the only chain flag:
 
 ```
-/specnaut specify --manual "<feature description>"
+/specnaut plan --manual "<feature description>"
 ```
 
-#### Mid-chain re-entry
+#### Mid-chain re-entry needs no flag
 
-Any phase other than `specify` can also enter the chain when invoked mid-flow — useful for two real
-workflows:
-
-- **Manual review between early phases** — read `spec.md` after `specify` lands, then
-  `/specnaut clarify N` resumes the chain through `plan → tasks → … → STOP #2`.
-- **Context-budget recovery** — open a fresh session after compaction and run
-  `/specnaut implement N` to pick up the tail (`→ review → STOP #2`).
-
-The default is **context-aware**: if downstream artefacts under `.specnaut/specs/<feature>/` are
-missing, the chain fires; if they exist, the invocation is treated as a single-phase re-run (so
-regenerating `plan.md` doesn't accidentally cascade through the rest). Two explicit overrides when
-the default guesses wrong:
-
-- `/specnaut <phase> N --continue` — force the chain regardless of artefact state.
-- `/specnaut <phase> N --once` — force one-shot regardless.
-
-#### Lite chain (small-feature shortcut)
-
-For small, single-file features (markdown documentation, agent definitions, README / AGENTS / CLAUDE
-/ CHANGELOG tweaks), the chain runs in a lighter shape that skips `clarify` and `tasks`:
+Any phase can enter the chain when invoked mid-flow — useful after a long session or a fresh shell.
+The behaviour is **inferred from what is on disk**: if the downstream artefacts under
+`.specnaut/specs/<feature>/` are missing, the chain fires; if they exist, the invocation is a
+single-phase re-run, so regenerating `plan.md` does not accidentally cascade through the rest.
 
 ```
-specify → plan → analyze → implement → review → merge
+/specnaut implement N     # picks up the tail: → review → STOP 2
 ```
-
-Selection happens once, in `phases/specify.md`:
-
-- The router's `--lite` / `--full` flag forces the shape and skips the heuristic.
-- Otherwise the brief is scored against `phases/lite-heuristic.md` (file-path hints like `.md` /
-  `AGENTS.md`, verb hints like `write` / `document`, subject hints like `doc` / `paragraph`, brief
-  length, suppressors like `API` / `migration` / `auth`). On a positive score the user is prompted
-  once: `This brief looks small — run the lite chain? [Y/n]`.
-- The chosen shape persists to `.specnaut/feature.json` as `workflow_shape: "lite" | "full"`.
-  Downstream phases consult it at every chain transition. Backward-compat: absent field treated as
-  `"full"`.
-
-In lite mode STOP #1 is n/a (no `clarify` phase runs) — `specify` makes informed guesses for
-ambiguities and records them in the spec's Assumptions section. STOP #2 (pre-merge) behaves
-identically to the full chain.
-
-```
-/specnaut specify --lite "Document the OSS/proprio boundary in AGENTS.md"
-/specnaut specify --full "Add OAuth2 login"   # opt out of auto-detected lite
-```
-
-The `/specnaut-auto` slash command is kept for one release as a deprecation alias and will be
-removed in the next major version.
 
 ### 2. `review` phase post-implement
 
@@ -624,14 +617,14 @@ Every scaffold ships a `developer` agent that implements tasks from `tasks.md`. 
 under a strict doctrine that applies to every task, regardless of project stack:
 
 **Domain Model gate (NON-NEGOTIABLE)** — before writing a single line of code, the developer reads
-the `## Domain Model` block in `spec.md` (spec path) or in the Product Owner's `/backlog brief`
-output (direct-implementation path). If the block is absent, empty, or still contains template
-placeholders, the agent halts and returns `BLOCKED` with reason
-`awaiting:product-owner-domain-brief`. The `implement` phase skill enforces the same gate — it reads
-the section at step 3 and surfaces the same BLOCKED report with a recommendation to run
-`/specnaut clarify` first. The `clarify` phase cannot advance while the Domain Model is incomplete,
-and `specify` step 5.7 is responsible for populating the full block (Bounded context, Vocabulary,
-Entities, Value objects, Invariants, Out of scope) rather than just listing key entities.
+the domain model in `plan.md`'s technical-context section (spec path) or in the Product Owner's
+`/backlog brief` output (direct-implementation path). If it is absent, empty, or still contains
+template placeholders, the agent halts and returns `BLOCKED` with reason
+`awaiting:product-owner-domain-brief`. The `implement` phase enforces the same gate and surfaces the
+same BLOCKED report, recommending a re-run of `/specnaut plan` to fill it. The plan phase is
+responsible for populating the full block (Bounded context, Vocabulary, Entities, Value objects,
+Invariants) rather than just listing key entities — and its stop is where you are asked about
+anything it could not settle.
 
 **Test-Driven Development (NON-NEGOTIABLE)** — red → green → refactor on every implementation. No
 business logic ships untested. If the project has no test infrastructure, the developer bootstraps
@@ -710,8 +703,8 @@ heuristic with reason "cross-bounded-context".
 **`/backlog brief` — Domain Model is mandatory.** Every brief the PO generates for a developer MUST
 include a `## Domain Model` block with: Bounded context, Vocabulary (ubiquitous language), Entities
 (with aggregate root flag), Value objects, Invariants, and Out of scope. A brief without this block
-is incomplete — the PO clarifies with the user before issuing it. If a `spec.md` is attached, the
-block is written into the spec too (the spec template carries the section).
+is incomplete — the PO clarifies with the user before issuing it. If a `plan.md` is attached, the
+block is written into its technical-context section too (the plan template carries it).
 
 **Tech-debt intake protocol.** When a developer's completion report carries a `Tech debt surfaced`
 block, the PO parses it, deduplicates against the current backlog, and opens one classified ticket
@@ -764,12 +757,12 @@ marketplace:
 
 The plugin gives any Claude Code user instant access to the full Specnaut slash-command suite and
 sub-agents — no binary, no `specnaut init` required. The plugin assets (the consolidated `specnaut`
-router skill with 19 phase docs including the five `audit-*` axes — `security` / `performance` /
+router skill with its phase docs including the five `audit-*` axes — `security` / `performance` /
 `accessibility` from Epic #302 and `architecture` / `dependencies` from Epic #320, the
-`specnaut-review` auto-invoke alias, the deprecated `specnaut-auto` alias, and 15 sub-agents
-including the manual-only `performance-auditor`, `a11y-auditor`, `architecture-auditor`, and
-`dependency-auditor` introduced with the audit family) are namespaced under `/specnaut-plugin:*` so
-they coexist with project-local copies without collision.
+`specnaut-review` auto-invoke alias, and 15 sub-agents including the manual-only
+`performance-auditor`, `a11y-auditor`, `architecture-auditor`, and `dependency-auditor` introduced
+with the audit family) are namespaced under `/specnaut-plugin:*` so they coexist with project-local
+copies without collision.
 
 When both the plugin and the binary are in use, `specnaut upgrade` detects the plugin and
 auto-migrates vanilla on-disk agents and command files (backed up, then deleted — the plugin serves
@@ -783,13 +776,13 @@ backlog backends, and what changed between releases. It auto-triggers on Specnau
 ("how does specnaut X", "what is /specnaut Y", "quoi de neuf") so users on a Specnaut-scaffolded
 project can ask the harness about the tool without copy-pasting docs. It uses a vendored knowledge
 snapshot for offline / deterministic answers and `WebFetch` against
-<https://specnaut.com/llms.txt> + the GitHub Releases API for live "what's new" queries.
-Manual dispatch via `/specnaut-expert <question>` is also supported.
+<https://specnaut.com/llms.txt> + the GitHub Releases API for live "what's new" queries. Manual
+dispatch via `/specnaut-expert <question>` is also supported.
 
 The agent also handles **bug reports**: ask "report this as a bug" (or hit a Specnaut failure) and
-it pre-fills a structured GitHub issue against `specnaut/specnaut-cli` with a 6-section template (Summary
-/ Repro / Observed / Expected / Environment / Logs), auto-populating the environment block from
-`.specnaut/installed.lock` + `specnaut --version` + `uname -srm`, scrubbing common token shapes
+it pre-fills a structured GitHub issue against `specnaut/specnaut-cli` with a 6-section template
+(Summary / Repro / Observed / Expected / Environment / Logs), auto-populating the environment block
+from `.specnaut/installed.lock` + `specnaut --version` + `uname -srm`, scrubbing common token shapes
 (GitHub PATs, GitLab PATs, Anthropic / OpenAI keys, AWS access keys), and handing you a pre-filled
 `https://github.com/specnaut/specnaut-cli/issues/new?…` URL to review and submit. The agent never
 auto-submits — you always see the body before clicking.
