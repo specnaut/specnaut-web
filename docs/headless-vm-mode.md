@@ -5,8 +5,12 @@ checkpoint becomes a **gate** you resolve from anywhere (e.g. your phone), and t
 automatically when you answer. This composes the remote-control gate features:
 
 - the gate client + remote-mode switch ([#357]),
-- the `specnaut gate` command + gate-aware **clarify** checkpoint ([#358]),
+- the `specnaut gate` command ([#358]),
 - the gate-aware **plan** and **merge** approval checkpoints ([#359], this feature).
+
+> Since v2.0.0 the chain has exactly two stops, so it raises exactly two gates: `plan_approval` at
+> the end of `plan`, and `merge_approval` at the review verdict. The separate `clarify` checkpoint
+> is gone — open questions are now asked at the end of `plan`, inside the first stop.
 
 > Requires Specnaut Cloud. The CLI speaks only the public `/api/v1` gate contract
 > (`docs/api/gates.md`); see that file for the wire format.
@@ -50,7 +54,7 @@ needed:
 
 ```bash
 # One-shot, non-interactive:
-claude -p "/specnaut specify \"<feature description>\""
+claude -p "/specnaut plan \"<feature description>\""
 
 # Or goal-directed until an end state (re-takes turns on its own):
 claude -p "/goal the feature ships and deno task test exits 0, or stop after 30 turns"
@@ -58,19 +62,17 @@ claude -p "/goal the feature ships and deno task test exits 0, or stop after 30 
 
 As the chain runs, each checkpoint opens a gate instead of prompting the terminal:
 
-| Checkpoint                         | Gate type                    | You answer                              |
-| ---------------------------------- | ---------------------------- | --------------------------------------- |
-| Clarify (`[NEEDS CLARIFICATION]`)  | `clarification` / `decision` | the clarification text / a choice       |
-| Plan approval (before `tasks`)     | `plan_approval`              | `approve` / `reject` (+ note to revise) |
-| Pre-merge STOP #2 (before `merge`) | `merge_approval`             | `approve` / `reject` (+ note)           |
+| Checkpoint                                  | Gate type        | You answer                              |
+| ------------------------------------------- | ---------------- | --------------------------------------- |
+| STOP 1 — end of `plan`, before `tasks`      | `plan_approval`  | `approve` / `reject` (+ note to revise) |
+| STOP 2 — the review verdict, before `merge` | `merge_approval` | `approve` / `reject` (+ note)           |
 
 ## 4. Resolve gates remotely
 
 Open gates surface on the Cloud project (and, once [#18] ships, as a phone push). Answer one and the
-waiting VM observes the resolution and continues — clarify writes the answer into the spec and
-resumes; an approved plan/merge gate resumes into the next phase; a **rejected** approval halts the
-run cleanly and reports your note (treat a reject-with-note as "revise and re-run" — the chain does
-not auto-loop).
+waiting VM observes the resolution and continues — an approved plan or merge gate resumes into the
+next phase; a **rejected** approval halts the run cleanly and reports your note (treat a
+reject-with-note as "revise and re-run" — the chain does not auto-loop).
 
 A gate that is never answered ends at the configured `await_timeout_s` with a distinct _unresolved_
 outcome; the checkpoint halts rather than proceeding. **A STOP never auto-approves.**
@@ -84,8 +86,8 @@ silently. With remote mode off, every checkpoint keeps its normal local behaviou
 ## End-to-end
 
 ```
-specify → clarify (gate) → plan → plan_approval (gate) → tasks → analyze →
-implement → review → merge_approval (gate) → merge → done
+plan → plan_approval (gate) → tasks → implement → review →
+merge_approval (gate) → merge → done
 ```
 
 With remote mode on and every gate resolved from your phone, that whole sequence runs with **zero

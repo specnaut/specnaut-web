@@ -11,7 +11,7 @@ a single source.
 
 | You used                                     | Use this Specnaut skill instead             | Notes                                                                                                                                                                                                               |
 | -------------------------------------------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `superpowers:brainstorming`                  | `brainstorming`                             | Same one-question-at-a-time discipline, same hand-off to writing-plans. Specnaut version coexists with `/specnaut specify` for greenfield spec-kit work.                                                            |
+| `superpowers:brainstorming`                  | `brainstorming`                             | Same one-question-at-a-time discipline, same hand-off to writing-plans. Specnaut version coexists with `/specnaut plan` for greenfield spec-kit work.                                                               |
 | `superpowers:writing-plans`                  | `writing-plans`                             | Same zero-placeholder + TDD-bite-size discipline. Saves to `docs/specnaut/plans/` (not `docs/superpowers/plans/`). Hands off to `subagent-driven-development` or `executing-plans`.                                 |
 | `superpowers:subagent-driven-development`    | `subagent-driven-development`               | Same two-stage review loop (spec compliance, then code quality). Dispatches Specnaut's bundled `developer` + `code-reviewer` agents instead of generic `general-purpose` — agents already know project conventions. |
 | `superpowers:executing-plans`                | `executing-plans`                           | Same inline-with-checkpoints semantics. Adds Specnaut's pre-commit gate awareness (deno fmt/lint/bundle/check).                                                                                                     |
@@ -37,12 +37,10 @@ The discipline is the same. The integration is what changes.
   constitution. Superpowers' equivalent is the upstream `CLAUDE.md` — same content type, different
   location and lifecycle.
 
-- **Spec-kit pipeline** —
-  `/specnaut specify → clarify → plan → tasks →
-  analyze → implement → review → merge` for
-  greenfield features with formal contracts (research.md, data-model.md, contracts/, quickstart.md).
-  Coexists with the `writing-plans` skill for issue-driven work. Superpowers doesn't have an
-  equivalent ceremony.
+- **Spec-kit pipeline** — `/specnaut plan → tasks → implement → review → merge` for greenfield
+  features. `plan` produces a single planning document carrying the architecture, the domain model,
+  the interface contracts and a binding decision table; `tasks` breaks it down. Coexists with the
+  `writing-plans` skill for issue-driven work. Superpowers doesn't have an equivalent ceremony.
 
 - **Multi-harness plugin distribution** — same source tree ships to Claude Code, Codex, Cursor,
   OpenCode, Copilot CLI. Each harness has the right adapter manifest + SessionStart hook.
@@ -153,8 +151,8 @@ This is the "tribal knowledge → durable contract" move.
 - Hands off to either `subagent-driven-development` (recommended for 3+ task plans) or
   `executing-plans` (for trivial plans)
 - Coexists with `/specnaut plan` — the spec-kit pipeline phase for greenfield features. Different
-  inputs (spec.md vs. issue URL), different outputs (multi-file artefact set vs. single executable
-  plan).
+  inputs (a feature brief vs. an issue URL), different outputs (`plan.md` + `tasks.md`, which chain
+  onward into implementation, vs. a single executable plan).
 
 ### `subagent-driven-development`
 

@@ -888,6 +888,29 @@ the GitHub Release body.
 `specnaut upgrade` updates templates in place and prints a handoff line inviting the user to review
 what changed via the `specnaut-expert` agent.
 
+### Upgrading from 1.x to 2.x
+
+**2.0.0 is a breaking release.** The canonical migration guide is
+[`UPGRADING.md`](https://github.com/specnaut/specnaut-cli/blob/main/UPGRADING.md) in the CLI
+repository — read it before running `specnaut upgrade` on a project scaffolded with 1.x. It is kept
+there rather than duplicated here so the two cannot drift apart.
+
+What changes, at a glance:
+
+| Before                                                 | After                                                 |
+| :----------------------------------------------------- | :---------------------------------------------------- |
+| 9 chainable phases                                     | **5** — `plan → tasks → implement → review → merge`   |
+| 5 chain flags                                          | **1** — `--manual`                                    |
+| up to 8 files per feature                              | **2** — `plan.md` + `tasks.md`                        |
+| stops whenever clarification is needed, then pre-merge | **exactly 2** — end of `plan`, and the review verdict |
+
+`brainstorm`, `specify`, `clarify`, `analyze`, `checklist` and `list-skills` no longer exist; an old
+phase name prints the phase index and stops. `analyze` was **replaced, not dropped** — with a single
+planning document there are no artefacts left to hold in agreement, so its successor is a binding
+decision table plus architecture and security audits run against the plan _before any code exists_.
+
+Your existing spec directories are left on disk untouched. Nothing migrates them.
+
 ### Files written
 
 - `.specnaut/upgrade-pending.json` — a marker recording the upgrade range:
