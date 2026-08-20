@@ -192,12 +192,24 @@ Pass `--dry-run` to preview the plan without touching disk — combined with `--
 files would be overwritten and which would be merged, but writes nothing. `--dry-run` is the trump
 card: it wins over `--force`.
 
-**Inside a monorepo workspace?** When the target sits inside an enclosing Specnaut workspace (an
-ancestor with `.specnaut/` whose `deno.json` `workspace` list declares the target as a member),
+**Inside a monorepo workspace?** When the target sits inside an enclosing Specnaut workspace,
 `specnaut init` and `specnaut upgrade` provision `.specnaut/` as usual but skip the agentic files
 (`.claude/skills`, `.claude/agents`, `.claude/commands`) — those are inherited from the parent, so
-no copy is scattered into the sub-repo. To force full provisioning anyway, drop an empty
-`.specnaut/standalone.yml` marker in the target.
+no copy is scattered into the sub-repo.
+
+A target counts as parent-managed when an ancestor has `.specnaut/` **and** either:
+
+- that ancestor's `deno.json` `workspace` list declares the target as a member, or
+- the target carries an empty `.specnaut/parent-managed.yml` marker.
+
+The second exists because the first is a Deno-specific signal. A sub-repo on a different toolchain
+is usually kept out of `workspace` deliberately — adding it there breaks its own build — and before
+the marker it had no way to say "my enclosing workspace manages me". The marker does not skip the
+ancestor check: without a providing ancestor, suppressing the agentic files would leave the sub-repo
+with none and nothing supplying them.
+
+To force full provisioning anyway, drop an empty `.specnaut/standalone.yml` marker in the target. It
+wins over both signals above.
 
 ### What's in `.specnaut/installed.lock` and should I commit it?
 
