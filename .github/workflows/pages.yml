@@ -38,6 +38,13 @@ jobs:
         with:
           deno-version: v2.x
 
+      # Fails the deploy on a reference to an asset that does not exist. The
+      # site shipped a 404 in its agent roster for months: a rebrand renamed
+      # the reference and not the file, and because the sprites carry alt=""
+      # it rendered as a silent empty box.
+      - name: Check asset references
+        run: deno task docs:check
+
       - name: Build docs
         run: deno task docs:build
 

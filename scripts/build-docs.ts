@@ -58,7 +58,7 @@ async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
  * Resolve the Specnaut CLI version to display. This site repo (`specnaut-web`)
  * carries no CLI source, so the authoritative version is the latest published
  * release of `specnaut/specnaut-cli` — also what `version.json` must report for the
- * `specnaut-expert` agent's installed-vs-latest comparison. Falls back to the
+ * `specnaut-guide` agent's installed-vs-latest comparison. Falls back to the
  * local `deno.json` version for offline / local builds so the build never
  * fails on a network hiccup.
  */
@@ -376,7 +376,7 @@ export async function buildDocs(opts: {
   const html = HTML_TEMPLATE(rendered, version, appUrl);
   const markdown = `<!-- Specnaut v${version} — ${REPO_URL} -->\n\n${enrichedMarkdown}`;
 
-  // Lightweight machine-readable endpoint consumed by the `specnaut-expert`
+  // Lightweight machine-readable endpoint consumed by the `specnaut-guide`
   // agent to compare the user's installed version against the latest
   // released one. `released_at` is the build timestamp — accurate within
   // the day since pages.yml redeploys on every docs change (and can be
