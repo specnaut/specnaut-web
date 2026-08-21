@@ -1,8 +1,7 @@
 // check-assets — every local asset the site references must exist on disk.
 //
-// A rebrand renamed `specflow-expert.png` to `specnaut-expert.png` in the
-// markup but not on disk, and the site shipped a 404 in its agent roster for
-// as long as nobody scrolled to it. The sprites carry `alt=""` — correct,
+// A rebrand renamed an agent sprite in the markup but not on disk, and the
+// site shipped a 404 in its agent roster for as long as nobody scrolled to it. The sprites carry `alt=""` — correct,
 // since the adjacent <figcaption> names the agent — so a missing one renders
 // as a silent empty box rather than broken-image text. Nothing anywhere
 // reported it.

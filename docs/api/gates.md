@@ -41,7 +41,7 @@ Exact role thresholds are defined by the backend (see #17), not by this contract
   "payload": {/* type-specific, see "Gate types" */},
   "state": "open", // open | answered | applied | cancelled
   "answer": null, // type-specific; null until answered
-  "createdBy": "agent:specflow-cli", // opaque actor handle
+  "createdBy": "agent:specnaut-cli", // opaque actor handle
   "resolvedBy": null, // actor who answered; null until answered
   "createdAt": "2026-06-04T10:00:00Z", // RFC 3339 / ISO 8601 UTC
   "resolvedAt": null // when answered; null until then
