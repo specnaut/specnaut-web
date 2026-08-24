@@ -27,7 +27,7 @@ a single source.
 
 The discipline is the same. The integration is what changes.
 
-- **Backlog awareness** — Specnaut ships a `backlog` skill + `product-owner` agent +
+- **Backlog awareness** — Specnaut ships a `board` skill + `product-owner` agent +
   GitHub/GitLab/local backends. Every plan can ref-link the GitHub issue, every PR auto-closes the
   linked issue, every grooming pass goes through the PO. Superpowers is harness-only; it doesn't
   know about your backlog.
@@ -104,7 +104,7 @@ ask:
 
 The agent should list `specnaut` (router), `writing-plans`, `requesting-code-review`,
 `subagent-driven-development`, `executing-plans`, `verification-before-completion`, `brainstorming`,
-`backlog`, plus the agent registry (developer, code-reviewer, product-owner, etc.).
+`board`, plus the agent registry (developer, code-reviewer, product-owner, etc.).
 
 ### 4. Map your existing plans
 

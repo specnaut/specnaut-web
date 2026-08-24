@@ -113,13 +113,13 @@ that need a one-time human setup before the marketplace listings are live:
 
 **Plugin vs `specnaut init`** — they complement each other:
 
-| Aspect                             | Binary (`specnaut init`)   | Plugin (`/plugin install`)          |
-| ---------------------------------- | -------------------------- | ----------------------------------- |
-| Scope                              | Project-local (`.claude/`) | User-scope (all projects)           |
-| Slash-command style                | `/specnaut plan` (short)   | `/specnaut-plugin:specnaut plan`    |
-| Customizable per-project           | Yes                        | No (user-scope, shared)             |
-| Backlog skill, hooks, `.specnaut/` | Yes                        | No (project-stateful — binary-only) |
-| Kept in sync                       | `specnaut upgrade`         | `/plugin update`                    |
+| Aspect                           | Binary (`specnaut init`)   | Plugin (`/plugin install`)          |
+| -------------------------------- | -------------------------- | ----------------------------------- |
+| Scope                            | Project-local (`.claude/`) | User-scope (all projects)           |
+| Slash-command style              | `/specnaut plan` (short)   | `/specnaut-plugin:specnaut plan`    |
+| Customizable per-project         | Yes                        | No (user-scope, shared)             |
+| Board skill, hooks, `.specnaut/` | Yes                        | No (project-stateful — binary-only) |
+| Kept in sync                     | `specnaut upgrade`         | `/plugin update`                    |
 
 Most teams use both: the plugin provides discoverability and keeps the agents up-to-date across all
 projects; `specnaut init` provides the short slash-commands and project-local customization.
@@ -256,7 +256,7 @@ and how the PO agent talks to it.
 
 When the chosen backend is `github` or `gitlab`, `specnaut init` can take the project's Kanban URL
 up front and write a fully-populated `.specnaut/backlog-config.yml` — no manual edit needed before
-running `/backlog`. Pass the project URL via `--backlog-url`:
+running `/board`. Pass the project URL via `--backlog-url`:
 
 ```bash
 # GitHub org-owned project
@@ -655,7 +655,7 @@ under a strict doctrine that applies to every task, regardless of project stack:
 
 **Domain Model gate (NON-NEGOTIABLE)** — before writing a single line of code, the developer reads
 the domain model in `plan.md`'s technical-context section (spec path) or in the Product Owner's
-`/backlog brief` output (direct-implementation path). If it is absent, empty, or still contains
+`/board brief` output (direct-implementation path). If it is absent, empty, or still contains
 template placeholders, the agent halts and returns `BLOCKED` with reason
 `awaiting:product-owner-domain-brief`. The `implement` phase enforces the same gate and surfaces the
 same BLOCKED report, recommending a re-run of `/specnaut plan` to fill it. The plan phase is
@@ -733,11 +733,11 @@ groom) emits the field/option IDs into env vars for case-insensitive matching. O
 axes are scoped labels via `glab`; on the local Markdown backend they live in task-file frontmatter.
 
 **Bounded context (soft fifth axis)** — a `domain:<context>` label (e.g. `domain:checkout`) is
-optional on mono-domain projects but the `## Domain Model` block in every `/backlog brief` output is
+optional on mono-domain projects but the `## Domain Model` block in every `/board brief` output is
 always mandatory. Items touching ≥ 2 bounded contexts automatically trigger the epic detection
 heuristic with reason "cross-bounded-context".
 
-**`/backlog brief` — Domain Model is mandatory.** Every brief the PO generates for a developer MUST
+**`/board brief` — Domain Model is mandatory.** Every brief the PO generates for a developer MUST
 include a `## Domain Model` block with: Bounded context, Vocabulary (ubiquitous language), Entities
 (with aggregate root flag), Value objects, Invariants, and Out of scope. A brief without this block
 is incomplete — the PO clarifies with the user before issuing it. If a `plan.md` is attached, the
@@ -777,7 +777,7 @@ progress), and once every child reaches **Done** the parent rolls up to Done. A 
 **Ready** is deliberately a no-op — Ready means groomed-and-waiting, not active work, so it must not
 promote the parent.
 
-The Product Owner agent **proactively** proposes epic decomposition during `/backlog add` and during
+The Product Owner agent **proactively** proposes epic decomposition during `/board add` and during
 grooming whenever a request crosses ≥2 subsystems, has more than 5 acceptance-criteria bullets, or
 carries trigger phrases like "break down", "phased", "rewrite", "end-to-end". Obvious splits get
 auto-created; ambiguous ones get a concrete sub-task list back as a question. You don't have to ask

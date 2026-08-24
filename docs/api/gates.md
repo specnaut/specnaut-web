@@ -174,8 +174,8 @@ Errors: `409` gate not `open` · `404` · `401`.
 ## Activity feed events
 
 Gate lifecycle changes surface in
-[`GET /api/v1/activity`](../../templates/core/skills/backlog/SKILL.md) as events, sharing that
-feed's ordering and opaque-cursor pagination (no separate poller). One kind per transition:
+[`GET /api/v1/activity`](../../templates/core/skills/board/SKILL.md) as events, sharing that feed's
+ordering and opaque-cursor pagination (no separate poller). One kind per transition:
 
 ```jsonc
 { "kind": "gate_opened",    "gateId": "gate_7Kf3Qx9", "gateType": "clarification", "state": "open",      "taskNumber": 42, "ts": "2026-06-04T10:00:00Z" }
