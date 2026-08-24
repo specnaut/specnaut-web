@@ -469,7 +469,7 @@ pipe to a custom publisher.
 | `windsurf`    | Windsurf           | `.windsurf/`            |
 | `copilot`     | GitHub Copilot CLI | `.github/instructions/` |
 | `opencode`    | OpenCode           | `.opencode/`            |
-| `antigravity` | Antigravity        | `.agent/`               |
+| `antigravity` | Antigravity        | `.agents/`              |
 
 All harnesses share the same source-of-truth content in `templates/core/`. The per-harness adapters
 in `src/infrastructure/harness/` map that core bundle to each harness's directory layout and
