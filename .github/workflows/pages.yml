@@ -38,6 +38,14 @@ jobs:
         with:
           deno-version: v2.x
 
+      # deno.json has declared fmt:check since this repo's first commit, in the
+      # same commit that added this workflow, and nothing ever invoked it. Two
+      # files drifted; one drifted into a rendering bug (a wrapped "+" read as a
+      # list marker) that the formatter would have caught immediately. A gate
+      # that is defined but never run reports nothing and proves nothing.
+      - name: Check formatting
+        run: deno task fmt:check
+
       # Fails the deploy on a reference to an asset that does not exist. The
       # site shipped a 404 in its agent roster for months: a rebrand renamed
       # the reference and not the file, and because the sprites carry alt=""
