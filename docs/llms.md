@@ -484,6 +484,31 @@ Some harnesses also ship harness-specific helper files alongside the core scaffo
   Codex's experimental one-shot long-horizon feature; enable via `goals = true` under `[features]`
   in `config.toml`).
 
+### Interoperating with DeepSeek Harness
+
+[DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`) has no `--ai` key, and
+Specnaut ships no adapter for it. It does not need one: run **`specnaut init --ai codex`**, and a
+`dsh` session reads the result as it stands. Both surfaces `dsh` discovers inside a project are ones
+the Codex target already writes:
+
+- **Instructions** — `AGENTS.md` and `CLAUDE.md`, found by walking up from the session's working
+  directory to the nearest `.git` ancestor. That is `dsh`'s `agent-instructions` plugin, whose
+  `projectRootMarkers` default to `['.git']`.
+- **Skills** — `<projectRoot>/.agents/skills/<name>/SKILL.md`. `dsh`'s filesystem skill provider
+  resolves `<projectRoot>/.dsh/skills` at rank 100 and `<projectRoot>/.agents/skills` at rank 200,
+  parsing single-level `<name>/SKILL.md` bundles with a kebab-case name and YAML frontmatter
+  carrying `name` and `description` — which is what the Codex target emits.
+
+**Where it stops.** `dsh` does not discover `.agents/agents/*.md` or `.agents/workflows/*.md`. Its
+subagents are programmatic providers registered on `ctx.subagents` in the plugin tree, not markdown
+found on disk. Specnaut's agent fleet does not cross over; skills and instructions do.
+
+Read this as interoperation by convention rather than as a supported harness. The compatibility is
+incidental — it follows from `.agents/` having become a convention shared across vendors, not from
+an integration Specnaut maintains or tests against a real `dsh` install. `dsh` is itself in
+developer preview, and its README warns of compatibility-breaking changes, so this note can go stale
+without anything here changing.
+
 ## Project-specific skill overlays
 
 Specnaut's skill folders are plain markdown — anything you put under your harness's `skills/`
