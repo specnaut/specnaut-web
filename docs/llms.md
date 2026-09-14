@@ -137,6 +137,23 @@ This scaffolds a tree configured for the **Claude Code** harness by default (`.c
 `.specnaut/`, `AGENTS.md`, `.specnaut/backlog.md`, …). Open the project in your harness — that's
 where you'll run the rest.
 
+### The three top-level skills
+
+Specnaut gives your harness three skills, and the split between them is the model:
+
+| Skill           | Owns                                                           | Example                               |
+| --------------- | -------------------------------------------------------------- | ------------------------------------- |
+| **`/board`**    | the backlog and the dashboard                                  | `/board add "Fix the login redirect"` |
+| **`/specnaut`** | **specification only** — plan, tasks, implement, review, merge | `/specnaut plan "Add OAuth2 login"`   |
+| **`/ship`**     | going to production — versioning and release notes             | `/ship tag`                           |
+
+Manage the backlog, write the spec, ship it.
+
+`/specnaut` owns specification and **no release concern**. Tagging and release notes used to sit
+under it as the `tag-version` and `release-version` phases; they are now `/ship tag` and
+`/ship release`. Both the owner and the verb changed, so `/ship tag-version` is not a command — see
+[Ship: versioning and release notes](#ship-versioning-and-release-notes).
+
 ### Step 1 after `init`: run `/specnaut constitution`
 
 `/specnaut constitution` is the expected first action after `specnaut init`. It scaffolds your
@@ -355,8 +372,8 @@ when stdin is a TTY, and falls back to a numeric prompt — or the defaults — 
 
 ### Pick a versioning scheme
 
-`specnaut init` asks which scheme to use for the bundled `/specnaut tag-version` and
-`/specnaut release-version` commands. Two options:
+`specnaut init` asks which scheme to use for the bundled `/ship tag` and `/ship release` commands.
+Two options:
 
 - **SemVer** (`v1.2.3`) — recommended for libraries / SDKs whose consumers reason about breaking
   changes by version number.
@@ -411,22 +428,31 @@ specnaut --version                # print version
 specnaut --help                   # full usage
 ```
 
-### Bundled tag + release commands
+### Ship: versioning and release notes
 
-Every scaffolded project ships two router commands under `/specnaut`:
+Every scaffolded project ships `/ship`, the third top-level skill. It owns going to production, and
+it is the only place release lives:
 
-- **`/specnaut tag-version`** — creates an annotated git tag using the project's versioning scheme.
-  Bumps automatically (latest tag → next). For SemVer, `--bump major|minor|patch` controls the
-  direction (default `patch`); for date-based, the letter suffix increments. Pushes to `origin` if a
-  remote is configured, else stays local. Pass `--no-push` to skip.
-- **`/specnaut release-version`** — generates **categorized release notes** for a tag (default:
-  latest) covering every commit since the previous tag. The output is the release-body Markdown, one
-  section per non-empty Conventional Commits bucket (Features / Bug Fixes / Performance / Refactors
-  / Documentation / Tests / Build & CI / Chores / Style / Other). Pipe the output into
+- **`/ship tag`** — creates an annotated git tag using the project's versioning scheme. Bumps
+  automatically (latest tag → next). For SemVer, `--bump major|minor|patch` controls the direction
+  (default `patch`); for date-based, the letter suffix increments. Pushes to `origin` if a remote is
+  configured, else stays local. Pass `--no-push` to skip.
+- **`/ship release`** — generates **categorized release notes** for a tag (default: latest) covering
+  every commit since the previous tag. The output is the release-body Markdown, one section per
+  non-empty Conventional Commits bucket (Features / Bug Fixes / Performance / Refactors /
+  Documentation / Tests / Build & CI / Chores / Style / Other). Pipe the output into
   `gh release create` / `glab release create` to publish.
 
-The scripts live at `.specnaut/scripts/release/{tag,release}.sh` — the same path across all 8
-harnesses.
+**If you are coming from an earlier version**, these were `/specnaut tag-version` and
+`/specnaut release-version`. Both halves of the name changed — the owning skill _and_ the verb — so
+swapping only the prefix gives you `/ship tag-version`, which nothing answers to. The new names are
+`/ship tag` and `/ship release`.
+
+Projects scaffolded before the split get `/ship` by running `specnaut upgrade`; there is nothing to
+move by hand, and a customised phase document travels to its new address rather than being left
+behind at the old one. **The scripts do not move**: they stay at
+`.specnaut/scripts/release/{tag,release}.sh`, the same path across every harness, so anything of
+yours that calls them directly keeps working.
 
 For **GitHub**-hosted projects, the bundled `release-github.sh` wrapper is the one-command path:
 
@@ -516,10 +542,10 @@ directory (e.g. `.claude/skills/<name>/`, `.cursor/skills/<name>/`) is a skill, 
 the common "override an upstream skill" pattern discoverable, Specnaut recognises two optional
 fields in `SKILL.md` frontmatter:
 
-| Field                    | Meaning                                                                                                                                                 |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `alias_of: <skill-name>` | This skill is a thin wrapper that delegates to the named upstream skill. Dotted notation (e.g. `specnaut.tag-version`) makes the distribution explicit. |
-| `overlays:`              | A list of pre/post hooks. Each entry carries `when: before \| after` and `path: ./scripts/<file>.sh` relative to the SKILL.md.                          |
+| Field                    | Meaning                                                                                                                                     |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `alias_of: <skill-name>` | This skill is a thin wrapper that delegates to the named upstream skill. Dotted notation (e.g. `ship.tag`) makes the distribution explicit. |
+| `overlays:`              | A list of pre/post hooks. Each entry carries `when: before \| after` and `path: ./scripts/<file>.sh` relative to the SKILL.md.              |
 
 The Specnaut binary itself **never resolves or dispatches** aliases / overlays — the harness (Claude
 Code, Cursor, Codex, …) is responsible for honouring the frontmatter at invocation time. Specnaut's
