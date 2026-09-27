@@ -53,8 +53,16 @@ jobs:
       - name: Check asset references
         run: deno task docs:check
 
+      - name: Test
+        run: deno task test
+
+      # The run-scoped token, not a stored secret: it authenticates the two
+      # release lookups, which 403'd unauthenticated on a shared runner IP and
+      # published this repo's own "1.0.0" as the CLI's latest version.
       - name: Build docs
         run: deno task docs:build
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
       - name: Setup Pages
         uses: actions/configure-pages@v6

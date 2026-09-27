@@ -64,26 +64,40 @@ async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
  */
 export async function resolveVersion(): Promise<string> {
   const url = "https://api.github.com/repos/specnaut/specnaut-cli/releases/latest";
+  let problem: string;
   try {
-    const res = await fetch(url, {
-      headers: { Accept: "application/vnd.github+json" },
-    });
+    const res = await fetch(url, { headers: githubHeaders() });
     if (res.ok) {
       const { tag_name } = await res.json() as { tag_name?: string };
       if (tag_name) return tag_name.replace(/^v/, "");
+      problem = `no tag_name in ${url}`;
     } else {
-      console.warn(
-        `::warning::resolveVersion: HTTP ${res.status} from ${url} — falling back to deno.json`,
-      );
+      problem = `HTTP ${res.status} from ${url}`;
     }
   } catch (err) {
-    console.warn(
-      `::warning::resolveVersion: ${
-        err instanceof Error ? err.message : err
-      } — falling back to deno.json`,
-    );
+    problem = err instanceof Error ? err.message : String(err);
   }
+  // In CI the fallback is this repo's own deno.json — a number that is not the
+  // CLI's. Published as version.json it tells every agent a wrong "latest"; a
+  // failed deploy keeps the previous, correct one online instead.
+  if (Deno.env.get("CI") === "true") {
+    throw new Error(`resolveVersion: ${problem} — refusing to publish a fallback version`);
+  }
+  console.warn(`::warning::resolveVersion: ${problem} — falling back to deno.json (local build)`);
   return await readVersion();
+}
+
+/**
+ * Headers for a GitHub API read. Authenticated with the workflow's run-scoped
+ * `GITHUB_TOKEN` when present: unauthenticated calls share a 60/hour quota per
+ * runner IP with every other job on that IP, so the build hit 403 on a busy
+ * runner even though it makes only two calls.
+ */
+function githubHeaders(): Record<string, string> {
+  const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
+  const token = Deno.env.get("GITHUB_TOKEN");
+  if (token) headers.Authorization = `Bearer ${token}`;
+  return headers;
 }
 
 /**
@@ -92,16 +106,15 @@ export async function resolveVersion(): Promise<string> {
  * emit a warning to stderr and return an empty string — the docs deploy
  * MUST NOT fail because of a cosmetic section.
  *
- * Public-repo unauthenticated calls have a 60 req/hr ceiling on GitHub
- * runners — sufficient for the build cadence.
+ * Authenticated via `githubHeaders()`: the unauthenticated 60/hour ceiling is
+ * per runner IP and shared with other jobs, so it is not "sufficient for the
+ * build cadence" — it 403'd in practice.
  */
 export async function fetchRecentReleases(count = 5): Promise<string> {
   const url = `https://api.github.com/repos/specnaut/specnaut-cli/releases?per_page=${count}`;
   let releases: Array<{ tag_name: string; body: string }>;
   try {
-    const res = await fetch(url, {
-      headers: { Accept: "application/vnd.github+json" },
-    });
+    const res = await fetch(url, { headers: githubHeaders() });
     if (!res.ok) {
       console.warn(
         `::warning::fetchRecentReleases: HTTP ${res.status} from ${url} — skipping section`,
