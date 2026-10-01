@@ -8,9 +8,10 @@ automatically when you answer. This composes the remote-control gate features:
 - the `specnaut gate` command ([#358]),
 - the gate-aware **plan** and **merge** approval checkpoints ([#359], this feature).
 
-> Since v2.0.0 the chain has exactly two stops, so it raises exactly two gates: `plan_approval` at
-> the end of `plan`, and `merge_approval` at the review verdict. The separate `clarify` checkpoint
-> is gone — open questions are now asked at the end of `plan`, inside the first stop.
+> Remote mode raises two gates whatever `.specnaut/workflow.yml` says: `plan_approval` at the end of
+> `plan`, and `merge_approval` at the review verdict. Turning remote mode on is itself the request
+> to approve the merge, so the `merge: auto` default does not remove that gate. Open questions are
+> asked at the end of `plan`, inside the first stop.
 
 > Requires Specnaut Cloud. The CLI speaks only the public `/api/v1` gate contract
 > (`docs/api/gates.md`); see that file for the wire format.

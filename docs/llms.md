@@ -573,26 +573,42 @@ session. Upstream stops at every step and asks the human to invoke the next one.
 /specnaut plan "<feature description>"
 ```
 
-That one command carries you to a reviewed branch. When the idea is still fuzzy and you cannot yet
-write that one-line description, say so anyway — `plan` opens with a short discovery dialogue (one
-question at a time, 2–3 genuinely different shapes) and then writes the plan in the same turn. There
-is no separate step to remember.
+That one command carries you to a merged, pushed base branch. When the idea is still fuzzy and you
+cannot yet write that one-line description, say so anyway — `plan` opens with a short discovery
+dialogue (one question at a time, 2–3 genuinely different shapes) and then writes the plan in the
+same turn. There is no separate step to remember.
 
-#### There are exactly two stops, and no third
+#### Autopilot by default: one stop, at the plan
 
 - **STOP 1 — the end of `plan`.** Always, not only when something is ambiguous. You are shown the
   architecture _as a proposal with the alternatives that were rejected and why_, both audits'
   findings separately, and the open questions one at a time. A single option presented as settled
-  gets approved by default, which is the same as not asking.
-- **STOP 2 — the review verdict**, which _is_ the merge request. There is no separate pre-merge
-  prompt: the summary (files changed, tests, open risks, business outcome) and `Ready to merge?` are
-  the same moment.
+  gets approved by default, which is the same as not asking. **This is where the work is decided**:
+  the stop says so, and asks what autopilot would otherwise settle on its own.
 
-Every other boundary is crossed automatically, in the same turn. `merge` is never automatic — but if
-you already said to merge, that is your instruction and it is not re-collected.
+After your answers the chain runs to the end without asking again: tasks, implementation, review,
+then a local fast-forward merge into the base branch, a **push**, and the backlog item closed. It
+still halts — and says why — on a real blocker: a CRITICAL or HIGH finding it could not fix, a merge
+that cannot fast-forward, a push the remote refuses.
 
 Only a **CRITICAL or HIGH** finding buys another fix cycle; MEDIUM and LOW go to the backlog and the
-branch ships. Those cycles run inside STOP 2 without asking you again between each one.
+branch ships. Those cycles run before the merge without asking you again between each one.
+
+#### Keeping a human on the merge
+
+When someone must read every change before it lands, set it once in `.specnaut/workflow.yml`
+(scaffolded by `specnaut init`):
+
+```yaml
+merge: manual
+```
+
+The chain then stops a second time, at the **review verdict**: the summary (files changed, tests,
+open risks, business outcome) and `Ready to merge?` are the same moment, and that one yes covers the
+merge, the push and the close. For a single run, `--manual-merge` or "stop before merging" in your
+request does the same. A value that cannot be read (a typo) counts as `manual`, so a broken setting
+never pushes. `/specnaut merge --pr` delivers through a pull request instead of a local merge in
+either mode.
 
 #### One planning document, and what makes it binding
 
@@ -664,7 +680,7 @@ The behaviour is **inferred from what is on disk**: if the downstream artefacts 
 single-phase re-run, so regenerating `plan.md` does not accidentally cascade through the rest.
 
 ```
-/specnaut implement N     # picks up the tail: → review → STOP 2
+/specnaut implement N     # picks up the tail: → review → merge → push
 ```
 
 ### 2. `review` phase post-implement
