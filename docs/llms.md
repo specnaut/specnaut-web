@@ -59,11 +59,11 @@ phase docs, the bootstrap skill, the sub-agents, and the SessionStart hook (wher
 
 | Harness                | Install command                                                                                                               |
 | ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Claude Code**        | `/plugin install specnaut/specnaut-cli-plugin`                                                                                |
+| **Claude Code**        | `/plugin marketplace add specnaut/specnaut-marketplace`<br/>`/plugin install specnaut-plugin@specnaut-marketplace`          |
 | **Codex CLI / App**    | `/plugins` → search "specnaut" → install (once the marketplace listing lands; see Notes)                                      |
 | **Cursor**             | `/add-plugin specnaut/specnaut-cli`                                                                                           |
 | **OpenCode**           | Add `"plugin": ["specnaut@git+https://github.com/specnaut/specnaut-cli.git"]` to `opencode.json`                              |
-| **GitHub Copilot CLI** | `copilot plugin marketplace add specnaut/specnaut-cli-marketplace`<br/>`copilot plugin install specnaut@specnaut-marketplace` |
+| **GitHub Copilot CLI** | `copilot plugin marketplace add specnaut/specnaut-marketplace`<br/>`copilot plugin install specnaut-plugin@specnaut-marketplace` |
 
 The skill content is identical across harnesses; only the surface conventions differ (slash-command
 prefix, auto-activation mechanism, tool naming). See the per-harness tool-mapping references at
@@ -101,15 +101,12 @@ routing principles so you don't need to invoke `/specnaut` explicitly — typing
 Codex CLI and Copilot CLI distribute plugins through marketplaces. Specnaut has two adapter targets
 that need a one-time human setup before the marketplace listings are live:
 
-- **Codex CLI** — `.codex-plugin/plugin.json` ships in this repo; the
-  `scripts/sync-to-codex-plugin.sh` script (fires on every release tag) mirrors the Specnaut plugin
-  content into `specnaut/plugins` (a fork of `openai/plugins`). Until that fork is rebased into
-  upstream and the `CODEX_SYNC_TOKEN` PAT is provisioned (see issues #298–#300), the sync emits a
-  workflow warning and skips — same fail-safe pattern as the Homebrew tap bump.
-- **Copilot CLI + shared marketplace** — `.claude-plugin/marketplace.json` lives in
-  `specnaut/specnaut-cli-marketplace` (a separate repo). `scripts/sync-to-marketplace.sh` bumps the
-  version on every release. Until the marketplace repo + `MARKETPLACE_SYNC_TOKEN` are provisioned
-  (see issues #309–#310), the sync skips with a warning.
+- **Codex CLI** — `.codex-plugin/plugin.json` ships in the specnaut-cli repository, and Codex
+  installs directly from it.
+- **Claude Code + Copilot CLI marketplace** — the catalogs live in specnaut-cli under
+  `packaging/marketplace/`, one per installer dialect (`.claude-plugin/marketplace.json` for Claude
+  Code, `.github/plugin/marketplace.json` for Copilot CLI). Every release pins their entries to its
+  own tag, and `specnaut/specnaut-marketplace` copies them verbatim from the latest release.
 
 **Plugin vs `specnaut init`** — they complement each other:
 
@@ -831,7 +828,8 @@ Specnaut ships a first-class Claude Code plugin (`specnaut-plugin`) available vi
 marketplace:
 
 ```
-/plugin install specnaut/specnaut-cli-plugin
+/plugin marketplace add specnaut/specnaut-marketplace
+/plugin install specnaut-plugin@specnaut-marketplace
 ```
 
 The plugin gives any Claude Code user instant access to the full Specnaut slash-command suite and

@@ -74,7 +74,8 @@ Pick your harness from the install matrix in
 common):
 
 ```
-/plugin install specnaut/specnaut-cli-plugin
+/plugin marketplace add specnaut/specnaut-marketplace
+/plugin install specnaut-plugin@specnaut-marketplace
 ```
 
 This installs the Specnaut plugin at user scope. The SessionStart hook loads `using-specnaut` at
