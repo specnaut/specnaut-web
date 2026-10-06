@@ -170,6 +170,21 @@ inherit all four blocks automatically. `specnaut upgrade` delivers updated agent
 does **not** rewrite an existing constitution — to adopt the new baselines in an existing project,
 rebase your constitution manually.
 
+**Size limits.** The constitution also carries a `## Size limits` table (`Unit | Target | Ceiling`,
+defaults: file 300 / 500 lines, function 30 / 50) and three rules: a unit over its ceiling fails
+unless the change shrinks it; a unit over its target may not grow past its size where the change
+began; extract before you add. That table is the only source of size thresholds — no agent carries
+its own number, and `.specnaut/memory/size-limits.md` holds the defaults for any unit the table
+omits. Every phase reads it: the plan measures each touched file (`wc -l`) in a **Files touched**
+table and is not done while a file over its target grows; tasks puts an extraction task before any
+task touching such a file; implement passes the table to every subagent and reports
+`file: before → after`; review rates growth of an over-target file HIGH. For edits that never go
+through an agent, `.specnaut/scripts/bash/size-ratchet.sh` checks the staged changes against the
+branch's merge base (or `--since <ref>`) and exits non-zero on a violation — so an extraction commit
+followed by an addition passes, and every review runs it too — run it by hand or from your
+pre-commit runner; Specnaut installs no git hook. An existing constitution does not receive the
+table from `specnaut upgrade`: run `/specnaut constitution`, which proposes adding it.
+
 Refine the generated constitution and the root `AGENTS.md` for your stack, then move on to
 `/specnaut plan "<feature description>"` for your first feature.
 
