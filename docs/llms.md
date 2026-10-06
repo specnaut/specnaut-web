@@ -57,12 +57,12 @@ If you want Specnaut's skills and sub-agents available across **all your project
 for five harnesses with the same skill content across all of them — the bundled router skill, the
 phase docs, the bootstrap skill, the sub-agents, and the SessionStart hook (where supported).
 
-| Harness                | Install command                                                                                                               |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| **Claude Code**        | `/plugin marketplace add specnaut/specnaut-marketplace`<br/>`/plugin install specnaut-plugin@specnaut-marketplace`          |
-| **Codex CLI / App**    | `/plugins` → search "specnaut" → install (once the marketplace listing lands; see Notes)                                      |
-| **Cursor**             | `/add-plugin specnaut/specnaut-cli`                                                                                           |
-| **OpenCode**           | Add `"plugin": ["specnaut@git+https://github.com/specnaut/specnaut-cli.git"]` to `opencode.json`                              |
+| Harness                | Install command                                                                                                                  |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| **Claude Code**        | `/plugin marketplace add specnaut/specnaut-marketplace`<br/>`/plugin install specnaut-plugin@specnaut-marketplace`               |
+| **Codex CLI / App**    | `/plugins` → search "specnaut" → install (once the marketplace listing lands; see Notes)                                         |
+| **Cursor**             | `/add-plugin specnaut/specnaut-cli`                                                                                              |
+| **OpenCode**           | Add `"plugin": ["specnaut@git+https://github.com/specnaut/specnaut-cli.git"]` to `opencode.json`                                 |
 | **GitHub Copilot CLI** | `copilot plugin marketplace add specnaut/specnaut-marketplace`<br/>`copilot plugin install specnaut-plugin@specnaut-marketplace` |
 
 The skill content is identical across harnesses; only the surface conventions differ (slash-command
@@ -845,6 +845,64 @@ When both the plugin and the binary are in use, `specnaut upgrade` detects the p
 auto-migrates vanilla on-disk agents and command files (backed up, then deleted — the plugin serves
 them going forward). `specnaut check --project` warns when covered files are missing and the plugin
 is not installed, with a recovery hint.
+
+#### The Specnaut Cockpit (Claude Code only)
+
+`specnaut-cockpit` is a second plugin in the same marketplace: a
+[Claude Code mod](https://code.claude.com/docs/en/plugins/mods/overview) for developers who work
+with Specnaut in Claude Code. It needs Claude Code v2.1.287 or later.
+
+```
+/plugin install specnaut-cockpit@specnaut-marketplace
+```
+
+Projects scaffolded with `specnaut init --ai claude` declare it in `.claude/settings.json`, so
+Claude Code offers to install it when someone trusts the project. `specnaut upgrade` adds the same
+declaration to existing projects.
+
+**What it shows.** A band above the prompt, sized to the terminal width:
+
+```
+5h 82% ↻2h10 · 7d 31% ↻3d4h · ctx 48% · $3.12 · ▸ plan ✓ tasks ✓ implement ● review ○ merge ○
+```
+
+- the 5-hour and weekly usage windows, with the time until each resets: yellow from 80%, red from
+  the hold threshold;
+- the context fill and the session's cost;
+- the chain's progress while the autopilot runs.
+
+A narrow terminal drops the reset times and the chain's detail first, and keeps the windows. Each
+window is announced once, as a toast, when it crosses a threshold.
+
+`/cockpit` opens a pane: the limits, this session, the last seven days (cost and 5-hour peak per
+day) and the branches that cost the most. `/cockpit hide` and `/cockpit show` toggle the band.
+
+**The quota hold.** The chain runs on autopilot after the plan, so a limit reached mid-run could cut
+a phase off halfway, for example a merge without its push. When a window is at or above the hold
+threshold (90% by default), the cockpit refuses the Skill call that starts `implement`, `review` or
+`merge`. The chain then stops at that phase boundary, the agent reports the window and its reset
+time, and `/specnaut <phase>` resumes after the reset. If you reply that it should continue anyway,
+it continues, and the same window does not hold it again. The hold is the only call the cockpit ever
+refuses.
+
+**Settings** (`/config`, or `/plugin configure specnaut-cockpit@specnaut-marketplace`):
+
+| Option    | Default | Effect                                                     |
+| --------- | ------- | ---------------------------------------------------------- |
+| `hold_at` | 90      | Window percentage that holds the autopilot. 100 = no hold. |
+| `warn_at` | 80      | Window percentage shown in yellow and announced.           |
+| `band`    | on      | Off keeps only `/cockpit` and the hold.                    |
+
+To decline it for a project, set `"specnaut-cockpit@specnaut-marketplace": false` under
+`enabledPlugins` in `.claude/settings.json`. Upgrades keep that `false`. Deleting the key brings it
+back at the next upgrade.
+
+**Where it works.** In Claude Code in a terminal and in the Code tab of the desktop app. In the IDE
+extension's chat panel and in `claude -p`, nothing is drawn, but the hold still applies. Rate-limit
+windows appear on plans that have them. With an API key, the band shows context, cost and the chain.
+
+**Privacy.** The history (90 days) stays in the mod's store on your machine. Nothing is sent
+anywhere. The only process the cockpit starts is `git rev-parse`, to name the current branch.
 
 ### 6. Bundled `specnaut-expert` agent
 
