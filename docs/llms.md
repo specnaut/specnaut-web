@@ -425,6 +425,13 @@ specnaut --version                # print version
 specnaut --help                   # full usage
 ```
 
+From inside an agent session, `/specnaut upgrade` runs the same round for you. It updates the binary
+when a newer release is published, then runs `specnaut upgrade` and reports what it rewrote, what it
+kept as customised, and what waits for `specnaut reconcile`. It checks the project with
+`specnaut check --project`, then commits the result as `chore(specnaut): upgrade to v<version>`
+without pushing. `--dry-run` shows the plan and changes nothing, and `--no-self-update` keeps the
+installed binary. It never runs `--force` unless you ask for it.
+
 ### Ship: versioning and release notes
 
 Every scaffolded project ships `/ship`, the third top-level skill. It owns going to production, and
