@@ -779,6 +779,14 @@ repo. Idempotent; never edits or deletes existing labels. The GitHub default `bu
 but never re-created. The full reference lives in `.specnaut/LABELS.md` next to the install —
 including a guidance note for local backend users on tagging via task-file frontmatter.
 
+**Grooming ends with a promotion.** `/board groom` moves each groomed item from the board's intake
+column to its ready column (default `Backlog` → `Ready`), so the next run skips it by column alone;
+only open scope decisions keep an item in intake. On GitHub the columns are read from the board once
+per run (`groom-columns.sh`). When the board has no matching column, the run asks once — an existing
+column, add the missing one, or groom without promoting — and records the answer in
+`.specnaut/backlog-config.yml` (`intake_column` / `ready_column`), so it is never asked again. A
+move that fails is listed in the groom report.
+
 **Mandatory classification — every groomed item is sized, prioritised, typed, and labelled.** The PO
 classifies every item it creates or clarifies along four axes — Size, Priority, Issue Type (`Task` /
 `Bug` / `Feature`), and at least one label — before the item is done; classification is a gate, not
