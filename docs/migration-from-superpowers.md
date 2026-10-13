@@ -16,7 +16,7 @@ a single source.
 | `superpowers:subagent-driven-development`    | `subagent-driven-development`               | Same two-stage review loop (spec compliance, then code quality). Dispatches Specnaut's bundled `developer` + `code-reviewer` agents instead of generic `general-purpose` — agents already know project conventions. |
 | `superpowers:executing-plans`                | `executing-plans`                           | Same inline-with-checkpoints semantics. Adds Specnaut's pre-commit gate awareness (deno fmt/lint/bundle/check).                                                                                                     |
 | `superpowers:requesting-code-review`         | `requesting-code-review`                    | Same Strengths / Critical / Important / Minor / Assessment template, inlined in the SKILL.md (no separate `code-reviewer.md` file — Specnaut already bundles a `code-reviewer` agent).                              |
-| `superpowers:verification-before-completion` | `verification-before-completion`            | Same forcing-function checklist before claiming DONE, with Specnaut-specific gates (deno task test, plugin sync, Windsurf cap, smoke audit).                                                                        |
+| `superpowers:verification-before-completion` | `verification-before-completion`            | Same forcing-function checklist before claiming DONE, with Specnaut-specific gates (the project's own tests at the right scope, plugin sync, smoke audit).                                                          |
 | `superpowers:using-superpowers`              | `using-specnaut`                            | Bootstrap skill auto-loaded at SessionStart on every supported harness. Same "1% threshold for skill check" discipline, adapted to Specnaut's skill + agent registry.                                               |
 | `superpowers:using-git-worktrees`            | (not bundled)                               | Specnaut doesn't ship an opinionated worktree skill. Use the upstream pattern manually if you prefer it.                                                                                                            |
 | `superpowers:test-driven-development`        | (built into other skills)                   | TDD is mandated by `writing-plans` (every code step starts with a failing test) and the `developer` agent doctrine. No separate skill.                                                                              |
@@ -159,7 +159,7 @@ This is the "tribal knowledge → durable contract" move.
 
 - Dispatches Specnaut's bundled `developer` agent as the implementer (vs. generic `general-purpose`
   upstream). The developer agent already knows the project conventions (hexagonal, TDD, in-code
-  documentation, Windsurf cap, byte-identity plugin sync, smoke audit).
+  documentation, byte-identity plugin sync, smoke audit).
 - Dispatches `code-reviewer` for both spec-compliance and code-quality stages, with different
   prompts.
 - Status code handling identical (DONE / DONE_WITH_CONCERNS / NEEDS_CONTEXT / BLOCKED).
@@ -176,15 +176,15 @@ This is the "tribal knowledge → durable contract" move.
 
 ### `verification-before-completion`
 
-- 8-item checklist tied to Specnaut's actual quality contract:
-  1. `deno task test` (passed count not "I think it's green")
-  2. Pre-commit gates (fmt --check, lint, bundle, check)
+- 7-item checklist tied to Specnaut's actual quality contract:
+  1. The project's own tests, at the right scope — the tests relevant to the change for a task, the
+     whole suite once for the work as a whole (passed count, not "I think it's green")
+  2. The project's own gates (format, lint, type check, generated artefacts)
   3. `git status --porcelain` clean
   4. Plan checkboxes all ticked
-  5. `audit.sh` clean (when touching `templates/core/skills/`)
-  6. `plugin_sync_test` green (when touching mirrored files)
-  7. Windsurf 12000-char cap (when touching SKILL.md / agent prompts)
-  8. Per-AC requirement coverage by file:line
+  5. `audit.sh` clean (when touching `templates/core/skills/`, Specnaut's own repo only)
+  6. `plugin_sync_test` green (when touching mirrored files, Specnaut's own repo only)
+  7. Per-AC requirement coverage by file:line
 - Report shape includes verification evidence inline (`Verification: …`).
 
 ### `using-specnaut`

@@ -7,8 +7,8 @@
 > system — directly into an existing project, in one command.
 
 Specnaut does **not** call any LLM and does **not** orchestrate any agent at runtime. Your AI
-harness (Claude Code, Cursor, Codex, GitHub Copilot CLI, Windsurf, OpenCode, Antigravity) is what
-reads the generated files and acts on them.
+harness (Claude Code, Cursor, Codex, GitHub Copilot CLI, OpenCode, Antigravity) is what reads the
+generated files and acts on them.
 
 This page is the canonical documentation. The same content is available as raw Markdown at
 [`/llms.txt`](/llms.txt) for LLM consumption — see [llmstxt.org](https://llmstxt.org/) for the
@@ -263,8 +263,10 @@ specnaut init my-project --ai codex
 # … etc.
 ```
 
-Seven harness targets are supported: `claude` (default), `cursor`, `codex`, `windsurf`, `copilot`,
-`opencode`, `antigravity`. Each emits files in the convention that harness expects.
+Six harness targets are supported: `claude` (default), `cursor`, `codex`, `copilot`, `opencode`,
+`antigravity`. Windsurf was supported up to 5.5.0 and removed in 6.0.0 — a Windsurf project switches
+with `specnaut init --here --force --ai <harness>`. Each emits files in the convention that harness
+expects.
 
 ### Pick a backlog backend
 
@@ -511,7 +513,6 @@ pipe to a custom publisher.
 | `claude`      | Claude Code        | `.claude/`              |
 | `cursor`      | Cursor             | `.cursor/`              |
 | `codex`       | Codex CLI          | `.codex/`, `.agents/`   |
-| `windsurf`    | Windsurf           | `.windsurf/`            |
 | `copilot`     | GitHub Copilot CLI | `.github/instructions/` |
 | `opencode`    | OpenCode           | `.opencode/`            |
 | `antigravity` | Antigravity        | `.agents/`              |
