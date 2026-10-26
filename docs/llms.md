@@ -63,7 +63,7 @@ the harness discovers the skills and agents from the plugin itself.
 | **Claude Code**        | `/plugin marketplace add specnaut/specnaut-marketplace`<br/>`/plugin install specnaut-plugin@specnaut-marketplace`               |
 | **Codex CLI / App**    | `/plugins` → search "specnaut" → install (once the marketplace listing lands; see Notes)                                         |
 | **Cursor**             | `/add-plugin specnaut/specnaut-cli`                                                                                              |
-| **OpenCode**           | Add `"plugin": ["specnaut@git+https://github.com/specnaut/specnaut-cli.git"]` to `opencode.json`                                 |
+| **OpenCode**           | Add `"plugin": ["specnaut@git+https://github.com/specnaut/specnaut-cli.git#v__SPECNAUT_VERSION__"]` to `opencode.json`           |
 | **GitHub Copilot CLI** | `copilot plugin marketplace add specnaut/specnaut-marketplace`<br/>`copilot plugin install specnaut-plugin@specnaut-marketplace` |
 
 The skill content is identical across harnesses; only the surface conventions differ (slash-command

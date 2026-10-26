@@ -55,6 +55,18 @@ async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
 }
 
 /**
+ * The docs source with every `__SPECNAUT_VERSION__` replaced by the release.
+ *
+ * The OpenCode install line pins the plugin to a release tag (cli#667), and a
+ * tag written by hand here would lag the first release after it. The site
+ * rebuilds on every CLI release and daily, so the placeholder keeps the
+ * published line on the latest release without anyone editing this repo.
+ */
+export function withVersion(markdown: string, version: string): string {
+  return markdown.replaceAll(VERSION_PLACEHOLDER, version);
+}
+
+/**
  * Resolve the Specnaut CLI version to display. This site repo (`specnaut-web`)
  * carries no CLI source, so the authoritative version is the latest published
  * release of `specnaut/specnaut-cli` — also what `version.json` must report for the
@@ -380,7 +392,7 @@ export async function buildDocs(opts: {
   const outMd = `${outDir}/llms.txt`;
   const outVersionJson = `${outDir}/version.json`;
 
-  const sourceMarkdown = await Deno.readTextFile(source);
+  const sourceMarkdown = withVersion(await Deno.readTextFile(source), version);
   const releaseSection = await fetchReleases();
   const enrichedMarkdown = releaseSection
     ? `${sourceMarkdown}\n\n${releaseSection}\n`
