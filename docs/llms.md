@@ -213,8 +213,10 @@ path — never a silent skip. The file stays lock-tracked, so `specnaut diff` ke
 drifted from the evolving bundle. A project with no `preserve.yml` behaves exactly as before. To
 deliberately discard a customization and restore the bundled version for one run, add
 `--reset-preserved` (it overrides every declaration for that run and reports each override; it is
-never the default). A declared path that is not a managed bundle file is reported as an ineffective
-declaration (a warning) rather than silently honored.
+never the default). A declared path Specnaut does not manage — neither shipped by the bundle nor
+recorded in the lock — is reported as an ineffective declaration (a warning) rather than silently
+honored. A declared path the bundle has since dropped stays on disk and tracked, and every `upgrade`
+reports that upstream no longer ships it until the declaration is removed.
 
 Pass `--dry-run` to preview the plan without touching disk — combined with `--force` it shows which
 files would be overwritten and which would be merged, but writes nothing. `--dry-run` is the trump
