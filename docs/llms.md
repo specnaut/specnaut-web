@@ -55,7 +55,8 @@ Manual download: pick the binary for your OS/arch from
 If you want Specnaut's skills and sub-agents available across **all your projects** without running
 `specnaut init`, install Specnaut as a plugin / extension in your harness. Specnaut ships adapters
 for five harnesses with the same skill content across all of them — the bundled router skill, the
-phase docs, the bootstrap skill, the sub-agents, and the SessionStart hook (where supported).
+phase docs, the other bundled skills and the sub-agents. A plugin injects nothing into a session:
+the harness discovers the skills and agents from the plugin itself.
 
 | Harness                | Install command                                                                                                                  |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -66,9 +67,9 @@ phase docs, the bootstrap skill, the sub-agents, and the SessionStart hook (wher
 | **GitHub Copilot CLI** | `copilot plugin marketplace add specnaut/specnaut-marketplace`<br/>`copilot plugin install specnaut-plugin@specnaut-marketplace` |
 
 The skill content is identical across harnesses; only the surface conventions differ (slash-command
-prefix, auto-activation mechanism, tool naming). See the per-harness tool-mapping references at
-`plugin/skills/using-specnaut/references/<harness>-tools.md` for the equivalent of every Claude Code
-tool on each harness.
+prefix, how a skill activates, tool naming). One rule is harness-specific and lives in the
+scaffolded `AGENTS.md`: dispatch a Specnaut agent by its name, never by describing the task —
+`Task(subagent_type: "<name>")` on Claude Code, `spawn_agent(agent_type="<name>")` on Codex.
 
 #### Claude Code — slash-command prefix
 
@@ -89,12 +90,10 @@ claude --plugin-dir /path/to/specnaut/plugin
 
 #### Auto-activation across harnesses
 
-Specnaut ships a `using-specnaut` bootstrap skill loaded automatically at session start on every
-harness that supports it (via plugin/hooks/hooks.json on Claude Code, plugin/hooks/hooks-cursor.json
-on Cursor, the `experimental.chat.messages.transform` hook in `.opencode/plugins/specnaut.js` on
-OpenCode). The bootstrap skill teaches the agent Specnaut's skill registry, agent registry, and
-routing principles so you don't need to invoke `/specnaut` explicitly — typing "plan this issue" or
-"review my work" is enough for the right skill to fire.
+Each skill carries a `description` the harness matches against what you type, so "plan this issue"
+or "review my work" is enough for the right skill to fire without invoking `/specnaut` explicitly.
+Nothing is injected at session start. On OpenCode, `.opencode/plugins/specnaut.js` only adds the
+plugin's skills directory to OpenCode's skill search path.
 
 #### Notes on Codex CLI and the shared marketplace
 

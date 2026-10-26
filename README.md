@@ -20,8 +20,7 @@ docs/
 ├── api/gates.md                 # feature reference
 ├── ops/hosting.md               # how specnaut.com is served + crawler access
 ├── cloud-credentials.md
-├── headless-vm-mode.md
-└── migration-from-superpowers.md
+└── headless-vm-mode.md
 scripts/build-docs.ts            # the static-site builder (Deno + @deno/gfm)
 .github/workflows/pages.yml      # build + deploy to GitHub Pages
 ```
