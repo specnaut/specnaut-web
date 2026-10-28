@@ -524,12 +524,16 @@ frontmatter conventions.
 
 Some harnesses also ship harness-specific helper files alongside the core scaffold:
 
-- **Claude** — `.claude/CLAUDE.md` (harness reference, including `/goal`, `/loop`, and
-  `claude agents` usage notes) + `.claude/loop.md` (default prompt for `/loop`, Claude's recurring
-  periodic-maintenance feature).
-- **Codex** — `.codex/AGENTS.md` (harness reference) + `.codex/goal.md` (default prompt for `/goal`,
-  Codex's experimental one-shot long-horizon feature; enable via `goals = true` under `[features]`
-  in `config.toml`).
+- **Claude** — `.claude/CLAUDE.md`, a relative symlink to the root `AGENTS.md` (a one-line
+  `@../AGENTS.md` file where links are refused), so Claude Code loads the same file as every other
+  harness. Plus `.claude/loop.md`, the default prompt for `/loop`, Claude's recurring
+  periodic-maintenance feature.
+- **Codex** — `.codex/AGENTS.md`, a relative symlink to the root `AGENTS.md` (Codex reads the root
+  file itself), and `[agents] enabled = true` in `.codex/config.toml`, so Codex starts Specnaut's
+  agents by name. `.codex/goal.md` is no longer shipped: `/goal` never read it.
+
+The `/goal`, `/loop` and `claude agents` notes live in the `Optional integrations` section of the
+root `AGENTS.md`, rendered for the harness the project was installed for.
 
 ### Interoperating with DeepSeek Harness
 
