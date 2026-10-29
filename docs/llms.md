@@ -54,9 +54,10 @@ Manual download: pick the binary for your OS/arch from
 
 If you want Specnaut's skills and sub-agents available across **all your projects** without running
 `specnaut init`, install Specnaut as a plugin / extension in your harness. Specnaut ships adapters
-for five harnesses with the same skill content across all of them — the bundled router skill, the
-phase docs, the other bundled skills and the sub-agents. A plugin injects nothing into a session:
-the harness discovers the skills and agents from the plugin itself.
+for five harnesses with the same skill content across all of them — the three top-level skills
+(`task`, `specnaut`, `ship`) and their phase docs, the other bundled skills and the sub-agents. A
+plugin injects nothing into a session: the harness discovers the skills and agents from the plugin
+itself.
 
 | Harness                | Install command                                                                                                                  |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
@@ -74,13 +75,13 @@ scaffolded `AGENTS.md`: dispatch a Specnaut agent by its name, never by describi
 #### Claude Code — slash-command prefix
 
 ```
-/specnaut-plugin:specnaut plan "<feature description>"
-/specnaut-plugin:specnaut tasks
+/specnaut-plugin:task plan "<feature description>"
+/specnaut-plugin:task tasks
 ```
 
-Slightly verbose, but unambiguous (the plugin's slash-commands are namespaced and the consolidated
-router itself is named `specnaut`). If you scaffold project-local with `specnaut init` instead, you
-get the shorter `/specnaut plan "..."` form.
+Slightly verbose, but unambiguous (the plugin's slash-commands are namespaced under
+`specnaut-plugin`, and the pipeline lives in the `task` skill). If you scaffold project-local with
+`specnaut init` instead, you get the shorter `/task plan "..."` form.
 
 To test a local checkout of the plugin without publishing:
 
@@ -91,7 +92,7 @@ claude --plugin-dir /path/to/specnaut/plugin
 #### Auto-activation across harnesses
 
 Each skill carries a `description` the harness matches against what you type, so "plan this issue"
-or "review my work" is enough for the right skill to fire without invoking `/specnaut` explicitly.
+or "review my work" is enough for the right skill to fire without invoking `/task` explicitly.
 Nothing is injected at session start. On OpenCode, `.opencode/plugins/specnaut.js` only adds the
 plugin's skills directory to OpenCode's skill search path.
 
@@ -109,13 +110,13 @@ that need a one-time human setup before the marketplace listings are live:
 
 **Plugin vs `specnaut init`** — they complement each other:
 
-| Aspect                           | Binary (`specnaut init`)   | Plugin (`/plugin install`)          |
-| -------------------------------- | -------------------------- | ----------------------------------- |
-| Scope                            | Project-local (`.claude/`) | User-scope (all projects)           |
-| Slash-command style              | `/specnaut plan` (short)   | `/specnaut-plugin:specnaut plan`    |
-| Customizable per-project         | Yes                        | No (user-scope, shared)             |
-| Board skill, hooks, `.specnaut/` | Yes                        | No (project-stateful — binary-only) |
-| Kept in sync                     | `specnaut upgrade`         | `/plugin update`                    |
+| Aspect                               | Binary (`specnaut init`)   | Plugin (`/plugin install`)          |
+| ------------------------------------ | -------------------------- | ----------------------------------- |
+| Scope                                | Project-local (`.claude/`) | User-scope (all projects)           |
+| Slash-command style                  | `/task plan` (short)       | `/specnaut-plugin:task plan`        |
+| Customizable per-project             | Yes                        | No (user-scope, shared)             |
+| Backlog scripts, hooks, `.specnaut/` | Yes                        | No (project-stateful — binary-only) |
+| Kept in sync                         | `specnaut upgrade`         | `/plugin update`                    |
 
 Most teams use both: the plugin provides discoverability and keeps the agents up-to-date across all
 projects; `specnaut init` provides the short slash-commands and project-local customization.
@@ -137,25 +138,40 @@ where you'll run the rest.
 
 Specnaut gives your harness three skills, and the split between them is the model:
 
-| Skill           | Owns                                                           | Example                               |
-| --------------- | -------------------------------------------------------------- | ------------------------------------- |
-| **`/board`**    | the backlog and the dashboard                                  | `/board add "Fix the login redirect"` |
-| **`/specnaut`** | **specification only** — plan, tasks, implement, review, merge | `/specnaut plan "Add OAuth2 login"`   |
-| **`/ship`**     | going to production — versioning and release notes             | `/ship tag`                           |
+| Skill           | Owns                                                                   | Example                                                      |
+| --------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------ |
+| **`/task`**     | one unit of work — from backlog item to merged branch, audits included | `/task add "…"`, `/task plan <id>`, `/task audit --security` |
+| **`/specnaut`** | the framework itself — its documentation, what is installed, upgrading | `/specnaut doc`, `/specnaut list`, `/specnaut upgrade`       |
+| **`/ship`**     | going to production — versioning and release notes                     | `/ship tag`, `/ship release`                                 |
 
-Manage the backlog, write the spec, ship it.
+Carry the work from backlog to merge, keep the framework current, ship it.
 
-`/specnaut` owns specification and **no release concern**. Tagging and release notes used to sit
-under it as the `tag-version` and `release-version` phases; they are now `/ship tag` and
+`/task` covers the whole life of one unit of work: the backlog verbs (`list`, `next`, `add`, `edit`,
+`close`, `groom`, `estimate`, `status`, `brief`, `<id>`), the pipeline (`plan`, `tasks`,
+`implement`, `review`, `merge`), the read-only audit (`/task audit`, every applicable axis with no
+flag, or `--security`, `--archi`, `--perf`, `--a11y`, `--deps`), and `constitution`. On harnesses
+that prefix their skills, it is `specnaut-task`; `specnaut init` prints the exact commands for the
+harness you chose.
+
+Neither `/task` nor `/specnaut` carries a release concern. Tagging and release notes used to sit
+under `/specnaut` as the `tag-version` and `release-version` phases; they are now `/ship tag` and
 `/ship release`. Both the owner and the verb changed, so `/ship tag-version` is not a command — see
 [Ship: versioning and release notes](#ship-versioning-and-release-notes).
 
-### Step 1 after `init`: run `/specnaut constitution`
+> **Moved in 7.2.** `/board …` is now `/task …` (`/board update` is `/task edit`); `/specnaut plan`,
+> `tasks`, `implement`, `review`, `merge` and `constitution` are now `/task plan`, …; `/code-audit`
+> is `/task audit`, and `/sec-audit`, `/arch-audit`, `/perf-audit`, `/a11y-audit` and `/dep-audit`
+> are `/task audit --security`, `--archi`, `--perf`, `--a11y` and `--deps`. The old addresses print
+> the new one and stop; there are no aliases. See
+> [`UPGRADING.md`](https://github.com/specnaut/specnaut-cli/blob/main/UPGRADING.md) in the CLI
+> repository for what `specnaut upgrade` moves for you.
 
-`/specnaut constitution` is the expected first action after `specnaut init`. It scaffolds your
-project's guiding principles (architecture, quality gates, ways of working) into
-`.specnaut/memory/constitution.md` so the rest of the pipeline (`/specnaut plan`, `/specnaut tasks`,
-`/specnaut implement`) has something to anchor on — the plan phase gives every principle an explicit
+### Step 1 after `init`: run `/task constitution`
+
+`/task constitution` is the expected first action after `specnaut init`. It scaffolds your project's
+guiding principles (architecture, quality gates, ways of working) into
+`.specnaut/memory/constitution.md` so the rest of the pipeline (`/task plan`, `/task tasks`,
+`/task implement`) has something to anchor on — the plan phase gives every principle an explicit
 verdict.
 
 The generated constitution comes pre-populated with four opinionated baseline blocks (all
@@ -182,10 +198,10 @@ through an agent, `.specnaut/scripts/bash/size-ratchet.sh` checks the staged cha
 branch's merge base (or `--since <ref>`) and exits non-zero on a violation — so an extraction commit
 followed by an addition passes, and every review runs it too — run it by hand or from your
 pre-commit runner; Specnaut installs no git hook. An existing constitution does not receive the
-table from `specnaut upgrade`: run `/specnaut constitution`, which proposes adding it.
+table from `specnaut upgrade`: run `/task constitution`, which proposes adding it.
 
 Refine the generated constitution and the root `AGENTS.md` for your stack, then move on to
-`/specnaut plan "<feature description>"` for your first feature.
+`/task plan "<feature description>"` for your first feature.
 
 ### Add Specnaut to an existing project
 
@@ -288,7 +304,7 @@ and how the PO agent talks to it.
 
 When the chosen backend is `github` or `gitlab`, `specnaut init` can take the project's Kanban URL
 up front and write a fully-populated `.specnaut/backlog-config.yml` — no manual edit needed before
-running `/board`. Pass the project URL via `--backlog-url`:
+running `/task`. Pass the project URL via `--backlog-url`:
 
 ```bash
 # GitHub org-owned project
@@ -591,11 +607,11 @@ Specnaut is a fork of the official `specify` CLI with the following additions:
 
 ### 1. Auto-chained pipeline
 
-The generated `/specnaut` skill chains `plan → tasks → implement → review → merge` in a single
-session. Upstream stops at every step and asks the human to invoke the next one.
+The generated `/task` skill chains `plan → tasks → implement → review → merge` in a single session.
+Upstream stops at every step and asks the human to invoke the next one.
 
 ```
-/specnaut plan "<feature description>"
+/task plan "<feature description>"
 ```
 
 That one command carries you to a merged, pushed base branch. When the idea is still fuzzy and you
@@ -632,8 +648,8 @@ The chain then stops a second time, at the **review verdict**: the summary (file
 open risks, business outcome) and `Ready to merge?` are the same moment, and that one yes covers the
 merge, the push and the close. For a single run, `--manual-merge` or "stop before merging" in your
 request does the same. A value that cannot be read (a typo) counts as `manual`, so a broken setting
-never pushes. `/specnaut merge --pr` delivers through a pull request instead of a local merge in
-either mode.
+never pushes. `/task merge --pr` delivers through a pull request instead of a local merge in either
+mode.
 
 #### One planning document, and what makes it binding
 
@@ -656,10 +672,10 @@ a plan violation rather than a style opinion.
 
 #### The plan is audited before a line of code exists
 
-`plan` dispatches the `architecture-auditor` and `security-auditor` agents **on the plan itself**,
-in the same message so they run concurrently. They judge different things: the architect asks
-whether a rule has one home, the security seat asks whether that home is reachable by someone who
-should not reach it.
+`plan` dispatches the `architect-expert` and `security-expert` agents **on the plan itself**, in the
+same message so they run concurrently. They judge different things: the architect asks whether a
+rule has one home, the security seat asks whether that home is reachable by someone who should not
+reach it.
 
 Their findings go **into `plan.md`** — either the plan changes, or it records why the objection was
 accepted. A clean verdict is written down _with its coverage_, because a clean verdict is worth
@@ -673,14 +689,14 @@ the gate impossible is a migration, a backfill and every caller.
 
 #### Linking a feature to a backlog issue
 
-Pass `--issue <id>` to `/specnaut plan` (or to the bundled `create-new-feature.sh`) to record the
+Pass `--issue <id>` to `/task plan` (or to the bundled `create-new-feature.sh`) to record the
 originating backlog issue in `.specnaut/feature.json`:
 
 ```
-/specnaut plan "Fix the off-by-one in pagination" --issue 42
+/task plan "Fix the off-by-one in pagination" --issue 42
 ```
 
-After `/specnaut merge` fast-forwards the branch onto `main` and you push, the merge phase reads
+After `/task merge` fast-forwards the branch onto `main` and you push, the merge phase reads
 `feature.json.linked_issue`, runs `cascade-check.sh` (github / gitlab) to confirm no sub-issues
 block the close, asks `Close issue #42 on the board now? (yes/no)`, and on `yes` flips the project
 column to `Done` via `move.sh` then dispatches the `product-owner` agent to post a close comment
@@ -694,7 +710,7 @@ with the merged commit range and `gh issue close --reason completed`. The board 
 `--manual` is the only chain flag:
 
 ```
-/specnaut plan --manual "<feature description>"
+/task plan --manual "<feature description>"
 ```
 
 #### Mid-chain re-entry needs no flag
@@ -705,7 +721,7 @@ The behaviour is **inferred from what is on disk**: if the downstream artefacts 
 single-phase re-run, so regenerating `plan.md` does not accidentally cascade through the rest.
 
 ```
-/specnaut implement N     # picks up the tail: → review → merge → push
+/task implement N     # picks up the tail: → review → merge → push
 ```
 
 ### 2. `review` phase post-implement
@@ -722,13 +738,13 @@ under a strict doctrine that applies to every task, regardless of project stack:
 
 **Domain Model gate (NON-NEGOTIABLE)** — before writing a single line of code, the developer reads
 the domain model in `plan.md`'s technical-context section (spec path) or in the Product Owner's
-`/board brief` output (direct-implementation path). If it is absent, empty, or still contains
+`/task brief` output (direct-implementation path). If it is absent, empty, or still contains
 template placeholders, the agent halts and returns `BLOCKED` with reason
 `awaiting:product-owner-domain-brief`. The `implement` phase enforces the same gate and surfaces the
-same BLOCKED report, recommending a re-run of `/specnaut plan` to fill it. The plan phase is
-responsible for populating the full block (Bounded context, Vocabulary, Entities, Value objects,
-Invariants) rather than just listing key entities — and its stop is where you are asked about
-anything it could not settle.
+same BLOCKED report, recommending a re-run of `/task plan` to fill it. The plan phase is responsible
+for populating the full block (Bounded context, Vocabulary, Entities, Value objects, Invariants)
+rather than just listing key entities — and its stop is where you are asked about anything it could
+not settle.
 
 **Test-Driven Development (NON-NEGOTIABLE)** — red → green → refactor on every implementation. No
 business logic ships untested. If the project has no test infrastructure, the developer bootstraps
@@ -785,7 +801,7 @@ repo. Idempotent; never edits or deletes existing labels. The GitHub default `bu
 but never re-created. The full reference lives in `.specnaut/LABELS.md` next to the install —
 including a guidance note for local backend users on tagging via task-file frontmatter.
 
-**Grooming ends with a promotion.** `/board groom` moves each groomed item from the board's intake
+**Grooming ends with a promotion.** `/task groom` moves each groomed item from the board's intake
 column to its ready column (default `Backlog` → `Ready`), so the next run skips it by column alone;
 only open scope decisions keep an item in intake. On GitHub the columns are read from the board once
 per run (`groom-columns.sh`). When the board has no matching column, the run asks once — an existing
@@ -808,11 +824,11 @@ groom) emits the field/option IDs into env vars for case-insensitive matching. O
 axes are scoped labels via `glab`; on the local Markdown backend they live in task-file frontmatter.
 
 **Bounded context (soft fifth axis)** — a `domain:<context>` label (e.g. `domain:checkout`) is
-optional on mono-domain projects but the `## Domain Model` block in every `/board brief` output is
+optional on mono-domain projects but the `## Domain Model` block in every `/task brief` output is
 always mandatory. Items touching ≥ 2 bounded contexts automatically trigger the epic detection
 heuristic with reason "cross-bounded-context".
 
-**`/board brief` — Domain Model is mandatory.** Every brief the PO generates for a developer MUST
+**`/task brief` — Domain Model is mandatory.** Every brief the PO generates for a developer MUST
 include a `## Domain Model` block with: Bounded context, Vocabulary (ubiquitous language), Entities
 (with aggregate root flag), Value objects, Invariants, and Out of scope. A brief without this block
 is incomplete — the PO clarifies with the user before issuing it. If a `plan.md` is attached, the
@@ -852,7 +868,7 @@ progress), and once every child reaches **Done** the parent rolls up to Done. A 
 **Ready** is deliberately a no-op — Ready means groomed-and-waiting, not active work, so it must not
 promote the parent.
 
-The Product Owner agent **proactively** proposes epic decomposition during `/board add` and during
+The Product Owner agent **proactively** proposes epic decomposition during `/task add` and during
 grooming whenever a request crosses ≥2 subsystems, has more than 5 acceptance-criteria bullets, or
 carries trigger phrases like "break down", "phased", "rewrite", "end-to-end". Obvious splits get
 auto-created; ambiguous ones get a concrete sub-task list back as a question. You don't have to ask
@@ -869,13 +885,12 @@ marketplace:
 ```
 
 The plugin gives any Claude Code user instant access to the full Specnaut slash-command suite and
-sub-agents — no binary, no `specnaut init` required. The plugin assets (the consolidated `specnaut`
-router skill with its phase docs including the five `audit-*` axes — `security` / `performance` /
-`accessibility` from Epic #302 and `architecture` / `dependencies` from Epic #320, the
-`specnaut-review` auto-invoke alias, and 15 sub-agents including the manual-only
-`performance-auditor`, `a11y-auditor`, `architecture-auditor`, and `dependency-auditor` introduced
-with the audit family) are namespaced under `/specnaut-plugin:*` so they coexist with project-local
-copies without collision.
+sub-agents — no binary, no `specnaut init` required. The plugin assets (the three top-level skills —
+`task` with its backlog and phase docs, audit included, `specnaut` and `ship` — the contract skills
+they load, and the sub-agents, the audit seats `architect-expert`, `security-expert`,
+`performance-expert`, `accessibility-expert` and `dependency-expert` among them) are namespaced
+under `/specnaut-plugin:*` (`/specnaut-plugin:task plan`) so they coexist with project-local copies
+without collision.
 
 When both the plugin and the binary are in use, `specnaut upgrade` detects the plugin and
 auto-migrates vanilla on-disk agents and command files (backed up, then deleted — the plugin serves
@@ -917,8 +932,8 @@ day) and the branches that cost the most. `/cockpit hide` and `/cockpit show` to
 a phase off halfway, for example a merge without its push. When a window is at or above the hold
 threshold (90% by default), the cockpit refuses the Skill call that starts `implement`, `review` or
 `merge`. The chain then stops at that phase boundary, the agent reports the window and its reset
-time, and `/specnaut <phase>` resumes after the reset. If you reply that it should continue anyway,
-it continues, and the same window does not hold it again. The hold is the only call the cockpit ever
+time, and `/task <phase>` resumes after the reset. If you reply that it should continue anyway, it
+continues, and the same window does not hold it again. The hold is the only call the cockpit ever
 refuses.
 
 **Settings** (`/config`, or `/plugin configure specnaut-cockpit@specnaut-marketplace`):
@@ -940,15 +955,14 @@ windows appear on plans that have them. With an API key, the band shows context,
 **Privacy.** The history (90 days) stays in the mod's store on your machine. Nothing is sent
 anywhere. The only process the cockpit starts is `git rev-parse`, to name the current branch.
 
-### 6. Bundled `specnaut-expert` agent
+### 6. Bundled `specnaut-guide` agent
 
-Every scaffold ships a `specnaut-expert` agent that knows Specnaut itself — its commands, harnesses,
+Every scaffold ships a `specnaut-guide` agent that knows Specnaut itself — its commands, harnesses,
 backlog backends, and what changed between releases. It auto-triggers on Specnaut-related questions
-("how does specnaut X", "what is /specnaut Y", "quoi de neuf") so users on a Specnaut-scaffolded
-project can ask the harness about the tool without copy-pasting docs. It uses a vendored knowledge
-snapshot for offline / deterministic answers and `WebFetch` against
-<https://specnaut.com/llms.txt> + the GitHub Releases API for live "what's new" queries. Manual
-dispatch via `/specnaut-expert <question>` is also supported.
+("how does specnaut X", "what is /task Y", "quoi de neuf") so users on a Specnaut-scaffolded project
+can ask the harness about the tool without copy-pasting docs. It uses a vendored knowledge snapshot
+for offline / deterministic answers and `WebFetch` against <https://specnaut.com/llms.txt> + the
+GitHub Releases API for live "what's new" queries. You can also dispatch it by name with a question.
 
 The agent also handles **bug reports**: ask "report this as a bug" (or hit a Specnaut failure) and
 it pre-fills a structured GitHub issue against `specnaut/specnaut-cli` with a 6-section template
@@ -958,11 +972,11 @@ from `.specnaut/installed.lock` + `specnaut --version` + `uname -srm`, scrubbing
 `https://github.com/specnaut/specnaut-cli/issues/new?…` URL to review and submit. The agent never
 auto-submits — you always see the body before clicking.
 
-### 7. Bundled `security-auditor` agent — two modes
+### 7. Bundled `security-expert` agent — two modes
 
-Every scaffold also ships a `security-auditor` agent with two dispatch shapes:
+Every scaffold also ships a `security-expert` agent with two dispatch shapes:
 
-1. **PR review** — spawned by the `review-coordinator` during `/specnaut review`. Audits the diff
+1. **PR review** — spawned by the `review-coordinator` during `/task review`. Audits the diff
    against eight rules (secrets in source, input validation, authz, injection, path traversal, SSRF,
    silent catches, internal-ID exposure) and emits a `FINDING` / `VERDICT` report.
 2. **Alert triage** — invoked by the maintainer's `/release` flow when the `security-preflight`
@@ -1018,7 +1032,7 @@ they never read.
 
 Every `feat:` PR body must include an `## Agent adoption` section with a `` ```prompt `` fenced
 block. The release pipeline extracts these into a structured `### Adoption guide` block on the
-GitHub Release; `specnaut-expert review-upgrade` plays them back in the user's project after
+GitHub Release; `specnaut-guide review-upgrade` plays them back in the user's project after
 `specnaut upgrade`.
 
 See the
@@ -1045,7 +1059,7 @@ GitHub Releases bodies are auto-generated by `scripts/gen-changelog.ts` and foll
 ```
 ````
 
-Consumed by `specnaut-expert review-upgrade` (Phase 4 of the upgrade adoption flow).
+Consumed by `specnaut-guide review-upgrade` (Phase 4 of the upgrade adoption flow).
 
 4. `### Internal / chores` — `chore:` / `refactor:` / `docs:` / `test:` etc., collapsed under a
    `<details>` block.
@@ -1057,7 +1071,20 @@ the GitHub Release body.
 ## Upgrades & adoption
 
 `specnaut upgrade` updates templates in place and prints a handoff line inviting the user to review
-what changed via the `specnaut-expert` agent.
+what changed via the `specnaut-guide` agent.
+
+### Moved in 7.2: `/board` and the pipeline are now `/task`
+
+`/board` and the pipeline verbs of `/specnaut` are regrouped into `/task`, and `/specnaut` keeps the
+framework only (`doc`, `list`, `upgrade`) — the mapping is in
+[The three top-level skills](#the-three-top-level-skills). `specnaut upgrade` carries an edited
+phase document to its new address under `task/`, moves an addendum from
+`.specnaut/addenda/specnaut/<verb>.md` to `.specnaut/addenda/task/<verb>.md`, and moves the audit
+scope script to `.specnaut/scripts/audit/collect-audit-scope.sh`. Saved prompts, your own skills and
+the `AGENTS.md` prose that name `/board`, `/specnaut plan` or an `*-audit` skill are yours to
+update. The full list, including what happens to retired skills you edited, is in
+[`UPGRADING.md`](https://github.com/specnaut/specnaut-cli/blob/main/UPGRADING.md) in the CLI
+repository.
 
 ### Upgrading from 1.x to 2.x
 
@@ -1095,8 +1122,8 @@ Your existing spec directories are left on disk untouched. Nothing migrates them
 ```
 
 Written on every successful apply. On chained upgrades, the existing marker's `from` is preserved.
-Consumed by `specnaut-expert review-upgrade` and by `specnaut reconcile`. Deleted by the agent at
-the end of a successful review.
+Consumed by `specnaut-guide review-upgrade` and by `specnaut reconcile`. Deleted by the agent at the
+end of a successful review.
 
 - `.specnaut/upgrade-staging/<path>` — for every file the upgrade preserved (i.e., on-disk version
   was customized vs. lock SHA), the upstream (bundled-template) version is written here under the
@@ -1113,11 +1140,11 @@ Both are gitignored (`templates/core/root/.gitignore` ships the lines).
 ✓ upgraded to templates 1.4.0 → 1.6.0
 
 → Walk through what's new with your AI:
-`@specnaut-expert review-upgrade`
+`@specnaut-guide review-upgrade`
 ```
 
 An AI agent that sees `.specnaut/upgrade-pending.json` in a project should proactively suggest
-running `@specnaut-expert review-upgrade`.
+running `@specnaut-guide review-upgrade`.
 
 ### `specnaut reconcile`
 
@@ -1145,14 +1172,14 @@ on-disk content, so the next upgrade does not re-flag this file as
 preserved. Removes the staging entry.
 ```
 
-`specnaut-expert review-upgrade` is the recommended way to walk through reconciliation interactively
+`specnaut-guide review-upgrade` is the recommended way to walk through reconciliation interactively
 — it surfaces a `keep / take / merge / view / skip` choice per file and dispatches the `developer`
 subagent for intelligent merges.
 
-### `specnaut-expert review-upgrade`
+### `specnaut-guide review-upgrade`
 
-Dispatching `@specnaut-expert review-upgrade` triggers a 7-step guided workflow inside the
-`specnaut-expert` agent:
+Dispatching `@specnaut-guide review-upgrade` triggers a 7-step guided workflow inside the
+`specnaut-guide` agent:
 
 1. **Read marker** — reads `.specnaut/upgrade-pending.json`; exits with instructions if absent.
 2. **Fetch releases** — fetches GitHub Release bodies for every tag in `(from, to]` and parses each

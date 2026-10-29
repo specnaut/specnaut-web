@@ -55,7 +55,7 @@ needed:
 
 ```bash
 # One-shot, non-interactive:
-claude -p "/specnaut plan \"<feature description>\""
+claude -p "/task plan \"<feature description>\""
 
 # Or goal-directed until an end state (re-takes turns on its own):
 claude -p "/goal the feature ships and deno task test exits 0, or stop after 30 turns"
