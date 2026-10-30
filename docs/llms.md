@@ -3,8 +3,8 @@
 > Specnaut is an enhanced fork of the
 > [`specify` CLI from GitHub Spec Kit](https://github.com/github/spec-kit), distributed as a single
 > native binary (no Python prerequisites). It scaffolds the files your AI coding harness consumes —
-> SpecKit slash-commands, spec / plan / tasks templates, a constitution, agents, and a backlog
-> system — directly into an existing project, in one command.
+> SpecKit slash-commands, a plan template, a constitution, agents, and a backlog system — directly
+> into an existing project, in one command.
 
 Specnaut does **not** call any LLM and does **not** orchestrate any agent at runtime. Your AI
 harness (Claude Code, Cursor, Codex, GitHub Copilot CLI, OpenCode, Antigravity) is what reads the
@@ -76,7 +76,7 @@ scaffolded `AGENTS.md`: dispatch a Specnaut agent by its name, never by describi
 
 ```
 /specnaut-plugin:task plan "<feature description>"
-/specnaut-plugin:task tasks
+/specnaut-plugin:task implement
 ```
 
 Slightly verbose, but unambiguous (the plugin's slash-commands are namespaced under
@@ -147,11 +147,11 @@ Specnaut gives your harness three skills, and the split between them is the mode
 Carry the work from backlog to merge, keep the framework current, ship it.
 
 `/task` covers the whole life of one unit of work: the backlog verbs (`list`, `next`, `add`, `edit`,
-`close`, `groom`, `estimate`, `status`, `brief`, `<id>`), the pipeline (`plan`, `tasks`,
-`implement`, `review`, `merge`), the read-only audit (`/task audit`, every applicable axis with no
-flag, or `--security`, `--archi`, `--perf`, `--a11y`, `--deps`), and `constitution`. On harnesses
-that prefix their skills, it is `specnaut-task`; `specnaut init` prints the exact commands for the
-harness you chose.
+`close`, `groom`, `estimate`, `status`, `brief`, `<id>`), the pipeline (`plan`, `implement`,
+`review`, `merge`), the read-only audit (`/task audit`, every applicable axis with no flag, or
+`--security`, `--archi`, `--perf`, `--a11y`, `--deps`), and `constitution`. On harnesses that prefix
+their skills, it is `specnaut-task`; `specnaut init` prints the exact commands for the harness you
+chose.
 
 Neither `/task` nor `/specnaut` carries a release concern. Tagging and release notes used to sit
 under `/specnaut` as the `tag-version` and `release-version` phases; they are now `/ship tag` and
@@ -166,42 +166,44 @@ under `/specnaut` as the `tag-version` and `release-version` phases; they are no
 > [`UPGRADING.md`](https://github.com/specnaut/specnaut-cli/blob/main/UPGRADING.md) in the CLI
 > repository for what `specnaut upgrade` moves for you.
 
-### Step 1 after `init`: run `/task constitution`
+> **Changed in 7.3.** `tasks` is part of `implement`: `/task tasks` prints `/task implement` and
+> stops. The constitution lives at `docs/constitution.md`, the roster is nine agents, and
+> `merge: manual` holds harder — see [Changed in 7.3](#changed-in-73).
 
-`/task constitution` is the expected first action after `specnaut init`. It scaffolds your project's
-guiding principles (architecture, quality gates, ways of working) into
-`.specnaut/memory/constitution.md` so the rest of the pipeline (`/task plan`, `/task tasks`,
-`/task implement`) has something to anchor on — the plan phase gives every principle an explicit
-verdict.
+### The constitution: `docs/constitution.md`
 
-The generated constitution comes pre-populated with four opinionated baseline blocks (all
-user-tunable): **Engineering methodology** (TDD / DDD / SOLID-DRY-KISS-YAGNI /
-Boy-Scout-escalation), **Architecture layers** (hexagonal default: `domain/` / `application/` /
-`infrastructure/` / `presentation/`), **Back-end patterns** (Repository, service objects, DI through
-constructors, thin controllers, errors as domain types, pure domain), and **Front-end patterns**
-(view/logic separation, no business rules in templates, smart vs dumb components, single source of
-truth for state, typed API client, accessibility mandatory). New projects via `specnaut init`
-inherit all four blocks automatically. `specnaut upgrade` delivers updated agents and skills but
-does **not** rewrite an existing constitution — to adopt the new baselines in an existing project,
-rebase your constitution manually.
+`specnaut init` bootstraps your project's constitution at `docs/constitution.md`: four short
+principles — **domain isolation**, **dependencies point inward**, **bounded contexts** and **SOLID**
+— each with a `Check:` line a reviewer can apply to a plan or a diff, and an `Override:` line naming
+what to adapt to your stack. Every `/task` entry point and every bundled agent reads it before
+anything else, and the plan cites, by name, each principle the change could break.
 
-**Size limits.** The constitution also carries a `## Size limits` table (`Unit | Target | Ceiling`,
-defaults: file 300 / 500 lines, function 30 / 50) and three rules: a unit over its ceiling fails
-unless the change shrinks it; a unit over its target may not grow past its size where the change
-began; extract before you add. That table is the only source of size thresholds — no agent carries
-its own number, and `.specnaut/memory/size-limits.md` holds the defaults for any unit the table
-omits. Every phase reads it: the plan measures each touched file (`wc -l`) in a **Files touched**
-table and is not done while a file over its target grows; tasks puts an extraction task before any
-task touching such a file; implement passes the table to every subagent and reports
-`file: before → after`; review rates growth of an over-target file HIGH. For edits that never go
-through an agent, `.specnaut/scripts/bash/size-ratchet.sh` checks the staged changes against the
-branch's merge base (or `--since <ref>`) and exits non-zero on a violation — so an extraction commit
-followed by an addition passes, and every review runs it too — run it by hand or from your
-pre-commit runner; Specnaut installs no git hook. An existing constitution does not receive the
-table from `specnaut upgrade`: run `/task constitution`, which proposes adding it.
+It is a team document, not Specnaut's: once it exists, no `init` or `upgrade` rewrites it, with or
+without `--force`. Amend it with `/task constitution` when you need to — it is not a step to run
+before your first plan. An amendment is drafted, shown to you as a diff with its `Version:` bump
+(semantic versioning), and written only after you reply with the exact confirmation phrase it
+prints; a hook refuses any other write to the file. It is loaded into every session, so it keeps
+principles only — delivery status and incident history belong in the backlog — and it has the
+shortest size limits of any file.
 
-Refine the generated constitution and the root `AGENTS.md` for your stack, then move on to
-`/task plan "<feature description>"` for your first feature.
+**If you publish `docs/` as a site**, the constitution is published with it: exclude
+`docs/constitution.md` if it must stay private.
+
+**Size limits.** Thresholds live in `.specnaut/size-limits.yml`, which your project owns; the
+defaults in `.specnaut/memory/size-limits.md` (file 300 / 500 lines, function 30 / 50, constitution
+60 / 100) apply to any unit it does not set, and no agent carries its own number. Three rules: a
+unit over its ceiling fails unless the change shrinks it; a unit over its target may not grow past
+its size where the change began; extract before you add. The plan lists the size ratchet among its
+done checks; the developer extracts an over-target file first, as its own commit, and reports
+`file: before → after`; review measures every diff. For edits that never go through an agent,
+`.specnaut/scripts/bash/size-ratchet.sh` checks the staged changes against the branch's merge base
+(or `--since <ref>`) and exits non-zero on a violation — so an extraction commit followed by an
+addition passes — run it by hand or from your pre-commit runner; Specnaut installs no git hook.
+`/task constitution` also changes the gate configs (`.specnaut/size-limits.yml`,
+`.specnaut/boundaries.yml`, `.specnaut/ui.yml`), under a confirmation phrase of their own.
+
+Refine the root `AGENTS.md` for your stack, then run `/task plan "<feature description>"` for your
+first feature.
 
 ### Add Specnaut to an existing project
 
@@ -297,7 +299,7 @@ specnaut init my-project --backlog cloud      # hosted Specnaut Cloud
 Four backends are supported: `local` (default), `github`, `gitlab`, and `cloud` — the hosted
 [Specnaut Cloud](https://app.specnaut.com) backend, which you connect to with `specnaut login` (see
 [Connect the CLI to Specnaut Cloud](#connect-the-cli-to-specnaut-cloud) below). See
-[Backlog as product source of truth](#3-backlog-as-product-source-of-truth) for what each one stores
+[Backlog as product source of truth](#4-backlog-as-product-source-of-truth) for what each one stores
 and how the PO agent talks to it.
 
 #### Pre-fill the backlog config with `--backlog-url`
@@ -548,8 +550,13 @@ Some harnesses also ship harness-specific helper files alongside the core scaffo
   file itself), and `[agents] enabled = true` in `.codex/config.toml`, so Codex starts Specnaut's
   agents by name. `.codex/goal.md` is no longer shipped: `/goal` never read it.
 
-The `/goal`, `/loop` and `claude agents` notes live in the `Optional integrations` section of the
-root `AGENTS.md`, rendered for the harness the project was installed for.
+The harness features that pair well with the workflow — `/loop`, `/goal`, `claude agents`, headless
+runs and MCP servers on Claude Code; `/goal` and the CLI reference on Codex — are documented in the
+bundled `specnaut-facts` skill, in `integrations.md`
+(`.claude/skills/specnaut-facts/integrations.md` on Claude Code,
+`.agents/skills/specnaut-facts/integrations.md` on Codex). The root `AGENTS.md` keeps one line in
+its `Optional integrations` section pointing there, so the reference is read when asked rather than
+loaded into every session.
 
 ### Interoperating with DeepSeek Harness
 
@@ -576,39 +583,14 @@ an integration Specnaut maintains or tests against a real `dsh` install. `dsh` i
 developer preview, and its README warns of compatibility-breaking changes, so this note can go stale
 without anything here changing.
 
-## Project-specific skill overlays
-
-Specnaut's skill folders are plain markdown — anything you put under your harness's `skills/`
-directory (e.g. `.claude/skills/<name>/`, `.cursor/skills/<name>/`) is a skill, full stop. To make
-the common "override an upstream skill" pattern discoverable, Specnaut recognises two optional
-fields in `SKILL.md` frontmatter:
-
-| Field                    | Meaning                                                                                                                                     |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| `alias_of: <skill-name>` | This skill is a thin wrapper that delegates to the named upstream skill. Dotted notation (e.g. `ship.tag`) makes the distribution explicit. |
-| `overlays:`              | A list of pre/post hooks. Each entry carries `when: before \| after` and `path: ./scripts/<file>.sh` relative to the SKILL.md.              |
-
-The Specnaut binary itself **never resolves or dispatches** aliases / overlays — the harness (Claude
-Code, Cursor, Codex, …) is responsible for honouring the frontmatter at invocation time. Specnaut's
-role is to standardise the contract.
-
-The alias and overlay fields are declared in a skill's own frontmatter, so what is installed and
-what wraps what is readable directly from the files in your harness's skills directory. Skills
-without `alias_of` are plain skills; those with it name their target.
-
-A reference example lives at
-[`templates/core/skills/alias-example/SKILL.md`](https://github.com/specnaut/specnaut-cli/blob/main/templates/core/skills/alias-example/SKILL.md)
-in the Specnaut source tree. It is **not** installed by `specnaut init` — copy it manually when you
-want to introduce your first alias.
-
 ## What makes Specnaut different from upstream Spec Kit
 
 Specnaut is a fork of the official `specify` CLI with the following additions:
 
 ### 1. Auto-chained pipeline
 
-The generated `/task` skill chains `plan → tasks → implement → review → merge` in a single session.
-Upstream stops at every step and asks the human to invoke the next one.
+The generated `/task` skill chains `plan → implement → review → merge` in a single session. Upstream
+stops at every step and asks the human to invoke the next one.
 
 ```
 /task plan "<feature description>"
@@ -621,16 +603,19 @@ same turn. There is no separate step to remember.
 
 #### Autopilot by default: one stop, at the plan
 
-- **STOP 1 — the end of `plan`.** Always, not only when something is ambiguous. You are shown the
-  architecture _as a proposal with the alternatives that were rejected and why_, both audits'
-  findings separately, and the open questions one at a time. A single option presented as settled
-  gets approved by default, which is the same as not asking. **This is where the work is decided**:
-  the stop says so, and asks what autopilot would otherwise settle on its own.
+- **STOP 1 — the end of `plan`, only when something only you can answer is open.** That means
+  business rules, thresholds, what happens to existing data, scope — and always the base branch,
+  anything irreversible or destructive, a break in a public surface, a new external service, vendor
+  or cost. Technical forks are not on the list: architecture, patterns, security hardening and
+  performance trade-offs are ranked by the expert seats, and the plan takes the top option and
+  records what it rejected and why. At the stop you see that design _as a report, not a vote_, both
+  audits' findings separately, and the open questions, the one that invalidates the most others
+  first. With nothing open, `plan` reports the same and goes straight on to `implement`.
 
-After your answers the chain runs to the end without asking again: tasks, implementation, review,
-then a local fast-forward merge into the base branch, a **push**, and the backlog item closed. It
-still halts — and says why — on a real blocker: a CRITICAL or HIGH finding it could not fix, a merge
-that cannot fast-forward, a push the remote refuses.
+After your answers the chain runs to the end without asking again: implementation, review, then a
+local fast-forward merge into the base branch, a **push**, and the backlog item closed. It still
+halts — and says why — on a real blocker: a CRITICAL or HIGH finding it could not fix, a merge that
+cannot fast-forward, a push the remote refuses.
 
 Only a **CRITICAL or HIGH** finding buys another fix cycle; MEDIUM and LOW go to the backlog and the
 branch ships. Those cycles run before the merge without asking you again between each one.
@@ -645,20 +630,37 @@ merge: manual
 ```
 
 The chain then stops a second time, at the **review verdict**: the summary (files changed, tests,
-open risks, business outcome) and `Ready to merge?` are the same moment, and that one yes covers the
-merge, the push and the close. For a single run, `--manual-merge` or "stop before merging" in your
-request does the same. A value that cannot be read (a typo) counts as `manual`, so a broken setting
-never pushes. `/task merge --pr` delivers through a pull request instead of a local merge in either
-mode.
+open risks, business outcome) and `Ready to merge? Reply merge to land it` are the same moment, and
+that one word covers the merge, the push and the close. For a single run, `--manual-merge` or "stop
+before merging" in your request does the same. A value that cannot be read (a typo) counts as
+`manual`, so a broken setting never pushes.
+
+**The hold is enforced, not only asked for.** Under `merge: manual` in the file, a hook holds every
+merge into, and push of, the base branch until your own prompt in that turn says `merge` or
+`/task merge`. A plain "yes", a `merge` from an earlier turn, a click on a permission prompt, or an
+edit to `workflow.yml` or to the landing scripts does not release it. `land-feature.sh` and
+`remove-spec.sh` also hold themselves (exit 13, naming what releases them), so a renamed copy or
+another spelling of the command is held too. After a `cd` into another project, the hold reads that
+project's mode as well as yours, and keeps the stricter one.
+
+`/task merge --pr` delivers through a pull request instead of a local merge in either mode.
 
 #### One planning document, and what makes it binding
 
-A feature produces exactly two files: `plan.md` and `tasks.md`. There is no `spec.md`,
-`research.md`, `data-model.md`, `quickstart.md` or `contracts/` — eight documents per feature was
-eight chances for two of them to disagree, and the disagreement was always found by whoever was
-implementing.
+A feature produces one file: `plan.md`. There is no `spec.md`, `tasks.md`, `research.md`,
+`data-model.md`, `quickstart.md` or `contracts/` — every extra document was another chance for two
+of them to disagree, and the disagreement was always found by whoever was implementing. `implement`
+orders the work itself, from the plan: there is no separate breakdown step.
 
-`plan.md` has twelve mandatory sections, and the one the phase exists for is the **decision table**:
+By default `plan.md` is a **brief** in five parts: the task and what is out of scope; the guardrails
+(the decision table, the constitution principles the change could break, the surfaces it touches,
+and a required `Surfaces added or widened` line); done, as runnable checks; the audit findings; and
+the open questions with their answers. The **full plan** — scenarios, `FR-` / `SC-` ids, domain
+model, risks — is written when you pass `--full`, or without being asked when the change adds or
+widens a trust boundary: stored data or a migration, authentication or authorisation, secrets or
+cryptography, a new place that accepts untrusted input, a new external service or dependency.
+
+Either shape carries the **decision table**, the part the phase exists for:
 
 | The decision            | Its single home               | What would duplicate it            |
 | :---------------------- | :---------------------------- | :--------------------------------- |
@@ -672,10 +674,11 @@ a plan violation rather than a style opinion.
 
 #### The plan is audited before a line of code exists
 
-`plan` dispatches the `architect-expert` and `security-expert` agents **on the plan itself**, in the
-same message so they run concurrently. They judge different things: the architect asks whether a
-rule has one home, the security seat asks whether that home is reachable by someone who should not
-reach it.
+`plan` dispatches the `architect-expert` and `security-expert` agents **on the plan itself** — and
+`performance-expert` too when the change has a hot path, a bulk job or a query over an unbounded set
+— in the same message so they run concurrently, whether the plan is a brief or the full plan. They
+judge different things: the architect asks whether a rule has one home, the security seat asks
+whether that home is reachable by someone who should not reach it.
 
 Their findings go **into `plan.md`** — either the plan changes, or it records why the objection was
 accepted. A clean verdict is written down _with its coverage_, because a clean verdict is worth
@@ -690,20 +693,31 @@ the gate impossible is a migration, a backfill and every caller.
 #### Linking a feature to a backlog issue
 
 Pass `--issue <id>` to `/task plan` (or to the bundled `create-new-feature.sh`) to record the
-originating backlog issue in `.specnaut/feature.json`:
+originating backlog issue in `.specnaut/feature.json` and move its card to In progress:
 
 ```
 /task plan "Fix the off-by-one in pagination" --issue 42
 ```
 
-After `/task merge` fast-forwards the branch onto `main` and you push, the merge phase reads
-`feature.json.linked_issue`, runs `cascade-check.sh` (github / gitlab) to confirm no sub-issues
-block the close, asks `Close issue #42 on the board now? (yes/no)`, and on `yes` flips the project
-column to `Done` via `move.sh` then dispatches the `product-owner` agent to post a close comment
-with the merged commit range and `gh issue close --reason completed`. The board stays in sync with
-`main` instead of drifting.
+`/task merge` closes it once the work is pushed, without asking: the push was the authorisation. The
+phase is a sequence of bundled scripts, each with a documented exit table the agent maps line by
+line:
 
-`--issue` is opt-in; existing feature trees without the field skip the auto-close silently.
+- `epic-status.sh` reads the branch's `Epic:` trailers and tells a standalone feature (squashed by
+  scope) from an epic (one commit per child, kept);
+- on an epic, `fold-fixups.sh` folds each `fixup!` commit into its own child's commit, so the base
+  still reads one commit per child;
+- `land-feature.sh` checks the tree is clean and the branch contains `origin/<base>`, fast-forwards
+  the base, pushes it, deletes the branch and verifies `HEAD` is the base;
+- `cascade-check.sh` (github / gitlab) refuses the close while a sub-issue is still open; the
+  `product-owner` agent then posts a close comment naming the merged range and closes the issue;
+- `close-shipped.sh` confirms each issue is closed, moves its card to Done, and reconciles the whole
+  board once;
+- `remove-spec.sh` removes the feature's spec directory and pushes the removal.
+
+The board stays in sync with `main` instead of drifting. `--no-close` merges and pushes but leaves
+the item open, for a feature delivered across several branches. `--issue` is opt-in; feature trees
+without the field skip the close.
 
 #### Running a single phase
 
@@ -726,25 +740,29 @@ single-phase re-run, so regenerating `plan.md` does not accidentally cascade thr
 
 ### 2. `review` phase post-implement
 
-After `implement`, the generated workflow runs a dedicated `review` phase that checks structure
-(architecture boundaries, silent error swallowing, leaked internal IDs, cache layering, test
-coverage) and the quality gates (format, lint, typecheck, tests). If `review` flags something, the
-loop is `implement → review → fix → re-review` — also automatic.
+After `implement`, the generated workflow runs a dedicated `review` phase on a frozen tree. It
+measures first — the quality gates (format, lint, typecheck, tests) and the size ratchet — then
+dispatches the review seats **from your main session**, by name, at most four at a time:
+`code-reviewer` always (with its test checklist when tests changed), `security-expert` always,
+`accessibility-expert` when the diff touches a front-end surface, `dependency-expert` when it
+touches a dependency manifest, and `performance-expert` when the plan recorded a hot path. No
+coordinating agent sits in between. Only a CRITICAL or HIGH finding sends the work back — the loop
+is `implement → review → fix → re-review`, also automatic — while MEDIUM and LOW go to the backlog
+and the branch ships.
 
 ### 3. Developer agent doctrine
 
-Every scaffold ships a `developer` agent that implements tasks from `tasks.md`. The agent operates
-under a strict doctrine that applies to every task, regardless of project stack:
+Every scaffold ships a `developer` agent that implements a planned feature from its `plan.md` — the
+brief or the full plan — and fixes review feedback. It is started by name, never auto-invoked, and
+its doctrine applies to every task, regardless of project stack:
 
-**Domain Model gate (NON-NEGOTIABLE)** — before writing a single line of code, the developer reads
-the domain model in `plan.md`'s technical-context section (spec path) or in the Product Owner's
-`/task brief` output (direct-implementation path). If it is absent, empty, or still contains
-template placeholders, the agent halts and returns `BLOCKED` with reason
-`awaiting:product-owner-domain-brief`. The `implement` phase enforces the same gate and surfaces the
-same BLOCKED report, recommending a re-run of `/task plan` to fill it. The plan phase is responsible
-for populating the full block (Bounded context, Vocabulary, Entities, Value objects, Invariants)
-rather than just listing key entities — and its stop is where you are asked about anything it could
-not settle.
+**Plan and constitution first** — it reads `docs/constitution.md`, noting each principle's `Check:`
+line, then the plan: its guardrails say what must not break, its done checks are what it works on
+until they pass, and its decision table gives every rule one home file that it may not spell a
+second time without the plan being amended. The domain model is wherever the plan states it, or in
+the Product Owner's `/task brief` output on the direct path; where the change introduces entities
+and none of these names them, the developer says so in its report and models them from the code that
+exists.
 
 **Test-Driven Development (NON-NEGOTIABLE)** — red → green → refactor on every implementation. No
 business logic ships untested. If the project has no test infrastructure, the developer bootstraps
@@ -752,22 +770,24 @@ the language-idiomatic test runner (Vitest for TS/JS, Pytest for Python, JUnit f
 for Go, `cargo test` for Rust, PHPUnit for PHP, RSpec for Ruby, etc.) as part of the task and
 records it explicitly in the `Decisions` block of the completion report.
 
-**Domain-Driven Design (NON-NEGOTIABLE)** — every change respects the project's domain boundaries.
-Domain layer stays pure (no I/O, no framework). Application layer holds use cases and ports.
-Infrastructure layer holds adapters. Presentation talks only to use cases. Cross-bounded-context
-bleed-through is forbidden — split or use an anti-corruption layer.
+**Domain-Driven Design (NON-NEGOTIABLE)** — every change respects the project's domain boundaries;
+the layers and their dependency direction are the constitution's. Domain layer stays pure (no I/O,
+no framework). Application layer holds use cases and ports. Infrastructure layer holds adapters.
+Presentation talks only to use cases. Cross-bounded-context bleed-through is forbidden — split or
+use an anti-corruption layer.
 
-**Boy Scout Rule with escalation** — small in-scope cleanups (≤ 1 file, ~15 lines of diff, no public
-API change) are done in the same PR and noted in `Decisions`. Larger out-of-scope cleanups are
-logged in a `Tech debt surfaced` block of the completion report rather than ballooning the PR. The
-Product Owner reads that block and opens a classified tech-debt ticket (`tech-debt` label, default
-Size XS/S, Priority P3, bumped to P2 on correctness/security risk) for each item.
+**Boy Scout Rule — fix it, do not log it** — a repair inside what the task already touches is done
+in the same branch, with a test that fails without it, and noted in `Decisions`, whatever its size.
+Only four reasons justify logging instead: it needs a product decision, crosses a boundary the task
+does not touch, needs a migration, or is larger than the task itself. Those go in a
+`Tech debt surfaced` block, one sentence each saying why, and the Product Owner opens each at P0 or
+P1 — anything that clears that bar is significant by definition.
 
 **SOLID / DRY / KISS / YAGNI** — explicitly required. Framework-specific patterns (Repository, DI,
-React hooks, MVC controllers) come from the constitution's Back-end and Front-end pattern blocks.
-**No silent catches** — every `catch` either logs at ERROR/WARN or re-throws. **In-code
-documentation** — doc-comments on every function, method, or class encoding a business rule or
-non-obvious design decision, in the idiomatic format for the language.
+React hooks, MVC controllers) come from the constitution, never from habit. **No silent catches** —
+every `catch` either logs at ERROR/WARN or re-throws. **In-code documentation** — doc-comments on
+every function, method, or class encoding a business rule or non-obvious design decision, in the
+idiomatic format for the language.
 
 ### 4. Backlog as product source of truth
 
@@ -836,8 +856,9 @@ block is written into its technical-context section too (the plan template carri
 
 **Tech-debt intake protocol.** When a developer's completion report carries a `Tech debt surfaced`
 block, the PO parses it, deduplicates against the current backlog, and opens one classified ticket
-per surfaced item: `tech-debt` label, default Size XS or S, Priority P3 (bumped to P2 when the item
-involves correctness or security risk). This is automatically triggered — no manual step required.
+per surfaced item: Type `Task`, `tech-debt` label, priority **P0 or P1** — an item had to clear the
+four reasons above to be logged at all, so it is never lower. This is automatically triggered — no
+manual step required.
 
 **Epics & sub-tasks.** Big work that needs decomposition lives as a parent **epic** with one or more
 **sub-tasks**. The link mechanism differs per backend, but the contract is the same: parents cannot
@@ -914,7 +935,7 @@ declaration to existing projects.
 **What it shows.** A band above the prompt, sized to the terminal width:
 
 ```
-5h 82% ↻2h10 · 7d 31% ↻3d4h · ctx 48% · $3.12 · ▸ plan ✓ tasks ✓ implement ● review ○ merge ○
+5h 82% ↻2h10 · 7d 31% ↻3d4h · ctx 48% · $3.12 · ▸ plan ✓ implement ● review ○ merge ○
 ```
 
 - the 5-hour and weekly usage windows, with the time until each resets: yellow from 80%, red from
@@ -974,52 +995,55 @@ auto-submits — you always see the body before clicking.
 
 ### 7. Bundled `security-expert` agent — two modes
 
-Every scaffold also ships a `security-expert` agent with two dispatch shapes:
+Every scaffold also ships a `security-expert` agent that judges who can reach what, and what they
+get when they do. It is read-only (`Read`, `Grep`, `Glob` — no shell) and has two dispatch shapes:
 
-1. **PR review** — spawned by the `review-coordinator` during `/task review`. Audits the diff
-   against eight rules (secrets in source, input validation, authz, injection, path traversal, SSRF,
-   silent catches, internal-ID exposure) and emits a `FINDING` / `VERDICT` report.
-2. **Alert triage** — invoked by the maintainer's `/release` flow when the `security-preflight`
-   workflow surfaces open GitHub-side alerts (secret-scanning, dependabot, code-scanning, private
-   advisories). The agent decides per-alert: open a backlog ticket via the PO, dismiss via
-   `gh api -X PATCH` with a documented `resolution=` reason, or escalate to the user.
+1. **Code review** — dispatched by `/task review` on every diff, straight from your main session
+   (there is no review-coordinator), and by `/task audit` (`--security`, or every applicable axis
+   with no flag) on a scope you name.
+2. **Plan audit** — dispatched by `/task plan` on `plan.md` itself, before any code exists, where
+   the expensive findings are cheap.
 
-The triage mode is release-time only and uses a tightly-constrained `Bash` grant — only the three
-`gh api` alert-dismissal endpoints are permitted. End users never trigger this mode; PR review
-remains the user-facing path.
+In both it works from the offline security knowledge base scaffolded at `.specnaut/memory/security/`
+— a triage file holding the reachability gate and the severity rubric, then the two or three domain
+files that match the scope — cites the file behind each finding, and labels any class in scope that
+the base does not cover _not assessed_. It fetches nothing from the network.
 
-### 8. Bundled `ui-ux-designer` agent
+It does not triage GitHub's security alerts: the former alert-triage mode, and the `Bash` grant it
+needed, are gone. Triage secret-scanning, Dependabot and code-scanning alerts in the repository's
+**Security** tab.
 
-Every scaffold also ships a `ui-ux-designer` agent that owns a single source of truth — the
-project's `DESIGN.md` — that every other agent consults to keep generated UI on-brand. Three modes
-auto-select from `DESIGN.md` state:
+### 8. The `/design` skill
 
-1. **Discovery** — when `DESIGN.md` is absent. The agent runs a 2-4 question interview (project +
-   audience, visual mood, brand seed, optional stack hint) and writes a complete first `DESIGN.md`
-   from a canonical template covering typography, palette (light + dark with WCAG-AA contrast
-   rules), 4-point spacing scale, radius / shadow tokens, component primitives, and motion.
-2. **Edit** — when `DESIGN.md` is present and the dispatch is a refactor request. The agent edits
-   the spec in place with a one-line rationale per change and a Decision-log append.
-3. **Audit** — when the dispatch contains the word `audit`. The agent scans
-   `**/*.{tsx,jsx,vue,
-   svelte,html,css,scss}` under `src/` for literal hex colours, off-system
-   fonts, and off-grid spacing values, reports drift in a
-   `| File | Line | Found | Expected token | Severity |` table, and emits `clean` / `drift_minor` /
-   `drift_major`.
+Every scaffold also ships a `/design` skill — formerly the `ui-ux-designer` agent — that owns a
+single source of truth: the project's `DESIGN.md`, which every agent that builds or reviews UI reads
+to keep it on-brand. Its shape is `.specnaut/templates/design-template.md` (brand identity,
+typography, colour palette, a 4-point spacing scale, radius and shadow, responsive rules, component
+primitives, motion, and a decision log). Three modes auto-select from `DESIGN.md` state:
 
-The agent is **manual-dispatch only** (`disable-model-invocation: true`) — design decisions are
-intentional and the agent never auto-runs. It produces Markdown, never code; the developer agent is
-what translates `DESIGN.md` into a Tailwind theme, CSS vars, or component library. `DESIGN.md` is
-NOT scaffolded by `specnaut init`; it materialises on the agent's first invocation when the user
-actually wants a design system, so backend-only and CLI-only projects don't carry stub spec files
-they never read.
+1. **Discovery** — when `DESIGN.md` is absent. At most four questions (product and audience, visual
+   mood, brand seed, and a stack hint only when relevant), skipped when your arguments already carry
+   a brief; then `DESIGN.md` is written from the template in one go.
+2. **Edit** — when `DESIGN.md` is present and the arguments name a change. One edit per change, each
+   with its reason, and a dated line appended to the decision log.
+3. **Audit** — when the arguments contain `audit`. It scans
+   `**/*.{tsx,jsx,vue,svelte,html,css,scss}` under `src/` and any path you name for literal hex
+   colours, off-system fonts, raw pixel spacing and raw font sizes, reports drift in a
+   `| File | Line | Found | Expected token | Severity |` table, and ends with `clean` /
+   `drift_minor` / `drift_major`.
+
+Only you start it (`disable-model-invocation: true`): a design decision is not cheap, and you own
+when one is taken. It writes `DESIGN.md` and nothing else — no source edit, no command, no agent
+dispatch; the developer agent is what translates `DESIGN.md` into your theme, CSS variables or
+component library. `DESIGN.md` is not scaffolded by `specnaut init`; it appears on the first
+`/design` run, so backend-only and CLI-only projects carry no stub they never read.
 
 ## Design principles
 
 - **Agnostic of the user project's language** — Python, TypeScript, Go, PHP, Rust… your project,
   your stack.
 - **Agnostic of the LLM** — Claude, OpenAI, Gemini, local models, anything your harness supports.
-- **Agnostic of the AI harness** — eight first-class targets today, with the same core content for
+- **Agnostic of the AI harness** — six first-class targets today, with the same core content for
   all.
 - **Agnostic of the backlog source** — pick local Markdown or your remote tracker (GitHub Issues +
   Projects, GitLab Issues; Bitbucket planned). The PO agent talks to whichever you chose.
@@ -1072,6 +1096,32 @@ the GitHub Release body.
 
 `specnaut upgrade` updates templates in place and prints a handoff line inviting the user to review
 what changed via the `specnaut-guide` agent.
+
+### Changed in 7.3
+
+Run `specnaut upgrade`. The full notes are in
+[`UPGRADING.md`](https://github.com/specnaut/specnaut-cli/blob/main/UPGRADING.md) in the CLI
+repository, under "7.2.x → 7.3.0".
+
+- **The constitution moves to `docs/constitution.md`**, byte for byte — see
+  [The constitution](#the-constitution-docsconstitutionmd). Upgrade refuses the move, and leaves
+  both files as they are, when both exist and differ, when the old file is a link, or when it is not
+  UTF-8: resolve it by hand, then upgrade again. `upgrade --dry-run` prints the move without making
+  it. `.specnaut/templates/constitution-template.md` is retired: an untouched copy is removed, an
+  edited one kept with a warning.
+- **Nine agents, down from fifteen.** `review-coordinator`, `test-reviewer`, `workflow-manager`,
+  `qa-tester` and `devops-sre` are gone, and with them the handoff, QA-report and alert-triage
+  contracts. Review dispatches its seats from your session, `code-reviewer` carries the test
+  checklist, and `ui-ux-designer` is the `/design` skill. `upgrade` names the successor of every
+  retired agent a file of yours still mentions, and removes nothing you wrote.
+- **Plans are briefs, and `tasks` is part of `implement`.** An addendum you wrote for `tasks` is
+  carried to `implement` by `upgrade`.
+- **`merge: manual` holds harder** — see
+  [Keeping a human on the merge](#keeping-a-human-on-the-merge).
+- **Codex: trust the hooks again.** The hooks changed, so Codex runs none of them until you open
+  Codex in the project, run `/hooks`, and trust Specnaut's hooks; `upgrade` prints the list.
+- **Skill overlays are gone.** The `alias_of` and `overlays` frontmatter fields and the alias
+  example no longer exist; a skill under your harness's `skills/` directory is simply a skill.
 
 ### Moved in 7.2: `/board` and the pipeline are now `/task`
 
