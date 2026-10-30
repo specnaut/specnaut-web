@@ -65,7 +65,7 @@ As the chain runs, each checkpoint opens a gate instead of prompting the termina
 
 | Checkpoint                                  | Gate type        | You answer                              |
 | ------------------------------------------- | ---------------- | --------------------------------------- |
-| STOP 1 — end of `plan`, before `tasks`      | `plan_approval`  | `approve` / `reject` (+ note to revise) |
+| STOP 1 — end of `plan`, before `implement`  | `plan_approval`  | `approve` / `reject` (+ note to revise) |
 | STOP 2 — the review verdict, before `merge` | `merge_approval` | `approve` / `reject` (+ note)           |
 
 ## 4. Resolve gates remotely
@@ -87,7 +87,7 @@ silently. With remote mode off, every checkpoint keeps its normal local behaviou
 ## End-to-end
 
 ```
-plan → plan_approval (gate) → tasks → implement → review →
+plan → plan_approval (gate) → implement → review →
 merge_approval (gate) → merge → done
 ```
 
