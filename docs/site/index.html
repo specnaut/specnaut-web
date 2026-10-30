@@ -8,7 +8,7 @@
     <title>Specnaut — a coordinated team of AI agents across 6 harnesses</title>
     <meta
       name="description"
-      content="Specnaut scaffolds a named team of AI agents — product-owner, developer, qa-tester, code-reviewer, security-expert, architect-expert, devops-sre, review-coordinator, specnaut-guide and more — across 6 coding harnesses (Claude Code, Cursor, Codex, Copilot, OpenCode, Antigravity). One curl, one binary, no Python."
+      content="Specnaut scaffolds a named team of nine AI agents — developer, product-owner, specnaut-guide, code-reviewer, architect-expert, security-expert, performance-expert, accessibility-expert and dependency-expert — across 6 coding harnesses (Claude Code, Cursor, Codex, Copilot, OpenCode, Antigravity). One curl, one binary, no Python."
     />
     <meta name="specnaut-version" content="__SPECNAUT_VERSION__" />
 
@@ -75,7 +75,7 @@
             </h1>
             <p class="lede">
               Specnaut scaffolds the files your AI coding harness consumes — slash-commands,
-              spec/plan/tasks templates, agents, and a backlog system — across
+              a plan template, agents, and a backlog system — across
               <strong class="harness-rotator" aria-hidden="true">Claude Code</strong><span
                 class="sr-only"
               >Claude Code, Cursor, Codex CLI, GitHub Copilot CLI, OpenCode,
@@ -161,8 +161,8 @@
               <span class="step-num">2</span>
               <h3>Plan</h3>
               <p>
-                <code>/task plan</code> produces one planning document, then chains itself
-                through tasks, implementation, review, merge and push. Expert agents settle the
+                <code>/task plan</code> writes a short brief, then chains itself through
+                implementation, review, merge and push. Expert agents settle the
                 architecture, security and performance choices; it stops only for what only you can
                 answer — then runs on autopilot.
               </p>
@@ -171,8 +171,9 @@
               <span class="step-num">3</span>
               <h3>Review</h3>
               <p>
-                A dedicated review phase runs code, security, and test reviewers plus the quality
-                gates — format, lint, typecheck, tests — before anything merges.
+                A dedicated review phase runs the code and security reviewers — and the
+                accessibility, dependency and performance experts when the change calls for them —
+                plus the quality gates — format, lint, typecheck, tests — before anything merges.
               </p>
             </li>
             <li class="step">
@@ -229,8 +230,9 @@
               <p class="eyebrow">Review</p>
               <h3>A review phase and quality gates before every merge</h3>
               <p>
-                The <code>review</code> phase coordinates code, security, and test reviewers, then
-                runs format, lint, typecheck, and tests as hard gates. An implement → review →
+                The <code>review</code> phase dispatches the code and security reviewers from your
+                session — and the accessibility, dependency and performance experts when the diff
+                calls for them — then runs format, lint, typecheck, and tests as hard gates. An implement → review →
                 fix → re-review loop keeps shipping honest — green before merge, every time.
               </p>
               <a class="btn btn-ghost feature-link" href="/docs/">How the review phase works →</a>
@@ -245,8 +247,8 @@
           <h2 id="roster-title" class="section-title">Meet the cast</h2>
           <p class="section-lede">
             Every seat has a single job and a scoped tool allow-list, so every step of the
-            workflow has an owner. A few of them, below — the full roster ships with the binary
-            and is listed in your project's <code>agents/README.md</code>.
+            workflow has an owner. All nine, below — the roster ships with the binary and is
+            listed in your project's <code>agents/README.md</code>.
           </p>
           <ul class="roster-grid">
             <li class="roster-card">
@@ -258,37 +260,47 @@
               <figcaption>Developer</figcaption>
             </li>
             <li class="roster-card">
-              <img class="sprite" src="/assets/agents/qa-tester.png" alt="" loading="lazy" />
-              <figcaption>QA Tester</figcaption>
+              <img class="sprite" src="/assets/agents/specnaut-guide.png" alt="" loading="lazy" />
+              <figcaption>Specnaut Guide</figcaption>
             </li>
             <li class="roster-card">
               <img class="sprite" src="/assets/agents/code-reviewer.png" alt="" loading="lazy" />
               <figcaption>Code Reviewer</figcaption>
             </li>
             <li class="roster-card">
-              <img class="sprite" src="/assets/agents/security-expert.png" alt="" loading="lazy" />
-              <figcaption>Security Expert</figcaption>
-            </li>
-            <li class="roster-card">
-              <img class="sprite" src="/assets/agents/devops-sre.png" alt="" loading="lazy" />
-              <figcaption>DevOps / SRE</figcaption>
-            </li>
-            <li class="roster-card">
-              <img class="sprite" src="/assets/agents/specnaut-guide.png" alt="" loading="lazy" />
-              <figcaption>Specnaut Guide</figcaption>
-            </li>
-            <li class="roster-card">
               <img class="sprite" src="/assets/agents/architect-expert.png" alt="" loading="lazy" />
               <figcaption>Architect Expert</figcaption>
             </li>
             <li class="roster-card">
+              <img class="sprite" src="/assets/agents/security-expert.png" alt="" loading="lazy" />
+              <figcaption>Security Expert</figcaption>
+            </li>
+            <li class="roster-card">
               <img
                 class="sprite"
-                src="/assets/agents/review-coordinator.png"
+                src="/assets/agents/performance-expert.png"
                 alt=""
                 loading="lazy"
               />
-              <figcaption>Review Coordinator</figcaption>
+              <figcaption>Performance Expert</figcaption>
+            </li>
+            <li class="roster-card">
+              <img
+                class="sprite"
+                src="/assets/agents/accessibility-expert.png"
+                alt=""
+                loading="lazy"
+              />
+              <figcaption>Accessibility Expert</figcaption>
+            </li>
+            <li class="roster-card">
+              <img
+                class="sprite"
+                src="/assets/agents/dependency-expert.png"
+                alt=""
+                loading="lazy"
+              />
+              <figcaption>Dependency Expert</figcaption>
             </li>
           </ul>
         </div>

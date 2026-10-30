@@ -377,8 +377,7 @@ code {
 /* Grid items also need min-width: 0 so their own internal content
    (codeblock, long-line code, anything with overflow-x:auto) can be
    contained instead of pushing the column. */
-.hero-copy,
-.hero-cast {
+.hero-copy {
   min-width: 0;
 }
 
@@ -608,57 +607,6 @@ code {
   color: inherit;
 }
 
-/* ---------------------------------------------------------------
- * Hero cast (9 floating sprites)
- * --------------------------------------------------------------- */
-
-/* Mobile-first: 2-col, height grows with content (9 figures = 5 rows of 2,
-   last row half-empty). The square aspect-ratio used to force-collapse the
-   3-col layout into a cramped grid below --bp-sm; lifting it lets each
-   sprite + caption breathe. From --bp-sm up, restore the original 3×3
-   square layout. */
-.hero-cast {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
-  align-items: center;
-  justify-items: center;
-  padding: var(--space-2);
-  max-width: 540px;
-  margin: 0 auto;
-}
-
-@media (min-width: 480px) {
-  .hero-cast {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    aspect-ratio: 1 / 1;
-    gap: var(--space-4);
-    padding: var(--space-4);
-  }
-}
-
-/* Each sprite is wrapped in a <figure> so its role can be labeled via
-   <figcaption> in pixel-art type. The figure becomes the grid item;
-   the sprite + caption stack vertically inside it. */
-.hero-cast figure {
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-1);
-}
-
-.hero-cast figcaption {
-  font-family: var(--font-pixel);
-  font-size: 7px;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  text-align: center;
-  color: var(--color-neutral-700);
-  line-height: 1.3;
-}
-
 .sprite {
   /* DESIGN.md image rule: decorative sprites cap at 96px below --bp-sm. */
   width: 100%;
@@ -683,36 +631,6 @@ code {
   .sprite {
     max-width: 140px;
   }
-}
-
-/* Stagger the bob so the cast doesn't move in lockstep — each sprite
-   starts at a different point in the same 3s cycle. */
-.sprite-product-owner {
-  animation-delay: 0s;
-}
-.sprite-developer {
-  animation-delay: -0.4s;
-}
-.sprite-qa-tester {
-  animation-delay: -0.8s;
-}
-.sprite-code-reviewer {
-  animation-delay: -1.2s;
-}
-.sprite-security-auditor {
-  animation-delay: -1.6s;
-}
-.sprite-devops-sre {
-  animation-delay: -2.0s;
-}
-.sprite-specnaut-expert {
-  animation-delay: -2.4s;
-}
-.sprite-architect {
-  animation-delay: -2.8s;
-}
-.sprite-review-coordinator {
-  animation-delay: -1.0s;
 }
 
 @keyframes sprite-bob {
