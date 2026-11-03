@@ -362,7 +362,7 @@ for confirmation the first time you authenticate against a URL that came from a 
 `.specnaut/backlog-config.yml` — a safeguard so a cloned repo cannot silently redirect your login:
 
 ```
-Connecting to:  https://your-deployment.convex.site
+Connecting to:  https://cloud.example.com
 Source:         project config (.specnaut/backlog-config.yml)
 ```
 
@@ -379,7 +379,9 @@ specnaut cloud logout          # remove the stored credentials for the deploymen
 
 Add `--api-url <url>` to any of these to target a specific deployment. **Headless / CI:** set the
 `SPECNAUT_CLOUD_TOKEN` environment variable to a Cloud API token to skip the browser flow entirely —
-no keychain access is attempted, which is the supported path for CI and unattended VMs.
+no keychain access is attempted, which is the supported path for CI and unattended VMs. The token
+goes only to Specnaut Cloud itself or to the deployment the environment names in
+`SPECNAUT_CLOUD_API_URL`, never to an `api_url` a repository sets.
 
 ### Run `init` non-interactively (CI / scripts)
 

@@ -13,7 +13,7 @@ URL supplied by a project's `.specnaut/backlog-config.yml` (#400) — so a clone
 redirect your login at an attacker host:
 
 ```
-Connecting to:  https://your-deployment.convex.site
+Connecting to:  https://cloud.example.com
 Source:         project config (.specnaut/backlog-config.yml)
 ```
 
@@ -61,8 +61,13 @@ to the `0600` file — login still succeeds.
 ## Headless / CI
 
 Set `SPECNAUT_CLOUD_TOKEN` to a Cloud API token. It bypasses both stores entirely; no keychain
-access is attempted. This is the supported path for CI and unattended VMs (it is unchanged from
-#353).
+access is attempted. This is the supported path for CI and unattended VMs.
+
+Unlike a stored credential, this token is bound to no deployment, so Specnaut sends it only to
+Specnaut Cloud itself (`https://api.specnaut.com`) or to the deployment the environment names in
+`SPECNAUT_CLOUD_API_URL`. An `api_url` set in the repository's `backlog-config.yml`, or passed on a
+command line the repository runs, never receives it: a repository cannot redirect your CI token. A
+self-hosted deployment in CI sets both variables.
 
 ## Upgrading from a file-only version
 
