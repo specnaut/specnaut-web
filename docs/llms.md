@@ -378,10 +378,9 @@ specnaut cloud logout          # remove the stored credentials for the deploymen
 ```
 
 Add `--api-url <url>` to any of these to target a specific deployment. **Headless / CI:** set the
-`SPECNAUT_CLOUD_TOKEN` environment variable to a Cloud API token to skip the browser flow entirely —
-no keychain access is attempted, which is the supported path for CI and unattended VMs. The token
-goes only to Specnaut Cloud itself or to the deployment the environment names in
-`SPECNAUT_CLOUD_API_URL`, never to an `api_url` a repository sets.
+`SPECNAUT_CLOUD_TOKEN` environment variable to a Cloud API token to skip the browser flow, for CI
+and unattended VMs. It goes only to Specnaut Cloud or the deployment `SPECNAUT_CLOUD_API_URL` names,
+never to an `api_url` a repository sets; when refused, Specnaut warns and uses your own login there.
 
 ### Run `init` non-interactively (CI / scripts)
 

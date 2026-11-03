@@ -60,14 +60,20 @@ to the `0600` file — login still succeeds.
 
 ## Headless / CI
 
-Set `SPECNAUT_CLOUD_TOKEN` to a Cloud API token. It bypasses both stores entirely; no keychain
-access is attempted. This is the supported path for CI and unattended VMs.
+Set `SPECNAUT_CLOUD_TOKEN` to a Cloud API token. This is the supported path for CI and unattended
+VMs. When the token is accepted for the deployment, it bypasses both stores: no keychain access is
+attempted.
 
 Unlike a stored credential, this token is bound to no deployment, so Specnaut sends it only to
 Specnaut Cloud itself (`https://api.specnaut.com`) or to the deployment the environment names in
 `SPECNAUT_CLOUD_API_URL`. An `api_url` set in the repository's `backlog-config.yml`, or passed on a
 command line the repository runs, never receives it: a repository cannot redirect your CI token. A
 self-hosted deployment in CI sets both variables.
+
+When the token is refused, Specnaut warns on stderr and uses your own login for that deployment, if
+you have one, reading the stores as usual. Otherwise the command fails as not authenticated.
+
+Specnaut follows no redirect from a Cloud API URL, so `api_url` must be the final address.
 
 ## Upgrading from a file-only version
 
