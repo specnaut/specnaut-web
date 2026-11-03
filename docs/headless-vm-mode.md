@@ -46,7 +46,8 @@ export SPECNAUT_CLOUD_TOKEN=<a Cloud API token>
 ```
 
 Sanity check: `specnaut gate status` exits `0` when remote mode is on and the project is
-Cloud-linked (exit `2` = remote off, `5` = not linked / not logged in).
+Cloud-linked (exit `2` = remote off, `5` = not linked / not logged in, `1` = an `api_url` that
+cannot be read or is not a plain http(s) URL).
 
 ## 3. Launch the run unattended
 
