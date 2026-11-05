@@ -149,9 +149,9 @@ Carry the work from backlog to merge, keep the framework current, ship it.
 `/task` covers the whole life of one unit of work: the backlog verbs (`list`, `next`, `add`, `edit`,
 `close`, `groom`, `estimate`, `status`, `brief`, `<id>`), the pipeline (`plan`, `implement`,
 `review`, `merge`), the read-only audit (`/task audit`, every applicable axis with no flag, or
-`--security`, `--archi`, `--perf`, `--a11y`, `--deps`), and `constitution`. On harnesses that prefix
-their skills, it is `specnaut-task`; `specnaut init` prints the exact commands for the harness you
-chose.
+`--security`, `--archi`, `--perf`, `--a11y`, `--deps`; `--scan` for the size map alone), and
+`constitution`. On harnesses that prefix their skills, it is `specnaut-task`; `specnaut init` prints
+the exact commands for the harness you chose.
 
 `/specnaut issue <brief>` reports a Specnaut problem or proposal to Specnaut's public tracker. It
 scrubs the report, searches for an existing issue, shows you the exact text, and publishes under
@@ -196,17 +196,22 @@ shortest size limits of any file.
 `docs/constitution.md` if it must stay private.
 
 **Size limits.** Thresholds live in `.specnaut/size-limits.yml`, which your project owns; the
-defaults in `.specnaut/memory/size-limits.md` (file 300 / 500 lines, function 30 / 50, constitution
-60 / 100) apply to any unit it does not set, and no agent carries its own number. Three rules: a
-unit over its ceiling fails unless the change shrinks it; a unit over its target may not grow past
-its size where the change began; extract before you add. The plan lists the size ratchet among its
-done checks; the developer extracts an over-target file first, as its own commit, and reports
-`file: before → after`; review measures every diff. For edits that never go through an agent,
-`.specnaut/scripts/bash/size-ratchet.sh` checks the staged changes against the branch's merge base
-(or `--since <ref>`) and exits non-zero on a violation — so an extraction commit followed by an
+defaults in `.specnaut/memory/size-limits.md` (file 200 / 500 lines, function 20 / 50, class 100 /
+200, constitution 60 / 100) apply to any unit it does not set, and no agent carries its own number.
+Three rules: a unit over its ceiling fails unless the change shrinks it; a unit over its target may
+not grow past its size where the change began; extract before you add. The plan lists the size
+ratchet among its done checks; the developer extracts an over-target file first, as its own commit,
+and reports `file: before → after`; review measures every diff. For edits that never go through an
+agent, `.specnaut/scripts/bash/size-ratchet.sh` checks the staged changes against the branch's merge
+base (or `--since <ref>`) and exits non-zero on a violation — so an extraction commit followed by an
 addition passes — run it by hand or from your pre-commit runner; Specnaut installs no git hook.
-`/task constitution` also changes the gate configs (`.specnaut/size-limits.yml`,
-`.specnaut/boundaries.yml`, `.specnaut/ui.yml`), under a confirmation phrase of their own.
+`specnaut scan [--path <dir>] [--format text|json|mermaid] [--top <n|all>]` maps the whole
+repository against the same limits without a model: lines and bytes per file, files and lines per
+folder, a folder tree, and functions and classes by estimate. It exits 0 with nothing over a ceiling
+and 1 with a file over one; estimates never set the exit code. `/task audit` starts from this map.
+Read it as a pointer to where to look, never as a verdict on the architecture. `/task constitution`
+also changes the gate configs (`.specnaut/size-limits.yml`, `.specnaut/boundaries.yml`,
+`.specnaut/ui.yml`), under a confirmation phrase of their own.
 
 Refine the root `AGENTS.md` for your stack, then run `/task plan "<feature description>"` for your
 first feature.
