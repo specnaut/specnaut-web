@@ -1,30 +1,35 @@
 /**
  * Builds the GitHub Pages site:
  *
- *   docs/site/**            → docs-dist/**            (static landing, copied verbatim;
- *                                                      `__SPECNAUT_VERSION__` / `__SPECNAUT_APP_URL__` /
- *                                                      `__SPECNAUT_APP_HOST__` substituted in HTML)
- *   docs/llms.md            → docs-dist/docs/index.html  (HTML rendering, GFM + embedded CSS)
- *                           → docs-dist/llms.txt          (raw markdown copy, llmstxt.org convention)
+ *   docs/site/**   → docs-dist/**               (static landing, copied verbatim;
+ *                                                `__SPECNAUT_VERSION__` / `__SPECNAUT_APP_URL__` /
+ *                                                `__SPECNAUT_APP_HOST__` substituted in HTML)
+ *   docs/llms.md   → docs-dist/docs/index.html  (HTML rendering, GFM, + "Recent releases")
+ *                  → docs-dist/llms.txt         (raw Markdown, llmstxt.org convention)
+ *   CLI releases   → docs-dist/changelog/index.html  (every release, newest first)
+ *                  → docs-dist/changelog.md     (its Markdown twin, linked from llms.txt)
+ *                  → docs-dist/version.json     (the latest release, for `specnaut-guide`)
  *
  * Wired up via `deno task docs:build`. Invoked by `.github/workflows/pages.yml`
- * on every push to main.
+ * on every push to main, daily, and on the CLI release's dispatch.
  *
  * The landing at `/` is the human-facing front door; the rendered llms.md
- * docs live at `/docs/`. The `/llms.txt` route serves the raw enriched
- * Markdown for LLM consumption (llmstxt.org convention) — its path must
- * NEVER move.
+ * docs live at `/docs/`. The `/llms.txt`, `/changelog/` and `/changelog.md`
+ * paths are public and linked — they must NEVER move.
  */
 import { render } from "@deno/gfm";
+import {
+  changelogHtml,
+  changelogMarkdown,
+  recentReleasesMarkdown,
+  type Release,
+} from "./changelog.ts";
 import { pageHtml } from "./page_template.ts";
-import { githubHeaders, REPO_URL, resolveVersion } from "./releases.ts";
+import { fetchReleases, REPO_URL, resolveVersion } from "./releases.ts";
 
 const SOURCE = "docs/llms.md";
 const SITE_DIR = "docs/site";
 const OUT_DIR = "docs-dist";
-const OUT_HTML = `${OUT_DIR}/docs/index.html`;
-const OUT_MD = `${OUT_DIR}/llms.txt`;
-const OUT_CNAME = `${OUT_DIR}/CNAME`;
 const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
 
 /**
@@ -60,68 +65,6 @@ export function withVersion(markdown: string, version: string): string {
 }
 
 /**
- * Fetch the last `count` GitHub releases and render a "Recent releases"
- * Markdown section. On any failure (network, non-2xx, malformed payload),
- * emit a warning to stderr and return an empty string — the docs deploy
- * MUST NOT fail because of a cosmetic section.
- *
- * Authenticated via `githubHeaders()`: the unauthenticated 60/hour ceiling is
- * per runner IP and shared with other jobs, so it is not "sufficient for the
- * build cadence" — it 403'd in practice.
- */
-export async function fetchRecentReleases(count = 5): Promise<string> {
-  const url = `https://api.github.com/repos/specnaut/specnaut-cli/releases?per_page=${count}`;
-  let releases: Array<{ tag_name: string; body: string }>;
-  try {
-    const res = await fetch(url, { headers: githubHeaders() });
-    if (!res.ok) {
-      console.warn(
-        `::warning::fetchRecentReleases: HTTP ${res.status} from ${url} — skipping section`,
-      );
-      return "";
-    }
-    releases = await res.json();
-  } catch (err) {
-    console.warn(
-      `::warning::fetchRecentReleases: ${
-        err instanceof Error ? err.message : err
-      } — skipping section`,
-    );
-    return "";
-  }
-  if (!Array.isArray(releases) || releases.length === 0) return "";
-
-  const lines: string[] = ["## Recent releases", ""];
-  for (const r of releases.slice(0, count)) {
-    const oneLiner = extractOneLiner(r.body ?? "");
-    const tagUrl = `${REPO_URL}/releases/tag/${r.tag_name}`;
-    lines.push(`- [${r.tag_name}](${tagUrl}) — ${oneLiner}`);
-  }
-  return lines.join("\n");
-}
-
-/**
- * Extracts a one-liner summary from a `gen-changelog.ts`-style release body.
- * Skips heading lines (`##`, `###`) and the trailing `**Full changelog:**`.
- * Returns the first bullet text, or the first non-empty non-heading line if
- * no bullet is present.
- */
-export function extractOneLiner(body: string): string {
-  for (const raw of body.split("\n")) {
-    const line = raw.trim();
-    if (!line) continue;
-    if (line.startsWith("#")) continue;
-    if (line.startsWith("**Full changelog")) continue;
-    // Skip raw HTML lines (e.g. <details>/<summary> wrappers) — they render
-    // as an empty, broken disclosure if surfaced as a one-liner.
-    if (line.startsWith("<")) continue;
-    if (line.startsWith("- ")) return line.slice(2).trim();
-    return line;
-  }
-  return "";
-}
-
-/**
  * GitHub Pages custom domain. Emitted as `docs-dist/CNAME` so each deploy
  * republishes it; without this, GitHub Pages drops the custom domain on
  * subsequent workflow deploys (build_type=workflow ignores the repo
@@ -131,8 +74,74 @@ export function extractOneLiner(body: string): string {
  */
 const CUSTOM_DOMAIN = "specnaut.com";
 
+const SITE_URL = `https://${CUSTOM_DOMAIN}`;
+
 const DOCS_DESCRIPTION =
   "Specnaut — enhanced spec-kit CLI with auto-chained workflow, review phase, and backlog. Distributed as a single native binary.";
+const CHANGELOG_DESCRIPTION =
+  "Every published release of the Specnaut CLI, newest first, with its full release notes.";
+
+/** Always in llms.txt: the full history is linked, never inlined (it would crowd out the docs). */
+const TWIN_LINK = `Full release history: [/changelog.md](${SITE_URL}/changelog.md)`;
+
+/** What `renderSite` needs besides the release list, resolved by `buildDocs`. */
+export interface SiteInputs {
+  /** The docs source, `__SPECNAUT_VERSION__` already substituted. */
+  markdown: string;
+  version: string;
+  appUrl: string;
+  /** `YYYY-MM-DD`, the build date `version.json` reports. */
+  today: string;
+}
+
+/**
+ * Every generated file, keyed by its path under the output directory. Pure:
+ * the docs page, `llms.txt`, the Changelog and its twin all derive from the
+ * one `releases` list (`null` when a local build could not fetch it).
+ */
+export function renderSite(inputs: SiteInputs, releases: Release[] | null): Record<string, string> {
+  const { version, appUrl } = inputs;
+  const recent = recentReleasesMarkdown(releases, 5);
+  const enriched = [inputs.markdown, recent, TWIN_LINK].filter(Boolean).join("\n\n") + "\n";
+  const docsBody = render(enriched, { allowIframes: false });
+  return {
+    "docs/index.html": pageHtml({
+      current: "docs",
+      title: "Specnaut — documentation",
+      description: DOCS_DESCRIPTION,
+      canonical: `${SITE_URL}/docs/`,
+      twin: "/llms.txt",
+      body: `<article class="markdown-body">\n${docsBody}\n</article>`,
+      version,
+      appUrl,
+    }),
+    "llms.txt": `<!-- Specnaut v${version} — ${REPO_URL} -->\n\n${enriched}`,
+    "changelog/index.html": pageHtml({
+      current: "changelog",
+      title: "Specnaut — changelog",
+      description: CHANGELOG_DESCRIPTION,
+      canonical: `${SITE_URL}/changelog/`,
+      twin: "/changelog.md",
+      body: changelogHtml(releases),
+      version,
+      appUrl,
+    }),
+    "changelog.md": changelogMarkdown(releases),
+    "CNAME": `${CUSTOM_DOMAIN}\n`,
+    // Consumed by the `specnaut-guide` agent to compare the user's installed
+    // version against the latest released one. `released_at` is the build date.
+    "version.json": JSON.stringify({ version, released_at: inputs.today }, null, 2) + "\n",
+  };
+}
+
+/** Writes `renderSite`'s files under `outDir`, creating their directories. */
+export async function writeSite(outDir: string, files: Record<string, string>): Promise<void> {
+  for (const [path, content] of Object.entries(files)) {
+    const dest = `${outDir}/${path}`;
+    await Deno.mkdir(dest.slice(0, dest.lastIndexOf("/")), { recursive: true });
+    await Deno.writeTextFile(dest, content);
+  }
+}
 
 /**
  * Recursively walk `siteDir` and mirror every file into `outDir`, preserving
@@ -200,73 +209,27 @@ export async function buildDocs(opts: {
   outDir?: string;
   version?: string;
   appUrl?: string;
-  fetchReleases?: () => Promise<string>;
-} = {}): Promise<
-  {
-    html: string;
-    markdown: string;
-    version: string;
-    versionJson: string;
-    siteFiles: string[];
-  }
-> {
-  const source = opts.source ?? SOURCE;
-  const siteDir = opts.siteDir ?? SITE_DIR;
+  fetchReleases?: () => Promise<Release[] | null>;
+  write?: (outDir: string, files: Record<string, string>) => Promise<void>;
+} = {}): Promise<{ files: Record<string, string>; version: string; siteFiles: string[] }> {
   const outDir = opts.outDir ?? OUT_DIR;
   const version = opts.version ?? await resolveVersion();
   const appUrl = opts.appUrl ?? resolveAppUrl();
-  const fetchReleases = opts.fetchReleases ?? (() => fetchRecentReleases());
-  const outHtml = `${outDir}/docs/index.html`;
-  const outMd = `${outDir}/llms.txt`;
-  const outVersionJson = `${outDir}/version.json`;
-
-  const sourceMarkdown = withVersion(await Deno.readTextFile(source), version);
-  const releaseSection = await fetchReleases();
-  const enrichedMarkdown = releaseSection
-    ? `${sourceMarkdown}\n\n${releaseSection}\n`
-    : sourceMarkdown;
-  const rendered = render(enrichedMarkdown, { allowIframes: false });
-  const html = pageHtml({
-    current: "docs",
-    title: "Specnaut — documentation",
-    description: DOCS_DESCRIPTION,
-    canonical: "https://specnaut.com/docs/",
-    twin: "/llms.txt",
-    body: `<article class="markdown-body">\n${rendered}\n</article>`,
-    version,
-    appUrl,
-  });
-  const markdown = `<!-- Specnaut v${version} — ${REPO_URL} -->\n\n${enrichedMarkdown}`;
-
-  // Lightweight machine-readable endpoint consumed by the `specnaut-guide`
-  // agent to compare the user's installed version against the latest
-  // released one. `released_at` is the build timestamp — accurate within
-  // the day since pages.yml redeploys on every docs change (and can be
-  // re-run on dispatch when a new CLI release ships).
-  const versionJson = JSON.stringify(
-    { version, released_at: new Date().toISOString().split("T")[0] },
-    null,
-    2,
-  ) + "\n";
-
-  await Deno.mkdir(`${outDir}/docs`, { recursive: true });
-  await Deno.writeTextFile(outHtml, html);
-  await Deno.writeTextFile(outMd, markdown);
-  await Deno.writeTextFile(`${outDir}/CNAME`, `${CUSTOM_DOMAIN}\n`);
-  await Deno.writeTextFile(outVersionJson, versionJson);
-
-  // Mirror the static landing on top of `outDir` last so its `index.html`
-  // shadows nothing — the rendered docs HTML lives in `outDir/docs/` now.
-  const siteFiles = await copyLandingSite(siteDir, outDir, version, appUrl);
-
-  return { html, markdown, version, versionJson, siteFiles };
+  const markdown = withVersion(await Deno.readTextFile(opts.source ?? SOURCE), version);
+  const releases = await (opts.fetchReleases ?? fetchReleases)();
+  const today = new Date().toISOString().slice(0, 10);
+  const files = renderSite({ markdown, version, appUrl, today }, releases);
+  await (opts.write ?? writeSite)(outDir, files);
+  // Mirror the static landing last: its `index.html` is the site root, and no
+  // generated file lives there.
+  const siteFiles = await copyLandingSite(opts.siteDir ?? SITE_DIR, outDir, version, appUrl);
+  return { files, version, siteFiles };
 }
 
 if (import.meta.main) {
-  const { html, version, siteFiles } = await buildDocs();
-  console.log(`✓ wrote ${OUT_HTML} (${html.length} bytes, v${version})`);
-  console.log(`✓ wrote ${OUT_MD}`);
-  console.log(`✓ wrote ${OUT_CNAME} (${CUSTOM_DOMAIN})`);
-  console.log(`✓ wrote ${OUT_DIR}/version.json (v${version})`);
-  console.log(`✓ copied ${siteFiles.length} landing files from ${SITE_DIR}/`);
+  const { files, version, siteFiles } = await buildDocs();
+  for (const [path, content] of Object.entries(files)) {
+    console.log(`✓ wrote ${OUT_DIR}/${path} (${content.length} bytes)`);
+  }
+  console.log(`✓ copied ${siteFiles.length} landing files from ${SITE_DIR}/ (v${version})`);
 }

@@ -6,54 +6,37 @@
 
 import { assertEquals, assertRejects } from "jsr:@std/assert@^1";
 import { resolveVersion } from "../scripts/releases.ts";
+import { json, withFetch } from "./_fetch_stub.ts";
 
-type Seen = { auth: string | null };
-
-async function withFetch(
-  status: number,
-  env: Record<string, string | undefined>,
-  fn: (seen: Seen) => Promise<void>,
-): Promise<void> {
-  const realFetch = globalThis.fetch;
-  const saved: Record<string, string | undefined> = {};
-  for (const [k, v] of Object.entries(env)) {
-    saved[k] = Deno.env.get(k);
-    if (v === undefined) Deno.env.delete(k);
-    else Deno.env.set(k, v);
-  }
-  const seen: Seen = { auth: null };
-  globalThis.fetch = (_url: string | URL | Request, init?: RequestInit) => {
-    seen.auth = new Headers(init?.headers).get("Authorization");
-    return Promise.resolve(
-      new Response(status === 200 ? JSON.stringify({ tag_name: "v9.8.7" }) : "{}", { status }),
-    );
-  };
-  try {
-    await fn(seen);
-  } finally {
-    globalThis.fetch = realFetch;
-    for (const [k, v] of Object.entries(saved)) {
-      if (v === undefined) Deno.env.delete(k);
-      else Deno.env.set(k, v);
-    }
-  }
-}
+const LATEST = "https://api.github.com/repos/specnaut/specnaut-cli/releases/latest";
+const latest = (status: number, tag = "v9.8.7") => () =>
+  status === 200 ? json({ tag_name: tag }) : json({}, status);
 
 Deno.test("resolveVersion authenticates when the workflow provides a token", async () => {
-  await withFetch(200, { GITHUB_TOKEN: "t0k", CI: "true" }, async (seen) => {
+  await withFetch(latest(200), { GITHUB_TOKEN: "t0k", CI: "true" }, async (seen) => {
     assertEquals(await resolveVersion(), "9.8.7");
-    assertEquals(seen.auth, "Bearer t0k");
+    assertEquals(seen.urls.map(String), [LATEST]);
+    assertEquals(seen.auth, ["Bearer t0k"]);
   });
 });
 
 Deno.test("resolveVersion fails the CI build instead of publishing a fallback", async () => {
-  await withFetch(403, { GITHUB_TOKEN: undefined, CI: "true" }, async () => {
+  await withFetch(latest(403), { GITHUB_TOKEN: undefined, CI: "true" }, async () => {
     await assertRejects(() => resolveVersion(), Error, "403");
   });
 });
 
 Deno.test("resolveVersion still falls back to deno.json for a local build", async () => {
-  await withFetch(403, { GITHUB_TOKEN: undefined, CI: undefined }, async () => {
+  await withFetch(latest(403), { GITHUB_TOKEN: undefined, CI: undefined }, async (seen) => {
     assertEquals(await resolveVersion(), JSON.parse(Deno.readTextFileSync("deno.json")).version);
+    assertEquals(seen.warnings.length, 1);
+  });
+});
+
+// The version lands in the page's <meta>, its footer link and version.json:
+// a tag that is not a version is refused like an outage, never published.
+Deno.test("resolveVersion refuses a latest tag that is not a version", async () => {
+  await withFetch(latest(200, 'v1.0.0"><b>'), { CI: "true" }, async () => {
+    await assertRejects(() => resolveVersion(), Error, "tag_name");
   });
 });

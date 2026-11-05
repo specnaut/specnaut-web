@@ -6,7 +6,7 @@
  */
 import { CLI_REPO, REPO_URL } from "./releases.ts";
 
-/** Which page is being rendered: decides the breadcrumb label. */
+/** Which page is being rendered: decides the breadcrumb and `aria-current`. */
 export type PageKey = "docs" | "changelog";
 
 const CRUMB: Record<PageKey, string> = {
@@ -28,6 +28,43 @@ const PRE_PAINT = `
       }
     `;
 
+async function sha256Base64(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return btoa(String.fromCharCode(...new Uint8Array(digest)));
+}
+
+/**
+ * The policy of every generated page. The Changelog renders release bodies,
+ * which contributors write; the sanitizer is the first line, this is the
+ * second: no inline script but the pre-paint snippet (allowed by its hash,
+ * computed from the constant so the two cannot drift), no inline style, and
+ * images or video only from this site and GitHub's hosts.
+ */
+const CSP = [
+  `script-src 'self' 'sha256-${await sha256Base64(PRE_PAINT)}'`,
+  "style-src 'self' https://fonts.googleapis.com",
+  "font-src https://fonts.gstatic.com",
+  "img-src 'self' data: https://github.com https://*.githubusercontent.com",
+  "media-src 'self' https://github.com https://*.githubusercontent.com",
+  "object-src 'none'; base-uri 'none'; form-action 'none'",
+].join("; ");
+
+/** The primary nav of generated pages; the landing's lives in its index.html. */
+const NAV: ReadonlyArray<{ href: string; label: string; page?: PageKey }> = [
+  { href: "/", label: "Home" },
+  { href: "/docs/", label: "Docs", page: "docs" },
+  { href: "/changelog/", label: "Changelog", page: "changelog" },
+  { href: REPO_URL, label: "GitHub" },
+];
+
+function navLinks(current: PageKey, appUrl: string): string {
+  const links = NAV.map(({ href, label, page }) =>
+    `<a href="${href}"${page === current ? ' aria-current="page"' : ""}>${label}</a>`
+  );
+  links.push(`<a class="nav-cloud" href="${appUrl}">Cloud →</a>`);
+  return links.join("\n          ");
+}
+
 export interface PageOptions {
   current: PageKey;
   title: string;
@@ -47,6 +84,7 @@ export function pageHtml(o: PageOptions): string {
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="Content-Security-Policy" content="${CSP}" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
 
@@ -79,9 +117,7 @@ export function pageHtml(o: PageOptions): string {
           <span class="brand-name">Specnaut</span>
         </a>
         <nav class="site-nav" aria-label="Primary">
-          <a href="/">Home</a>
-          <a href="${REPO_URL}">GitHub</a>
-          <a class="nav-cloud" href="${o.appUrl}">Cloud →</a>
+          ${navLinks(o.current, o.appUrl)}
         </nav>
       </div>
     </header>

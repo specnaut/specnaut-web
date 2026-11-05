@@ -235,3 +235,105 @@
 .doc-header a:hover {
   color: var(--color-neutral-900);
 }
+
+/* The current page in the generated pages' primary nav. */
+.site-nav a[aria-current="page"] {
+  color: var(--color-neutral-900);
+}
+
+/* ---------------------------------------------------------------
+ * Changelog (/changelog/) — one <details> per release, the newest
+ * open, so a phone reads a column of collapsed versions. Each
+ * summary is a full-width touch target.
+ * --------------------------------------------------------------- */
+
+.changelog-title {
+  font-size: clamp(26px, 6vw, 32px);
+  line-height: 1.25;
+  margin: 0 0 var(--space-3);
+}
+
+.changelog-lede,
+.changelog-unavailable {
+  color: var(--color-neutral-700);
+  margin: 0 0 var(--space-8);
+}
+
+.changelog-unavailable {
+  border-left: 3px solid var(--color-warning);
+  background: var(--color-neutral-100);
+  padding: var(--space-3) var(--space-5);
+}
+
+.release {
+  border-top: 1px solid var(--color-neutral-300);
+}
+
+.release > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-3);
+  position: relative;
+  min-height: 44px;
+  padding: var(--space-4) 0 var(--space-4) var(--space-6);
+  cursor: pointer;
+  list-style: none;
+}
+
+.release > summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Drawn, so the marker sits beside the heading instead of above it. */
+.release > summary::before {
+  content: "▸";
+  position: absolute;
+  left: 0;
+  color: var(--color-brand-primary);
+}
+
+.release[open] > summary::before {
+  content: "▾";
+}
+
+.release-title {
+  font-size: clamp(18px, 4vw, 20px);
+  line-height: 1.3;
+  margin: 0;
+}
+
+.release-meta {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-neutral-700);
+}
+
+.release-pre {
+  margin-left: var(--space-2);
+  padding: 0 var(--space-2);
+  border: 1px solid var(--color-warning);
+  border-radius: var(--radius-full);
+}
+
+.release-oneliner {
+  flex-basis: 100%;
+  color: var(--color-neutral-700);
+  font-size: 15px;
+}
+
+.release-oneliner,
+.release-notes {
+  overflow-wrap: anywhere;
+}
+
+.release-notes {
+  padding: 0 0 var(--space-6);
+}
+
+/* A body's ### and #### render two levels down; keep them readable. */
+.release-notes h5,
+.release-notes h6 {
+  font-size: 15px;
+  margin: var(--space-6) 0 var(--space-3);
+}

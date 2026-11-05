@@ -234,6 +234,8 @@ code {
 
 .band-hero {
   position: relative;
+  /* The hero's wash (.hero::before) is wider than a phone; clip, never scroll. */
+  overflow-x: clip;
   background: var(--color-neutral-0);
   padding-top: var(--space-8);
   padding-bottom: var(--space-24);
@@ -286,8 +288,10 @@ code {
 
 .site-header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
   padding-top: var(--space-6);
   padding-bottom: var(--space-6);
 }
@@ -324,21 +328,26 @@ code {
   border-radius: var(--radius-sm);
 }
 
+/* Wraps below --bp-sm: five links do not fit one line beside the brand. */
 .site-nav {
   display: flex;
-  gap: var(--space-4);
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
   font-weight: 600;
   font-size: 14px;
 }
 
 @media (min-width: 480px) {
   .site-nav {
-    gap: var(--space-6);
+    gap: 0 var(--space-6);
     font-size: 15px;
   }
 }
 
 .site-nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
   color: var(--color-neutral-700);
 }
 
