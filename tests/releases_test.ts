@@ -38,6 +38,7 @@ Deno.test("fetchReleases follows every page: 100 + 27 gives 127 entries in 2 cal
     const releases = await fetchReleases();
     assertEquals(releases?.length, 127);
     assertEquals(seen.urls.length, 2);
+    assertEquals(seen.redirect, ["error", "error"], "a redirect would be followed");
     for (const [i, url] of seen.urls.entries()) {
       assertEquals(url.origin, "https://api.github.com", "followed a Link URL");
       assertEquals(url.pathname, "/repos/specnaut/specnaut-cli/releases");

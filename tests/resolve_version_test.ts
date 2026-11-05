@@ -17,6 +17,7 @@ Deno.test("resolveVersion authenticates when the workflow provides a token", asy
     assertEquals(await resolveVersion(), "9.8.7");
     assertEquals(seen.urls.map(String), [LATEST]);
     assertEquals(seen.auth, ["Bearer t0k"]);
+    assertEquals(seen.redirect, ["error"], "a redirect would be followed");
   });
 });
 

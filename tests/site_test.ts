@@ -5,6 +5,7 @@
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@^1";
 import { buildDocs, renderSite } from "../scripts/build-docs.ts";
 import type { Release } from "../scripts/changelog.ts";
+import { HOSTILE } from "./_fixtures.ts";
 
 const RELEASES: Release[] = [
   {
@@ -81,4 +82,27 @@ Deno.test("buildDocs fetches the release list exactly once", async () => {
   assertEquals(calls, 1);
   assertStringIncludes(written["docs/index.html"], "Newest invented change");
   assertStringIncludes(written["changelog/index.html"], "Newest invented change");
+});
+
+Deno.test("a hostile first bullet reaches the docs page only sanitized and scoped", () => {
+  const hostile = [{ ...RELEASES[0], body: HOSTILE }, RELEASES[1]];
+  const docs = renderSite(INPUTS, hostile)["docs/index.html"];
+  assertStringIncludes(docs, "First bullet");
+  for (const banned of ["<iframe", "javascript:", "target=", "onerror", "alert(1)"]) {
+    assert(!docs.includes(banned), `${banned} reached /docs/`);
+  }
+  assertEquals(docs.match(/id="theme-toggle"/g)?.length, 1, "a body id collides with the toggle");
+  assertEquals(docs.match(/<script/g)?.length, 2, "a body script reached /docs/");
+  const start = docs.indexOf('<h2 id="recent-releases">');
+  const recent = docs.slice(start, docs.indexOf("</ul>", start));
+  assertStringIncludes(recent, "lead", "the hostile bullet is not in the recent section");
+  for (const a of recent.match(/<a\b[^>]*>/g) ?? []) {
+    assertEquals(a.match(/rel="[^"]*"/g), ['rel="noopener noreferrer"'], a);
+  }
+});
+
+Deno.test("only the changelog page loads changelog.css", () => {
+  const files = renderSite(INPUTS, RELEASES);
+  assertStringIncludes(files["changelog/index.html"], 'href="/changelog.css"');
+  assert(!files["docs/index.html"].includes("changelog.css"));
 });

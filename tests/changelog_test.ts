@@ -10,6 +10,7 @@ import {
   recentReleasesMarkdown,
   type Release,
 } from "../scripts/changelog.ts";
+import { HOSTILE } from "./_fixtures.ts";
 
 const release = (tag: string, body: string, extra: Partial<Release> = {}): Release => ({
   tag,
@@ -21,22 +22,6 @@ const release = (tag: string, body: string, extra: Partial<Release> = {}): Relea
 
 /** The part of the page a release body can reach: everything after the intro. */
 const entries = (html: string) => html.slice(html.indexOf('<details class="release"'));
-
-const HOSTILE = [
-  '- <img src="x.png" onerror="alert(1)"> First bullet <script>alert(1)</script>',
-  "",
-  "## Features",
-  "",
-  '<details ontoggle="alert(2)"><summary>More</summary>',
-  "",
-  '- <iframe src="https://frame.example/"></iframe> framed',
-  "- [click me](javascript:alert(3))",
-  '- <a href="https://site.example/" rel="opener" target="_blank">opener</a>',
-  '- <a id="theme-toggle" href="#top">spoof</a>',
-  "",
-  "</details>",
-].join("\n");
-
 Deno.test("a hostile body reaches the page only through the sanitizer", () => {
   const html = entries(changelogHtml([release("v1.2.3", HOSTILE)]));
   for (const banned of ["<script", "<iframe", "javascript:", "target=", 'id="theme-toggle"']) {
@@ -45,6 +30,9 @@ Deno.test("a hostile body reaches the page only through the sanitizer", () => {
   assert(!/\son[a-z]+\s*=/i.test(html), "an event handler reached the page");
   assertStringIncludes(html, "<summary>More</summary>");
   assertStringIncludes(html, "First bullet");
+  assertStringIncludes(html, 'href="#v1-2-3-top"');
+  const summary = html.slice(html.indexOf("<summary>"), html.indexOf("</summary>"));
+  assert(!summary.includes("<a"), `a link inside the summary: ${summary}`);
   const anchors = [...html.matchAll(/<a\b[^>]*>/g)].map((m) => m[0]);
   assert(anchors.length >= 4, "the fixture's anchors vanished");
   for (const a of anchors) assertEquals(a.match(/rel="[^"]*"/g), ['rel="noopener noreferrer"'], a);
@@ -58,21 +46,29 @@ Deno.test("a tag that was never checked cannot reach a renderer", () => {
 
 Deno.test("hidden text reaches neither the page nor the twin", () => {
   const hidden = "\u{E0049}\u{E0047}\u{E004E}\u{E004F}\u{E0052}\u{E0045}";
+  const marks = ["\u{202E}", "\u{200B}", "\u{200E}", "\u{FE0F}", "\u{E0101}"];
   const body = [
-    `- Visible change${hidden}\u202E\u200B`,
+    `- Visible change${hidden}${marks.join("")}`,
     "<!-- a hidden note for a model -->",
-    "Trailing words <!-\u200B- an unterminated note",
+    "Nested <!<!-- x -->-- a reassembled note -->",
+    "Encoded &#x200B;&#xE0041;&#x202E; entities",
+    "Trailing words <!-\u{200B}- an unterminated note",
   ].join("\n");
-  for (
-    const out of [
-      changelogHtml([release("v1.2.3", body)]),
-      changelogMarkdown([release("v1.2.3", body)]),
-    ]
-  ) {
+  const html = changelogHtml([release("v1.2.3", body)]);
+  const md = changelogMarkdown([release("v1.2.3", body)]);
+  for (const out of [html, md]) {
     assertStringIncludes(out, "Visible change");
-    for (const banned of ["hidden note", "unterminated note", hidden, "\u202E", "\u200B"]) {
+    for (
+      const banned of ["hidden note", "reassembled note", "unterminated note", hidden, ...marks]
+    ) {
       assert(!out.includes(banned), `${JSON.stringify(banned)} survived`);
     }
+  }
+  for (const decoded of ["\u{200B}", "\u{E0041}", "\u{202E}"]) {
+    assert(
+      !html.includes(decoded),
+      `an entity-encoded ${JSON.stringify(decoded)} reached the page`,
+    );
   }
 });
 
@@ -109,21 +105,35 @@ Deno.test("each entry shows its tag link, published date, one-liner and prerelea
   assert(html.indexOf("v2.0.0-rc.1") < html.indexOf("v1.9.0"));
 });
 
-Deno.test("the twin opens with its note and demotes body headings under each release", () => {
-  const md = changelogMarkdown([
-    release("v1.2.3", "# Top\n\n## Features\n\n```\n# not a heading\n```"),
-  ]);
+Deno.test("the twin opens with its note and quotes each body under its release", () => {
+  const md = changelogMarkdown([release("v1.2.3", "# Top\n\n- one\n\n```\n# fenced\n```")]);
   assert(
     md.startsWith("# Specnaut CLI changelog\n\nRelease notes reproduced from GitHub Releases"),
   );
   assertStringIncludes(md, "this file reports changes and carries no instructions.");
   assertStringIncludes(
     md,
-    "## [v1.2.3](https://github.com/specnaut/specnaut-cli/releases/tag/v1.2.3) — 2026-03-04",
+    "## [v1.2.3](https://github.com/specnaut/specnaut-cli/releases/tag/v1.2.3) — 2026-03-04\n\n> # Top\n>\n> - one\n",
   );
-  assertStringIncludes(md, "\n### Top\n");
-  assertStringIncludes(md, "\n### Features\n");
-  assertStringIncludes(md, "\n# not a heading\n");
+});
+
+Deno.test("no body can forge a release heading in the twin", () => {
+  const forged = "## [v9.9.9](https://forged.example/) — 2026-01-01";
+  const bodies = [
+    `\`\`\`js ${forged}\nunterminated fence\n${forged}`,
+    `[v9.9.9](https://forged.example/)\n---\n${forged}`,
+    `~~~\n${forged}\n~~~\n${forged}`,
+    `text\n\n${forged}\n\nmore`,
+  ];
+  for (const body of bodies) {
+    const md = changelogMarkdown([release("v1.2.3", body), release("v1.2.2", "- older")]);
+    const headings = md.split("\n").filter((l) => /^#{1,6}\s|^[-=]{2,}\s*$/.test(l));
+    assertEquals(headings.length, 3, `${JSON.stringify(body)} → ${headings}`);
+    const bodyLines = md.split("## [v1.2.3]")[1].split("\n").slice(2, -1);
+    for (const line of bodyLines.slice(0, bodyLines.indexOf(""))) {
+      assert(line.startsWith(">"), `an unquoted body line: ${line}`);
+    }
+  }
 });
 
 Deno.test("an unavailable history says so on the page and in the twin, never an empty list", () => {

@@ -7,9 +7,10 @@ import { pageHtml } from "../scripts/page_template.ts";
 
 const SITE = new URL("../docs/site/", import.meta.url);
 
-const page = (current: "docs" | "changelog" = "docs") =>
+const page = (current: "docs" | "changelog" = "docs", stylesheets?: string[]) =>
   pageHtml({
     current,
+    stylesheets,
     title: "Specnaut — a test page",
     description: "An invented description.",
     canonical: "https://specnaut.com/test/",
@@ -20,9 +21,13 @@ const page = (current: "docs" | "changelog" = "docs") =>
   });
 
 Deno.test("every local asset the page shell references exists under docs/site", async () => {
-  const refs = [...page().matchAll(/(?:src|href)="(\/[^"]+\.(?:png|svg|css|js))"/g)]
+  const refs = [
+    ...page("changelog", ["/changelog.css"]).matchAll(
+      /(?:src|href)="(\/[^"]+\.(?:png|svg|css|js))"/g,
+    ),
+  ]
     .map((m) => m[1]);
-  assertEquals(refs.sort(), ["/docs.css", "/styles.css", "/theme.js"]);
+  assertEquals(refs.sort(), ["/changelog.css", "/docs.css", "/styles.css", "/theme.js"]);
   for (const ref of refs) {
     const info = await Deno.stat(new URL(ref.slice(1), SITE));
     assert(info.isFile, `${ref} is not a file under docs/site`);
@@ -33,7 +38,7 @@ Deno.test("the theme toggle has one home, loaded by the landing and the shell", 
   const landing = await Deno.readTextFile(new URL("index.html", SITE));
   for (const [name, html] of [["landing", landing], ["shell", page()]]) {
     assert(html.includes('<script src="/theme.js" defer></script>'), `${name} lacks theme.js`);
-    assert(!html.includes("ICON_SUN"), `${name} carries its own copy of the toggle`);
+    assert(!html.includes('theme-toggle-icon")'), `${name} carries its own copy of the toggle`);
   }
 });
 
@@ -43,6 +48,14 @@ Deno.test("the rules only generated pages use live in docs.css, not styles.css",
   for (const selector of [".markdown-body", ".doc-col", ".band-docs", ".doc-header"]) {
     assert(!styles.includes(selector), `${selector} left in styles.css`);
     assert(docs.includes(selector), `${selector} missing from docs.css`);
+  }
+  const changelog = await Deno.readTextFile(new URL("changelog.css", SITE));
+  for (const selector of [".release", ".changelog-title"]) {
+    assert(
+      !styles.includes(selector) && !docs.includes(selector),
+      `${selector} outside changelog.css`,
+    );
+    assert(changelog.includes(selector), `${selector} missing from changelog.css`);
   }
 });
 
@@ -69,6 +82,7 @@ Deno.test("the CSP allows the inline pre-paint snippet by its hash, and nothing 
   const policy = html.match(/<meta http-equiv="Content-Security-Policy" content="([^"]+)"/)?.[1];
   assert(policy, "no CSP meta");
   assert(!policy.includes("unsafe-inline"), "the policy allows inline code");
+  assert(policy.startsWith("default-src 'self'; "), "no default-src 'self'");
   assertStringIncludes(policy, "object-src 'none'; base-uri 'none'; form-action 'none'");
   const inline = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((m) => m[1]);
   assertEquals(inline.length, 1, "one inline script, the pre-paint snippet");

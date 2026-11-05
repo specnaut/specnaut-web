@@ -21,8 +21,10 @@ import { render } from "@deno/gfm";
 import {
   changelogHtml,
   changelogMarkdown,
+  recentReleasesHtml,
   recentReleasesMarkdown,
   type Release,
+  TWIN_PATH,
 } from "./changelog.ts";
 import { pageHtml } from "./page_template.ts";
 import { fetchReleases, REPO_URL, resolveVersion } from "./releases.ts";
@@ -48,7 +50,7 @@ const APP_URL_PLACEHOLDER = "__SPECNAUT_APP_URL__";
 const APP_HOST_PLACEHOLDER = "__SPECNAUT_APP_HOST__";
 
 /** Resolve the Cloud app origin for this build (env override → prod default). */
-export function resolveAppUrl(): string {
+function resolveAppUrl(): string {
   return Deno.env.get("SPECNAUT_APP_URL") ?? DEFAULT_APP_URL;
 }
 
@@ -82,7 +84,7 @@ const CHANGELOG_DESCRIPTION =
   "Every published release of the Specnaut CLI, newest first, with its full release notes.";
 
 /** Always in llms.txt: the full history is linked, never inlined (it would crowd out the docs). */
-const TWIN_LINK = `Full release history: [/changelog.md](${SITE_URL}/changelog.md)`;
+const TWIN_LINK = `Full release history: [${TWIN_PATH}](${SITE_URL}${TWIN_PATH})`;
 
 /** What `renderSite` needs besides the release list, resolved by `buildDocs`. */
 export interface SiteInputs {
@@ -95,47 +97,62 @@ export interface SiteInputs {
 }
 
 /**
+ * The docs page. The release section is HTML from `recentReleasesHtml`, so
+ * release text never goes through the docs page's own Markdown pass.
+ */
+function docsPage(inputs: SiteInputs, releases: Release[] | null): string {
+  const markdown = render(inputs.markdown, { allowIframes: false });
+  const recent = recentReleasesHtml(releases, 5);
+  const link = render(TWIN_LINK, { allowIframes: false });
+  return pageHtml({
+    current: "docs",
+    title: "Specnaut — documentation",
+    description: DOCS_DESCRIPTION,
+    canonical: `${SITE_URL}/docs/`,
+    twin: "/llms.txt",
+    body: `<article class="markdown-body">\n${[markdown, recent, link].join("\n")}\n</article>`,
+    version: inputs.version,
+    appUrl: inputs.appUrl,
+  });
+}
+
+function changelogPage(inputs: SiteInputs, releases: Release[] | null): string {
+  return pageHtml({
+    current: "changelog",
+    title: "Specnaut — changelog",
+    description: CHANGELOG_DESCRIPTION,
+    canonical: `${SITE_URL}/changelog/`,
+    twin: TWIN_PATH,
+    stylesheets: ["/changelog.css"],
+    body: changelogHtml(releases),
+    version: inputs.version,
+    appUrl: inputs.appUrl,
+  });
+}
+
+/**
  * Every generated file, keyed by its path under the output directory. Pure:
  * the docs page, `llms.txt`, the Changelog and its twin all derive from the
  * one `releases` list (`null` when a local build could not fetch it).
  */
 export function renderSite(inputs: SiteInputs, releases: Release[] | null): Record<string, string> {
-  const { version, appUrl } = inputs;
   const recent = recentReleasesMarkdown(releases, 5);
-  const enriched = [inputs.markdown, recent, TWIN_LINK].filter(Boolean).join("\n\n") + "\n";
-  const docsBody = render(enriched, { allowIframes: false });
+  const llms = [inputs.markdown, recent, TWIN_LINK].filter(Boolean).join("\n\n") + "\n";
+  const versionJson = { version: inputs.version, released_at: inputs.today };
   return {
-    "docs/index.html": pageHtml({
-      current: "docs",
-      title: "Specnaut — documentation",
-      description: DOCS_DESCRIPTION,
-      canonical: `${SITE_URL}/docs/`,
-      twin: "/llms.txt",
-      body: `<article class="markdown-body">\n${docsBody}\n</article>`,
-      version,
-      appUrl,
-    }),
-    "llms.txt": `<!-- Specnaut v${version} — ${REPO_URL} -->\n\n${enriched}`,
-    "changelog/index.html": pageHtml({
-      current: "changelog",
-      title: "Specnaut — changelog",
-      description: CHANGELOG_DESCRIPTION,
-      canonical: `${SITE_URL}/changelog/`,
-      twin: "/changelog.md",
-      body: changelogHtml(releases),
-      version,
-      appUrl,
-    }),
-    "changelog.md": changelogMarkdown(releases),
+    "docs/index.html": docsPage(inputs, releases),
+    "llms.txt": `<!-- Specnaut v${inputs.version} — ${REPO_URL} -->\n\n${llms}`,
+    "changelog/index.html": changelogPage(inputs, releases),
+    [TWIN_PATH.slice(1)]: changelogMarkdown(releases),
     "CNAME": `${CUSTOM_DOMAIN}\n`,
     // Consumed by the `specnaut-guide` agent to compare the user's installed
     // version against the latest released one. `released_at` is the build date.
-    "version.json": JSON.stringify({ version, released_at: inputs.today }, null, 2) + "\n",
+    "version.json": JSON.stringify(versionJson, null, 2) + "\n",
   };
 }
 
 /** Writes `renderSite`'s files under `outDir`, creating their directories. */
-export async function writeSite(outDir: string, files: Record<string, string>): Promise<void> {
+async function writeSite(outDir: string, files: Record<string, string>): Promise<void> {
   for (const [path, content] of Object.entries(files)) {
     const dest = `${outDir}/${path}`;
     await Deno.mkdir(dest.slice(0, dest.lastIndexOf("/")), { recursive: true });
@@ -152,7 +169,7 @@ export async function writeSite(outDir: string, files: Record<string, string>): 
  * Silently no-ops when `siteDir` does not exist — keeps tests with synthetic
  * temp dirs hermetic while production builds always have `docs/site/` on disk.
  */
-export async function copyLandingSite(
+async function copyLandingSite(
   siteDir: string,
   outDir: string,
   version: string,

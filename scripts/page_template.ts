@@ -41,6 +41,7 @@ async function sha256Base64(text: string): Promise<string> {
  * images or video only from this site and GitHub's hosts.
  */
 const CSP = [
+  "default-src 'self'",
   `script-src 'self' 'sha256-${await sha256Base64(PRE_PAINT)}'`,
   "style-src 'self' https://fonts.googleapis.com",
   "font-src https://fonts.gstatic.com",
@@ -73,6 +74,8 @@ export interface PageOptions {
   canonical: string;
   /** Path of the page's agent-readable Markdown twin. */
   twin: string;
+  /** Page-specific stylesheets, linked after `styles.css` and `docs.css`. */
+  stylesheets?: string[];
   /** Inner HTML, already rendered and sanitized by the caller. */
   body: string;
   version: string;
@@ -95,7 +98,9 @@ export function pageHtml(o: PageOptions): string {
     <link rel="canonical" href="${o.canonical}" />
     <link rel="alternate" type="text/markdown" href="${o.twin}" />
     <link rel="stylesheet" href="/styles.css" />
-    <link rel="stylesheet" href="/docs.css" />
+    <link rel="stylesheet" href="/docs.css" />${
+    (o.stylesheets ?? []).map((href) => `\n    <link rel="stylesheet" href="${href}" />`).join("")
+  }
 
     <!-- Apply the saved theme before first paint to avoid a flash. -->
     <script>${PRE_PAINT}</script>

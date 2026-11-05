@@ -20,12 +20,18 @@ const PER_PAGE = 100;
 const MAX_PAGES = 20;
 
 /**
+ * Options for every GitHub API read. `redirect: "error"`: the URL is fixed, so
+ * a redirect is never a legitimate answer and is refused rather than followed.
+ */
+const apiInit = (): RequestInit => ({ headers: githubHeaders(), redirect: "error" });
+
+/**
  * Headers for a GitHub API read. Authenticated with the workflow's run-scoped
  * `GITHUB_TOKEN` when present: unauthenticated calls share a 60/hour quota per
  * runner IP with every other job on that IP, so the build hit 403 on a busy
  * runner even though it makes only a handful of calls.
  */
-export function githubHeaders(): Record<string, string> {
+function githubHeaders(): Record<string, string> {
   const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
   const token = Deno.env.get("GITHUB_TOKEN");
   if (token) headers.Authorization = `Bearer ${token}`;
@@ -38,7 +44,7 @@ export function githubHeaders(): Record<string, string> {
  * empty or partial history); a failed deploy keeps the previous, correct site
  * online instead. Locally the build keeps working offline.
  */
-export function refuseOrWarn(problem: string, localFallback: string): null {
+function refuseOrWarn(problem: string, localFallback: string): null {
   if (Deno.env.get("CI") === "true") {
     throw new Error(`${problem} — refusing to publish a fallback in CI`);
   }
@@ -64,7 +70,7 @@ export async function resolveVersion(): Promise<string> {
   const url = `${API_URL}/releases/latest`;
   let problem: string;
   try {
-    const res = await fetch(url, { headers: githubHeaders() });
+    const res = await fetch(url, apiInit());
     if (res.ok) {
       const { tag_name } = await res.json() as { tag_name?: unknown };
       if (typeof tag_name === "string" && TAG_PATTERN.test(tag_name)) return tag_name.slice(1);
@@ -103,6 +109,24 @@ function parseEntry(e: unknown, where: string): Release | null | string {
   };
 }
 
+/** One page of the list, or the reason it cannot be used. */
+async function fetchPage(url: string): Promise<unknown[] | string> {
+  try {
+    const res = await fetch(url, apiInit());
+    if (!res.ok) {
+      await res.body?.cancel();
+      return `HTTP ${res.status} from ${url}`;
+    }
+    const entries = await res.json();
+    return Array.isArray(entries) ? entries : `${url} did not return a list`;
+  } catch (err) {
+    return err instanceof Error ? err.message : String(err);
+  }
+}
+
+const newestFirst = (a: Release, b: Release) =>
+  a.publishedAt === b.publishedAt ? 0 : a.publishedAt < b.publishedAt ? 1 : -1;
+
 /**
  * Every published CLI release, newest first by `published_at`, or `null` (a
  * local build) when the list cannot be trusted whole. Reads `?page=N` from a
@@ -115,29 +139,15 @@ export async function fetchReleases(): Promise<Release[] | null> {
     refuseOrWarn(`fetchReleases: ${problem}`, "the changelog shows a notice");
   const releases: Release[] = [];
   for (let page = 1; page <= MAX_PAGES; page++) {
-    const url = `${API_URL}/releases?per_page=${PER_PAGE}&page=${page}`;
-    let entries: unknown;
-    try {
-      const res = await fetch(url, { headers: githubHeaders() });
-      if (!res.ok) {
-        await res.body?.cancel();
-        return refuse(`HTTP ${res.status} from ${url}`);
-      }
-      entries = await res.json();
-    } catch (err) {
-      return refuse(err instanceof Error ? err.message : String(err));
-    }
-    if (!Array.isArray(entries)) return refuse(`${url} did not return a list`);
+    const entries = await fetchPage(`${API_URL}/releases?per_page=${PER_PAGE}&page=${page}`);
+    if (typeof entries === "string") return refuse(entries);
     for (const [i, e] of entries.entries()) {
       const parsed = parseEntry(e, `page ${page} entry ${i}`);
       if (typeof parsed === "string") return refuse(parsed);
       if (parsed) releases.push(parsed);
     }
     if (entries.length < PER_PAGE) {
-      if (releases.length === 0) return refuse("no published release");
-      const newestFirst = (a: Release, b: Release) =>
-        a.publishedAt === b.publishedAt ? 0 : a.publishedAt < b.publishedAt ? 1 : -1;
-      return releases.sort(newestFirst);
+      return releases.length === 0 ? refuse("no published release") : releases.sort(newestFirst);
     }
   }
   return refuse(`more than ${MAX_PAGES} pages of releases`);
