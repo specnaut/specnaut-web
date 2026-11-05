@@ -757,6 +757,28 @@ coordinating agent sits in between. Only a CRITICAL or HIGH finding sends the wo
 is `implement → review → fix → re-review`, also automatic — while MEDIUM and LOW go to the backlog
 and the branch ships.
 
+#### Impact-aware quality gates
+
+`run-gate.sh <fast|full>` runs every command `.specnaut/gates.yml` declares. In a repository of
+several workspaces, a project can opt in to running only what a change can affect: it writes
+`.specnaut/impact.json` and an adapter of its own that reports owners and their dependencies, then
+calls `run-gate.sh <tier> --base <rev>`, or `--refs-stdin` from a pre-push hook. Specnaut ships no
+graph and names no build tool.
+
+A change runs the scoped commands of its owner and of that owner's reverse dependents, with the
+owners in `SPECNAUT_AFFECTED_OWNERS`. A gate command with no entry under `checks` always runs. With
+no declaration on either side the flag changes nothing, and bare `run-gate.sh <tier>` never reads
+the declaration: it is the manual full override.
+
+Uncertainty widens to the whole tier and names its cause on a `fallback:` line: an unowned path, a
+path listed in `full_on`, a gitlink, symlink or type change, a changed declaration, adapter file,
+`gates.yml` or `.specnaut/scripts/`, a failing adapter, a jq that is absent or too old, or a base
+that cannot be resolved. Behind a flag, exit 3 refuses a candidate that is dirty, moved during the
+run, or pushed as several trees, and exit 4 means nothing was checked: a skip is never a pass. On
+exit 4 with a `removed:` line other than `none`, stop and name what left the tier, because a bare run
+of an empty tier passes. A pass whose `scope:` line is not `full` is not the full gate, and is
+reported as what it was. The flags need jq 1.6 on the Bash twin and PowerShell 7.4 on the other.
+
 ### 3. Developer agent doctrine
 
 Every scaffold ships a `developer` agent that implements a planned feature from its `plan.md` — the
