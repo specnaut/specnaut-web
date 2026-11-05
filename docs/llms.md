@@ -775,8 +775,8 @@ path listed in `full_on`, a gitlink, symlink or type change, a changed declarati
 `gates.yml` or `.specnaut/scripts/`, a failing adapter, a jq that is absent or too old, or a base
 that cannot be resolved. Behind a flag, exit 3 refuses a candidate that is dirty, moved during the
 run, or pushed as several trees, and exit 4 means nothing was checked: a skip is never a pass. On
-exit 4 with a `removed:` line other than `none`, stop and name what left the tier, because a bare run
-of an empty tier passes. A pass whose `scope:` line is not `full` is not the full gate, and is
+exit 4 with a `removed:` line other than `none`, stop and name what left the tier, because a bare
+run of an empty tier passes. A pass whose `scope:` line is not `full` is not the full gate, and is
 reported as what it was. The flags need jq 1.6 on the Bash twin and PowerShell 7.4 on the other.
 
 ### 3. Developer agent doctrine
