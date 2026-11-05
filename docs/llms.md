@@ -138,11 +138,11 @@ where you'll run the rest.
 
 Specnaut gives your harness three skills, and the split between them is the model:
 
-| Skill           | Owns                                                                   | Example                                                      |
-| --------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------ |
-| **`/task`**     | one unit of work — from backlog item to merged branch, audits included | `/task add "…"`, `/task plan <id>`, `/task audit --security` |
-| **`/specnaut`** | the framework itself — its documentation, what is installed, upgrading | `/specnaut doc`, `/specnaut list`, `/specnaut upgrade`       |
-| **`/ship`**     | going to production — versioning and release notes                     | `/ship tag`, `/ship release`                                 |
+| Skill           | Owns                                                                                                | Example                                                                       |
+| --------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **`/task`**     | one unit of work — from backlog item to merged branch, audits included                              | `/task add "…"`, `/task plan <id>`, `/task audit --security`                  |
+| **`/specnaut`** | the framework itself — its documentation, what is installed, upgrading, reporting a problem with it | `/specnaut doc`, `/specnaut list`, `/specnaut upgrade`, `/specnaut issue "…"` |
+| **`/ship`**     | going to production — versioning and release notes                                                  | `/ship tag`, `/ship release`                                                  |
 
 Carry the work from backlog to merge, keep the framework current, ship it.
 
@@ -152,6 +152,12 @@ Carry the work from backlog to merge, keep the framework current, ship it.
 `--security`, `--archi`, `--perf`, `--a11y`, `--deps`), and `constitution`. On harnesses that prefix
 their skills, it is `specnaut-task`; `specnaut init` prints the exact commands for the harness you
 chose.
+
+`/specnaut issue <brief>` reports a Specnaut problem or proposal to Specnaut's public tracker. It
+scrubs the report, searches for an existing issue, shows you the exact text, and publishes under
+your GitHub account only after you approve those words. Without `gh` or permission you get a
+pre-filled link instead. It places no card on any board, and work on your own project stays with
+`/task add`.
 
 Neither `/task` nor `/specnaut` carries a release concern. Tagging and release notes used to sit
 under `/specnaut` as the `tag-version` and `release-version` phases; they are now `/ship tag` and
@@ -986,13 +992,8 @@ can ask the harness about the tool without copy-pasting docs. It uses a vendored
 for offline / deterministic answers and `WebFetch` against <https://specnaut.com/llms.txt> + the
 GitHub Releases API for live "what's new" queries. You can also dispatch it by name with a question.
 
-The agent also handles **bug reports**: ask "report this as a bug" (or hit a Specnaut failure) and
-it pre-fills a structured GitHub issue against `specnaut/specnaut-cli` with a 6-section template
-(Summary / Repro / Observed / Expected / Environment / Logs), auto-populating the environment block
-from `.specnaut/installed.lock` + `specnaut --version` + `uname -srm`, scrubbing common token shapes
-(GitHub PATs, GitLab PATs, Anthropic / OpenAI keys, AWS access keys), and handing you a pre-filled
-`https://github.com/specnaut/specnaut-cli/issues/new?…` URL to review and submit. The agent never
-auto-submits — you always see the body before clicking.
+To report a Specnaut problem or proposal, use `/specnaut issue <brief>`. The guide points you there
+when you ask, or when you hit a Specnaut failure: it publishes nothing itself.
 
 ### 7. Bundled `security-expert` agent — two modes
 
