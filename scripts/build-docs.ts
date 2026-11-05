@@ -16,6 +16,8 @@
  * NEVER move.
  */
 import { render } from "@deno/gfm";
+import { pageHtml } from "./page_template.ts";
+import { githubHeaders, REPO_URL, resolveVersion } from "./releases.ts";
 
 const SOURCE = "docs/llms.md";
 const SITE_DIR = "docs/site";
@@ -23,8 +25,6 @@ const OUT_DIR = "docs-dist";
 const OUT_HTML = `${OUT_DIR}/docs/index.html`;
 const OUT_MD = `${OUT_DIR}/llms.txt`;
 const OUT_CNAME = `${OUT_DIR}/CNAME`;
-const TITLE = "Specnaut — documentation";
-const REPO_URL = "https://github.com/specnaut/specnaut-cli";
 const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
 
 /**
@@ -47,13 +47,6 @@ export function resolveAppUrl(): string {
   return Deno.env.get("SPECNAUT_APP_URL") ?? DEFAULT_APP_URL;
 }
 
-async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
-  const raw = await Deno.readTextFile(denoJsonPath);
-  const { version } = JSON.parse(raw) as { version?: string };
-  if (!version) throw new Error(`No "version" field in ${denoJsonPath}`);
-  return version;
-}
-
 /**
  * The docs source with every `__SPECNAUT_VERSION__` replaced by the release.
  *
@@ -64,52 +57,6 @@ async function readVersion(denoJsonPath = "deno.json"): Promise<string> {
  */
 export function withVersion(markdown: string, version: string): string {
   return markdown.replaceAll(VERSION_PLACEHOLDER, version);
-}
-
-/**
- * Resolve the Specnaut CLI version to display. This site repo (`specnaut-web`)
- * carries no CLI source, so the authoritative version is the latest published
- * release of `specnaut/specnaut-cli` — also what `version.json` must report for the
- * `specnaut-guide` agent's installed-vs-latest comparison. Falls back to the
- * local `deno.json` version for offline / local builds so the build never
- * fails on a network hiccup.
- */
-export async function resolveVersion(): Promise<string> {
-  const url = "https://api.github.com/repos/specnaut/specnaut-cli/releases/latest";
-  let problem: string;
-  try {
-    const res = await fetch(url, { headers: githubHeaders() });
-    if (res.ok) {
-      const { tag_name } = await res.json() as { tag_name?: string };
-      if (tag_name) return tag_name.replace(/^v/, "");
-      problem = `no tag_name in ${url}`;
-    } else {
-      problem = `HTTP ${res.status} from ${url}`;
-    }
-  } catch (err) {
-    problem = err instanceof Error ? err.message : String(err);
-  }
-  // In CI the fallback is this repo's own deno.json — a number that is not the
-  // CLI's. Published as version.json it tells every agent a wrong "latest"; a
-  // failed deploy keeps the previous, correct one online instead.
-  if (Deno.env.get("CI") === "true") {
-    throw new Error(`resolveVersion: ${problem} — refusing to publish a fallback version`);
-  }
-  console.warn(`::warning::resolveVersion: ${problem} — falling back to deno.json (local build)`);
-  return await readVersion();
-}
-
-/**
- * Headers for a GitHub API read. Authenticated with the workflow's run-scoped
- * `GITHUB_TOKEN` when present: unauthenticated calls share a 60/hour quota per
- * runner IP with every other job on that IP, so the build hit 403 on a busy
- * runner even though it makes only two calls.
- */
-function githubHeaders(): Record<string, string> {
-  const headers: Record<string, string> = { Accept: "application/vnd.github+json" };
-  const token = Deno.env.get("GITHUB_TOKEN");
-  if (token) headers.Authorization = `Bearer ${token}`;
-  return headers;
 }
 
 /**
@@ -184,127 +131,8 @@ export function extractOneLiner(body: string): string {
  */
 const CUSTOM_DOMAIN = "specnaut.com";
 
-const HTML_TEMPLATE = (body: string, version: string, appUrl: string) =>
-  `<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="color-scheme" content="light dark" />
-
-    <title>${TITLE}</title>
-    <meta name="description" content="Specnaut — enhanced spec-kit CLI with auto-chained workflow, review phase, and backlog. Distributed as a single native binary." />
-    <meta name="specnaut-version" content="${version}" />
-
-    <link rel="canonical" href="https://specnaut.com/docs/" />
-    <link rel="alternate" type="text/markdown" href="/llms.txt" />
-    <link rel="stylesheet" href="/styles.css" />
-
-    <!-- Apply the saved theme before first paint to avoid a flash. -->
-    <script>
-      try {
-        var t = localStorage.getItem("theme");
-        if (t) document.documentElement.dataset.theme = t;
-      } catch (e) {}
-    </script>
-
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400&display=swap"
-      rel="stylesheet"
-    />
-  </head>
-
-  <body>
-    <header class="band band-header">
-      <div class="wrap site-header">
-        <a href="/" class="brand" aria-label="Specnaut home">
-          <span class="brand-mark" aria-hidden="true"></span>
-          <span class="brand-name">Specnaut</span>
-        </a>
-        <nav class="site-nav" aria-label="Primary">
-          <a href="/">Home</a>
-          <a href="https://github.com/specnaut/specnaut-cli">GitHub</a>
-          <a class="nav-cloud" href="${appUrl}">Cloud →</a>
-        </nav>
-      </div>
-    </header>
-
-    <main>
-      <section class="band band-docs">
-        <div class="wrap">
-          <div class="doc-col">
-            <p class="doc-header">
-              ← <a href="/">Specnaut home</a> · Documentation
-            </p>
-            <article class="markdown-body">
-${body}
-            </article>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <footer class="band band-footer">
-      <div class="wrap site-footer">
-        <p>
-          Specnaut
-          <a href="${REPO_URL}/releases/tag/v${version}">v${version}</a>
-          · <a href="/llms.txt">llms.txt</a>
-          · <a href="${REPO_URL}">github.com/specnaut/specnaut-cli</a>
-        </p>
-        <button
-          type="button"
-          class="theme-toggle"
-          id="theme-toggle"
-          aria-label="Toggle dark and light theme"
-        >
-          <span class="theme-toggle-icon" aria-hidden="true"></span>
-          <span class="theme-toggle-label">Dark</span>
-        </button>
-      </div>
-    </footer>
-
-    <script>
-      // Footer dark / light theme toggle (mirrors the landing page).
-      (() => {
-        const root = document.documentElement;
-        const btn = document.getElementById("theme-toggle");
-        if (!btn) return;
-        const mql = window.matchMedia("(prefers-color-scheme: dark)");
-        const iconEl = btn.querySelector(".theme-toggle-icon");
-        const labelEl = btn.querySelector(".theme-toggle-label");
-        const ICON_SUN =
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
-        const ICON_MOON =
-          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>';
-        const effective = () =>
-          root.dataset.theme || (mql.matches ? "dark" : "light");
-        const renderToggle = () => {
-          if (effective() === "dark") {
-            iconEl.innerHTML = ICON_SUN;
-            labelEl.textContent = "Light";
-          } else {
-            iconEl.innerHTML = ICON_MOON;
-            labelEl.textContent = "Dark";
-          }
-        };
-        renderToggle();
-        btn.addEventListener("click", () => {
-          const next = effective() === "dark" ? "light" : "dark";
-          root.dataset.theme = next;
-          try {
-            localStorage.setItem("theme", next);
-          } catch (e) {}
-          renderToggle();
-        });
-        mql.addEventListener("change", renderToggle);
-      })();
-    </script>
-  </body>
-</html>
-`;
+const DOCS_DESCRIPTION =
+  "Specnaut — enhanced spec-kit CLI with auto-chained workflow, review phase, and backlog. Distributed as a single native binary.";
 
 /**
  * Recursively walk `siteDir` and mirror every file into `outDir`, preserving
@@ -398,7 +226,16 @@ export async function buildDocs(opts: {
     ? `${sourceMarkdown}\n\n${releaseSection}\n`
     : sourceMarkdown;
   const rendered = render(enrichedMarkdown, { allowIframes: false });
-  const html = HTML_TEMPLATE(rendered, version, appUrl);
+  const html = pageHtml({
+    current: "docs",
+    title: "Specnaut — documentation",
+    description: DOCS_DESCRIPTION,
+    canonical: "https://specnaut.com/docs/",
+    twin: "/llms.txt",
+    body: `<article class="markdown-body">\n${rendered}\n</article>`,
+    version,
+    appUrl,
+  });
   const markdown = `<!-- Specnaut v${version} — ${REPO_URL} -->\n\n${enrichedMarkdown}`;
 
   // Lightweight machine-readable endpoint consumed by the `specnaut-guide`

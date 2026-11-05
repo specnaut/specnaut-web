@@ -5,7 +5,7 @@
 // deploy: the previous deploy keeps serving the right number.
 
 import { assertEquals, assertRejects } from "jsr:@std/assert@^1";
-import { resolveVersion } from "../scripts/build-docs.ts";
+import { resolveVersion } from "../scripts/releases.ts";
 
 type Seen = { auth: string | null };
 
