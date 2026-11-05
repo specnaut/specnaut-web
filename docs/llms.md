@@ -1246,6 +1246,9 @@ on-disk content, so the next upgrade does not re-flag this file as
 preserved. Removes the staging entry.
 ```
 
+If the folder a staged copy leaves behind cannot be removed, `reconcile` still succeeds, because the
+file and the lock are already updated, and names that folder on stderr. The next run retries.
+
 `specnaut-guide review-upgrade` is the recommended way to walk through reconciliation interactively
 — it surfaces a `keep / take / merge / view / skip` choice per file and dispatches the `developer`
 subagent for intelligent merges.
