@@ -731,6 +731,20 @@ The board stays in sync with `main` instead of drifting. `--no-close` merges and
 the item open, for a feature delivered across several branches. `--issue` is opt-in; feature trees
 without the field skip the close.
 
+`/task` starts no new work, and lands no other branch, while an earlier landing is unsettled.
+`plan`, `implement` (where it creates the branch), `merge` and `resume` first run an intake gate,
+`wip-audit.sh --gate`, and stop on anything but `gate clear`, quoting its lines. A landing is
+unsettled while either holds:
+
+- the local base holds commits `origin/<base>` lacks — an unfinished push;
+- the published base still tracks `.specnaut/feature.json` with an issue number. Removing that file
+  is the closeout's last step, so while it is there the closeout has not finished. Running
+  `/task resume <n>` finishes it: it closes, moves and pushes what the earlier run left. After a
+  pull request opened with `/task merge --pr` lands, `/task resume <n>` is how the item is closed
+  out;
+- after upgrading, a base that kept a `feature.json` from a landing before the gate existed blocks
+  once, until `/task resume <n>` settles it or the stale file is removed in its own commit.
+
 #### Running a single phase
 
 `--manual` is the only chain flag:
