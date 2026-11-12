@@ -462,6 +462,8 @@ specnaut init --here --force --reset-preserved  # forced refresh that overrides 
 specnaut reconcile --status       # list files pending post-upgrade reconciliation (JSON)
 specnaut reconcile <path> --accept-upstream  # take new template version (backs up local)
 specnaut reconcile <path> --accept-current   # keep local version (re-stamps lock SHA)
+specnaut verify-scripts           # check .specnaut/scripts/ against the base branch before a review
+                                  #   or merge runs them (read-only; exit 0 trusted, 1 untrusted, 3 no base)
 specnaut login                    # connect the CLI to Specnaut Cloud (see "Connect the CLI to Specnaut Cloud")
 specnaut cloud orgs               # list your Cloud organizations
 specnaut cloud board              # show the linked project's board
