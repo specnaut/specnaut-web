@@ -462,8 +462,10 @@ specnaut init --here --force --reset-preserved  # forced refresh that overrides 
 specnaut reconcile --status       # list files pending post-upgrade reconciliation (JSON)
 specnaut reconcile <path> --accept-upstream  # take new template version (backs up local)
 specnaut reconcile <path> --accept-current   # keep local version (re-stamps lock SHA)
-specnaut verify-scripts           # check .specnaut/scripts/ against the base branch before a review
-                                  #   or merge runs them (read-only; exit 0 trusted, 1 untrusted, 3 no base)
+specnaut verify-scripts           # check .specnaut/scripts/, and the config a branch controls, against
+                                  #   the base branch before resume, groom, the backlog verbs, audit,
+                                  #   review or merge run them
+                                  #   (read-only; exit 0 trusted, 1 untrusted, 3 no base)
 specnaut login                    # connect the CLI to Specnaut Cloud (see "Connect the CLI to Specnaut Cloud")
 specnaut cloud orgs               # list your Cloud organizations
 specnaut cloud board              # show the linked project's board
@@ -474,6 +476,17 @@ specnaut self-update --check      # only report whether an update is available
 specnaut --version                # print version
 specnaut --help                   # full usage
 ```
+
+`specnaut verify-scripts` is the gate the generated workflow runs before it executes a script of the
+tree: `resume`, `groom`, the backlog verbs and `audit` run it first, and `review` and `merge` run it
+in their own gate step. Before its final `VERDICT scripts …` line it prints one line per config
+input a branch controls (`workflow`, `size-limits`, `boundaries`, `backlog-config`, `linked-issue`
+and `gates`): `VERDICT <class> trusted`, or `VERDICT <class> untrusted <path> <reason>`. Trusted
+means the work tree holds the value the base branch's tip holds, so reading the tree reads the base.
+An untrusted line, or none, means the tree's value is never read and the verb takes the cautious
+reading instead: the merge mode is `manual`, a size or boundary check is reported as not run rather
+than passed, and no backlog script runs. Only `VERDICT scripts trusted` lets a verb run a script
+under `.specnaut/scripts/`; anything else runs none of them.
 
 From inside an agent session, `/specnaut upgrade` runs the same round for you. It updates the binary
 when a newer release is published, then runs `specnaut upgrade` and reports what it rewrote, what it
