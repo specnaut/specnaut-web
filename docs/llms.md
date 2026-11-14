@@ -486,7 +486,11 @@ means the work tree holds the value the base branch's tip holds, so reading the 
 An untrusted line, or none, means the tree's value is never read and the verb takes the cautious
 reading instead: the merge mode is `manual`, a size or boundary check is reported as not run rather
 than passed, and no backlog script runs. Only `VERDICT scripts trusted` lets a verb run a script
-under `.specnaut/scripts/`; anything else runs none of them.
+under `.specnaut/scripts/`; anything else runs none of them. It also prints `VERDICT instructions …`
+lines for the instruction files the agents load (an `AGENTS.md` or `CLAUDE.md`, a rule or an
+imported file). Unless they read `VERDICT instructions
+trusted`, `merge` does not land on its own:
+it shows what changed and asks once, and the landing script refuses until that answer is given.
 
 From inside an agent session, `/specnaut upgrade` runs the same round for you. It updates the binary
 when a newer release is published, then runs `specnaut upgrade` and reports what it rewrote, what it
