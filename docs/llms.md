@@ -1002,15 +1002,14 @@ declaration to existing projects.
 **What it shows.** A band above the prompt, sized to the terminal width:
 
 ```
-5h 82% ↻2h10 · 7d 31% ↻3d4h · ctx 48% · $3.12 · ▸ plan ✓ implement ● review ○ merge ○
+5h 82% ↻2h10 · 7d 31% ↻3d4h · ctx 48% · $3.12
 ```
 
 - the 5-hour and weekly usage windows, with the time until each resets: yellow from 80%, red from
   the hold threshold;
-- the context fill and the session's cost;
-- the chain's progress while the autopilot runs.
+- the context fill and the session's cost.
 
-A narrow terminal drops the reset times and the chain's detail first, and keeps the windows. Each
+A narrow terminal drops the reset times first, then context and cost, and keeps the windows. Each
 window is announced once, as a toast, when it crosses a threshold.
 
 `/cockpit` opens a pane: the limits, this session, the last seven days (cost and 5-hour peak per
@@ -1038,7 +1037,7 @@ back at the next upgrade.
 
 **Where it works.** In Claude Code in a terminal and in the Code tab of the desktop app. In the IDE
 extension's chat panel and in `claude -p`, nothing is drawn, but the hold still applies. Rate-limit
-windows appear on plans that have them. With an API key, the band shows context, cost and the chain.
+windows appear on plans that have them. With an API key, the band shows context and cost.
 
 **Privacy.** The history (90 days) stays in the mod's store on your machine. Nothing is sent
 anywhere. The only process the cockpit starts is `git rev-parse`, to name the current branch.
