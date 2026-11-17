@@ -147,11 +147,20 @@ Specnaut gives your harness three skills, and the split between them is the mode
 Carry the work from backlog to merge, keep the framework current, ship it.
 
 `/task` covers the whole life of one unit of work: the backlog verbs (`list`, `next`, `add`, `edit`,
-`close`, `groom`, `estimate`, `status`, `brief`, `<id>`), the pipeline (`plan`, `implement`,
-`review`, `merge`), the read-only audit (`/task audit`, every applicable axis with no flag, or
-`--security`, `--archi`, `--perf`, `--a11y`, `--deps`; `--scan` for the size map alone), and
-`constitution`. On harnesses that prefix their skills, it is `specnaut-task`; `specnaut init` prints
-the exact commands for the harness you chose.
+`close`, `groom`, `estimate`, `status`, `brief`, `kanban`, `<id>`), the pipeline (`plan`,
+`implement`, `review`, `merge`), the read-only audit (`/task audit`, every applicable axis with no
+flag, or `--security`, `--archi`, `--perf`, `--a11y`, `--deps`; `--scan` for the size map alone),
+and `constitution`. On harnesses that prefix their skills, it is `specnaut-task`; `specnaut init`
+prints the exact commands for the harness you chose.
+
+`/task kanban` opens the board your `.specnaut/backlog-config.yml` names in the system default
+browser, printing its address first: the GitHub Project, or the GitLab issue board
+(`<host>/<group>/<project>/-/boards`). It writes nothing to the tracker. On Specnaut Cloud it names
+the project and tells you to open the board from the Specnaut Cloud web app; on the local backend it
+points at `.specnaut/backlog.md`. `--no-open` prints the address without opening it. If you had
+routed `kanban`, or another verb Specnaut now ships, to a skill of your own and changed nothing else
+in the `/task` router, `specnaut upgrade` replaces that router with the bundled one and quotes the
+row it dropped.
 
 `/specnaut issue <brief>` reports a Specnaut problem or proposal to Specnaut's public tracker. It
 scrubs the report, searches for an existing issue, shows you the exact text, and publishes under
