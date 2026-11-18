@@ -1,0 +1,186 @@
+/* ============================================================
+ * Landing only (/) — loaded by docs/site/index.html after styles.css, so its
+ * rules keep their place at the end of the cascade. The generated pages
+ * (/docs/, /changelog/) never load it; their own rules are in docs.css.
+ * ============================================================ */
+
+/* The agent prompt wraps instead of scrolling: it is one sentence read whole,
+   and at a 320px viewport a scrolled line hides the URL that is its point. */
+.codeblock-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.prompt-intro {
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+/* -- Agent roster ------------------------------------------------------- */
+.roster {
+  width: 100%;
+}
+
+.roster .section-title {
+  margin-bottom: var(--space-4);
+}
+
+.section-lede {
+  text-align: center;
+  max-width: 56ch;
+  margin: 0 auto var(--space-10);
+  color: var(--color-neutral-700);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.roster-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+
+@media (min-width: 480px) {
+  .roster-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-6);
+  }
+}
+
+.roster-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-2);
+}
+
+.roster-card .sprite {
+  max-width: 112px;
+}
+
+.roster-card figcaption {
+  font-family: var(--font-pixel);
+  font-size: 7px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-align: center;
+  color: var(--color-neutral-700);
+  line-height: 1.4;
+}
+
+/* Stagger the roster bob so the cast doesn't move in lockstep. */
+.roster-card:nth-child(3n+2) .sprite {
+  animation-delay: -1s;
+}
+.roster-card:nth-child(3n) .sprite {
+  animation-delay: -2s;
+}
+
+/* -- Cloud section (two-column with art) -------------------------------- */
+.cloud-inner {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-10);
+  align-items: center;
+  text-align: left;
+}
+
+@media (min-width: 768px) {
+  .cloud-inner {
+    grid-template-columns: 0.9fr 1.1fr;
+    gap: var(--space-16);
+  }
+}
+
+.cloud-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cloud-art img {
+  width: 100%;
+  max-width: 380px;
+  height: auto;
+  filter: drop-shadow(var(--shadow-md));
+}
+
+.cloud-title {
+  text-align: left;
+  margin-bottom: var(--space-5);
+}
+
+.cloud-lede {
+  text-align: left;
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.cloud-points {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+/* -- Trust band --------------------------------------------------------- */
+.trust {
+  width: 100%;
+  text-align: center;
+}
+
+.trust-grid {
+  list-style: none;
+  margin: 0 0 var(--space-10);
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+  text-align: left;
+}
+
+@media (min-width: 480px) {
+  .trust-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .trust-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.trust-grid li {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.trust-grid strong {
+  display: block;
+  font-size: 16px;
+  color: var(--color-neutral-900);
+  margin-bottom: var(--space-1);
+}
+
+.trust-grid span {
+  color: var(--color-neutral-700);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.trust-cta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+
+.trust-snippet {
+  max-width: 640px;
+  margin: 0 auto;
+}
