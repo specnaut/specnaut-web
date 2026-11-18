@@ -15,9 +15,11 @@ docs/
 ├── llms.md                      # main documentation (rendered to /docs/, raw at /llms.txt)
 ├── SKILL.md                     # the install skill an agent follows, served at /SKILL.md
 ├── site/                        # marketing landing page
-│   ├── index.html
+│   ├── index.html               # the landing's shell; the build fills in its sections
+│   ├── _landing/                # one partial per landing section, never published
 │   ├── styles.css               # shared by every page
-│   ├── landing.css              # rules only the landing uses
+│   ├── landing-*.css            # rules only the landing uses, linked in cascade order
+│   ├── landing.css              # … ending with the roster, Cloud and trust bands
 │   ├── docs.css                 # rules only the generated pages use
 │   ├── changelog.css            # rules only /changelog/ uses
 │   ├── theme.js                 # the footer theme toggle, shared
@@ -29,7 +31,7 @@ docs/
 └── headless-vm-mode.md
 scripts/build-docs.ts            # the static-site builder (Deno + @deno/gfm)
 scripts/build_values.ts          # every __SPECNAUT_…__ placeholder, incl. the one install command
-scripts/landing.ts               # mirrors docs/site/ and fills its placeholders
+scripts/landing.ts               # mirrors docs/site/, assembles its partials, fills its placeholders
 scripts/releases.ts              # every read of the CLI's GitHub Releases
 scripts/changelog.ts             # renders /changelog/, /changelog.md, "Recent releases"
 .github/workflows/pages.yml      # build + deploy to GitHub Pages

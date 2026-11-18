@@ -72,8 +72,19 @@ Deno.test("every install line in SKILL.md, llms.txt and the landing is the singl
   }
 });
 
+/** The landing's HTML sources: its shell and every partial it assembles. */
+async function landingSources(): Promise<string[]> {
+  const partials = [];
+  for await (const entry of Deno.readDir(new URL("../docs/site/_landing", import.meta.url))) {
+    if (entry.name.endsWith(".html")) partials.push(`docs/site/_landing/${entry.name}`);
+  }
+  return ["docs/site/index.html", ...partials.sort()];
+}
+
 Deno.test("no source spells the installer URL by hand", async () => {
-  for (const path of ["docs/SKILL.md", "docs/llms.md", "docs/site/index.html"]) {
+  const sources = ["docs/SKILL.md", "docs/llms.md", ...await landingSources()];
+  assert(sources.includes("docs/site/_landing/hero.html"), "the landing's partials went unread");
+  for (const path of sources) {
     const source = await read(path);
     assert(!source.includes("install.sh |"), `${path} types an install line`);
     assert(!source.includes("specnaut-cli/main/install.sh"), `${path} types the installer URL`);

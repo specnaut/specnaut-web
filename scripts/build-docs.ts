@@ -2,8 +2,9 @@
  * Builds the GitHub Pages site:
  *
  *   docs/site/**   → docs-dist/**               (static landing, copied verbatim;
- *                                                every `__SPECNAUT_…__` placeholder
- *                                                substituted in HTML; see build_values.ts)
+ *                                                HTML assembled from its `_landing/`
+ *                                                partials, every `__SPECNAUT_…__`
+ *                                                placeholder substituted; see landing.ts)
  *   docs/llms.md   → docs-dist/docs/index.html  (HTML rendering, GFM, + "Recent releases")
  *                  → docs-dist/llms.txt         (raw Markdown, llmstxt.org convention)
  *   docs/SKILL.md  → docs-dist/SKILL.md         (the install skill the landing's prompt names)

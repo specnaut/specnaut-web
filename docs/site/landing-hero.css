@@ -1,0 +1,174 @@
+/* ============================================================
+ * Landing only (/): the hero, and the call-to-action row the Cloud band
+ * reuses. Linked after landing-components.css, whose codeblock it refines.
+ * ============================================================ */
+
+/* ---------------------------------------------------------------
+ * Hero
+ * --------------------------------------------------------------- */
+
+.hero {
+  display: grid;
+  /* minmax(0, 1fr) lets the column shrink below its min-content size. Without
+     it, the unbreakable curl URL inside the codeblock forces the column wider
+     than the mobile viewport and the whole hero overflows. */
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-12);
+  align-items: center;
+  position: relative;
+}
+
+/* Grid items also need min-width: 0 so their own internal content
+   (codeblock, long-line code, anything with overflow-x:auto) can be
+   contained instead of pushing the column. */
+.hero-copy {
+  min-width: 0;
+}
+
+@media (min-width: 1024px) {
+  .hero {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-16);
+  }
+}
+
+.hero-copy h1 {
+  /* Mobile-first per DESIGN.md responsive rule: Display drops to 32px below --bp-md. */
+  font-size: 32px;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-6);
+}
+
+@media (min-width: 768px) {
+  .hero-copy h1 {
+    font-size: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-copy h1 {
+    font-size: 56px;
+  }
+}
+
+.lede {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--color-neutral-700);
+  margin: 0 0 var(--space-8);
+  max-width: 56ch;
+}
+
+@media (min-width: 768px) {
+  .lede {
+    font-size: 18px;
+  }
+}
+
+.lede strong {
+  color: var(--color-neutral-900);
+  font-weight: 600;
+}
+
+/* Rotating harness name in the lede. Width sized for the longest display
+   name ("GitHub Copilot CLI", 18 chars) so the surrounding text never
+   reflows on swap. Fade duration kept in lockstep with the JS swap timer. */
+.harness-rotator {
+  display: inline-block;
+  min-width: 11ch;
+  transition: opacity 350ms ease;
+}
+
+.harness-rotator.is-fading {
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .harness-rotator {
+    transition: none;
+  }
+}
+
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+}
+
+.cta-note {
+  font-size: 13px;
+  color: var(--color-neutral-700);
+  margin: var(--space-3) 0 0;
+}
+
+.cta-note code {
+  font-size: 12px;
+}
+
+/* The agent prompt wraps instead of scrolling: it is one sentence read whole,
+   and at a 320px viewport a scrolled line hides the URL that is its point. */
+.codeblock-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.prompt-intro {
+  margin: var(--space-6) 0 var(--space-3);
+}
+
+/* -- Hero: branded wash + floating diorama ------------------------------ */
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: calc(-1 * var(--space-12)) auto auto 50%;
+  transform: translateX(-50%);
+  width: min(130%, 920px);
+  height: 90%;
+  background: radial-gradient(
+    55% 60% at 68% 32%,
+    color-mix(in oklab, var(--color-brand-primary) 16%, transparent),
+    transparent 72%
+  );
+  pointer-events: none;
+  filter: blur(6px);
+}
+
+.hero-art {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-art-img {
+  width: 100%;
+  max-width: 520px;
+  height: auto;
+  filter: drop-shadow(var(--shadow-md));
+  animation: hero-float 6s var(--motion-ease) infinite alternate;
+  will-change: transform;
+}
+
+@media (min-width: 1024px) {
+  .hero-art-img {
+    max-width: 100%;
+  }
+}
+
+@keyframes hero-float {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-10px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-art-img {
+    animation: none;
+  }
+}

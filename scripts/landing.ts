@@ -1,9 +1,13 @@
 /**
  * Mirrors the static landing (`docs/site/**`) into the published artifact.
  *
- * The landing is hand-written HTML with no build step of its own, so the few
- * values that change with each build reach it as placeholders, substituted in
- * HTML files only. Every other file is copied byte for byte.
+ * The landing is hand-written HTML, so the few values that change with each
+ * build reach it as placeholders, substituted in HTML files only. Every other
+ * file is copied byte for byte.
+ *
+ * An HTML file may pull in a partial with `<!-- include: _landing/hero.html -->`
+ * on a line of its own, so no landing source outgrows the file-size limit. Any
+ * entry whose name starts with `_` is such a source: it is read, never published.
  */
 
 import { substitute } from "./build_values.ts";
@@ -69,6 +73,7 @@ async function isDirectory(path: string): Promise<boolean> {
 /** Mirrors the directory `current`, found at `relative` under the output, recursively. */
 async function walk(mirror: Mirror, current: string, relative: string): Promise<void> {
   for await (const entry of Deno.readDir(current)) {
+    if (entry.name.startsWith("_")) continue;
     const src = `${current}/${entry.name}`;
     const rel = relative ? `${relative}/${entry.name}` : entry.name;
     const dest = `${mirror.outDir}/${rel}`;
@@ -82,11 +87,33 @@ async function walk(mirror: Mirror, current: string, relative: string): Promise<
   }
 }
 
-/** An HTML file gets its placeholders filled; any other file is copied byte for byte. */
+/** An HTML file is assembled and gets its placeholders filled; any other file is copied byte for byte. */
 async function mirrorFile(mirror: Mirror, src: string, dest: string): Promise<void> {
   if (src.endsWith(".html")) {
-    await mirror.sink.writeText(dest, substitute(await Deno.readTextFile(src), mirror.values));
+    await mirror.sink.writeText(dest, substitute(await assemble(src), mirror.values));
   } else {
     await mirror.sink.copy(src, dest);
   }
+}
+
+/** A whole line holding an include directive, its path relative to the including file. */
+const INCLUDE = /^[ \t]*<!-- include: ([\w./-]+) -->[ \t]*\n/gm;
+
+/**
+ * `src` with each include line replaced by the partial it names, one level
+ * deep. A directive left over (a partial that includes another, or a misspelt
+ * one) throws: published, it would be a comment where a section should be.
+ */
+async function assemble(src: string): Promise<string> {
+  const html = await Deno.readTextFile(src);
+  const dir = src.slice(0, src.lastIndexOf("/"));
+  const partials = new Map<string, string>();
+  for (const [, path] of html.matchAll(INCLUDE)) {
+    partials.set(path, await Deno.readTextFile(`${dir}/${path}`));
+  }
+  const assembled = html.replace(INCLUDE, (_line, path: string) => partials.get(path)!);
+  if (assembled.includes("<!-- include:")) {
+    throw new Error(`${src}: an include directive was not expanded`);
+  }
+  return assembled;
 }

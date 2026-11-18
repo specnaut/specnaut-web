@@ -1,0 +1,199 @@
+/* ============================================================
+ * Landing only (/): the components its sections share — the eyebrow, the
+ * buttons, the codeblock, the sprite and the section titles. Linked first
+ * after styles.css; the generated pages never load it.
+ * ============================================================ */
+
+.eyebrow {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  color: var(--color-brand-primary);
+  margin: 0 0 var(--space-4);
+  text-transform: uppercase;
+}
+
+/* ---------------------------------------------------------------
+ * Buttons (DESIGN.md: primary / secondary / ghost)
+ * --------------------------------------------------------------- */
+
+.btn {
+  /* DESIGN.md responsive: 44px touch target floor below --bp-md (WCAG 2.5.5),
+     drops to 40px on tablet+ where pointer precision is higher. */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    box-shadow var(--motion-micro) var(--motion-ease),
+    transform var(--motion-micro) var(--motion-ease),
+    filter var(--motion-micro) var(--motion-ease);
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 768px) {
+  .btn {
+    min-height: 40px;
+  }
+}
+
+.btn:hover {
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn[disabled],
+.btn[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+.btn-primary {
+  background: var(--color-btn-primary-bg);
+  color: var(--color-btn-primary-fg);
+  border-color: var(--color-btn-primary-border);
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+}
+
+.btn-secondary {
+  background: var(--color-neutral-100);
+  color: var(--color-neutral-900);
+  border-color: var(--color-neutral-300);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-brand-primary);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.btn-ghost:hover {
+  text-decoration: underline;
+  box-shadow: none;
+}
+
+.btn-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Sized to match the 15px button label, with a touch of optical weight on
+     top. The icon is an inline SVG using `currentColor`, so it inherits the
+     button's foreground colour automatically (white on primary, brand on
+     ghost). */
+}
+
+.btn-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---------------------------------------------------------------
+ * Codeblock (install snippet)
+ * --------------------------------------------------------------- */
+
+.codeblock {
+  background: var(--codeblock-bg);
+  color: var(--codeblock-fg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0;
+  white-space: pre;
+  box-shadow: var(--shadow-sm);
+}
+
+@media (min-width: 480px) {
+  .codeblock {
+    font-size: 13.5px;
+    padding: var(--space-4) var(--space-6);
+  }
+}
+
+.codeblock code {
+  background: transparent;
+  padding: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+.sprite {
+  /* DESIGN.md image rule: decorative sprites cap at 96px below --bp-sm. */
+  width: 100%;
+  max-width: 96px;
+  aspect-ratio: 1 / 1;
+  object-fit: contain;
+  image-rendering: pixelated;
+  image-rendering: -moz-crisp-edges;
+  image-rendering: crisp-edges;
+  border-radius: var(--radius-none);
+  background: transparent;
+  /* steps() instead of ease-in-out so the bob lands on integer-pixel
+     positions only. Pixelated rendering + sub-pixel transforms produced
+     visible edge shimmer / white halos against the dark page background;
+     discrete steps eliminate the sub-pixel positions entirely and the
+     "hop" cadence matches the pixel-art aesthetic. */
+  animation: sprite-bob 3s steps(4) infinite alternate;
+  will-change: transform;
+}
+
+@media (min-width: 480px) {
+  .sprite {
+    max-width: 140px;
+  }
+}
+
+@keyframes sprite-bob {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sprite {
+    animation: none;
+  }
+}
+
+/* ---------------------------------------------------------------
+ * Section titles
+ * --------------------------------------------------------------- */
+
+.section-title {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0 0 var(--space-10);
+  text-align: center;
+}
+
+@media (min-width: 768px) {
+  .section-title {
+    font-size: 32px;
+  }
+}

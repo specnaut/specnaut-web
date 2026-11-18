@@ -1,19 +1,9 @@
 /* ============================================================
- * Landing only (/) — loaded by docs/site/index.html after styles.css, so its
- * rules keep their place at the end of the cascade. The generated pages
- * (/docs/, /changelog/) never load it; their own rules are in docs.css.
+ * Landing only (/): the roster, Cloud and trust bands. Loaded by
+ * docs/site/index.html last, after styles.css and the landing-*.css sheets,
+ * so its rules keep their place at the end of the cascade. The generated
+ * pages (/docs/, /changelog/) never load it; their own rules are in docs.css.
  * ============================================================ */
-
-/* The agent prompt wraps instead of scrolling: it is one sentence read whole,
-   and at a 320px viewport a scrolled line hides the URL that is its point. */
-.codeblock-wrap {
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
-.prompt-intro {
-  margin: var(--space-6) 0 var(--space-3);
-}
 
 /* -- Agent roster ------------------------------------------------------- */
 .roster {
@@ -115,14 +105,35 @@
 }
 
 .cloud-lede {
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--color-neutral-700);
+  margin: 0 0 var(--space-8);
+  max-width: 64ch;
   text-align: left;
-  margin-left: 0;
-  margin-right: 0;
 }
 
 .cloud-points {
-  margin-left: 0;
-  margin-right: 0;
+  list-style: none;
+  margin: 0 0 var(--space-8);
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+  text-align: left;
+  max-width: 60ch;
+}
+
+.cloud-points li {
+  position: relative;
+  padding-left: var(--space-6);
+  line-height: 1.5;
+}
+
+.cloud-points li::before {
+  content: "✦";
+  position: absolute;
+  left: 0;
+  color: var(--color-brand-primary);
 }
 
 /* -- Trust band --------------------------------------------------------- */
