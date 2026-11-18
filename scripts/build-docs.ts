@@ -26,6 +26,7 @@ import {
   type Release,
   TWIN_PATH,
 } from "./changelog.ts";
+import { copyLandingSite } from "./landing.ts";
 import { pageHtml } from "./page_template.ts";
 import { fetchReleases, REPO_URL, resolveVersion } from "./releases.ts";
 
@@ -43,7 +44,7 @@ const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
  *
  * `__SPECNAUT_APP_URL__` (full origin, link `href`) and `__SPECNAUT_APP_HOST__`
  * (host only, visible label) are substituted in the static landing's HTML by
- * `copyLandingSite`, mirroring the `__SPECNAUT_VERSION__` mechanism.
+ * `copyLandingSite` (`landing.ts`), mirroring the `__SPECNAUT_VERSION__` mechanism.
  */
 const DEFAULT_APP_URL = "https://app.specnaut.com";
 const APP_URL_PLACEHOLDER = "__SPECNAUT_APP_URL__";
@@ -160,66 +161,6 @@ async function writeSite(outDir: string, files: Record<string, string>): Promise
   }
 }
 
-/**
- * Recursively walk `siteDir` and mirror every file into `outDir`, preserving
- * sub-directory structure. HTML files have `__SPECNAUT_VERSION__` substituted
- * so the static landing can show the current release version without a build
- * step of its own.
- *
- * Silently no-ops when `siteDir` does not exist — keeps tests with synthetic
- * temp dirs hermetic while production builds always have `docs/site/` on disk.
- */
-async function copyLandingSite(
-  siteDir: string,
-  outDir: string,
-  version: string,
-  appUrl: string,
-): Promise<string[]> {
-  const appHost = new URL(appUrl).host;
-  let stat: Deno.FileInfo;
-  try {
-    stat = await Deno.stat(siteDir);
-  } catch (err) {
-    if (err instanceof Deno.errors.NotFound) return [];
-    throw err;
-  }
-  if (!stat.isDirectory) return [];
-
-  const written: string[] = [];
-
-  async function walk(current: string, relative: string): Promise<void> {
-    for await (const entry of Deno.readDir(current)) {
-      const src = `${current}/${entry.name}`;
-      const rel = relative ? `${relative}/${entry.name}` : entry.name;
-      const dest = `${outDir}/${rel}`;
-      if (entry.isDirectory) {
-        await Deno.mkdir(dest, { recursive: true });
-        await walk(src, rel);
-        continue;
-      }
-      if (entry.isFile) {
-        if (entry.name.endsWith(".html")) {
-          const raw = await Deno.readTextFile(src);
-          await Deno.writeTextFile(
-            dest,
-            raw
-              .replaceAll(VERSION_PLACEHOLDER, version)
-              .replaceAll(APP_URL_PLACEHOLDER, appUrl)
-              .replaceAll(APP_HOST_PLACEHOLDER, appHost),
-          );
-        } else {
-          await Deno.copyFile(src, dest);
-        }
-        written.push(dest);
-      }
-    }
-  }
-
-  await Deno.mkdir(outDir, { recursive: true });
-  await walk(siteDir, "");
-  return written;
-}
-
 export async function buildDocs(opts: {
   source?: string;
   siteDir?: string;
@@ -239,7 +180,11 @@ export async function buildDocs(opts: {
   await (opts.write ?? writeSite)(outDir, files);
   // Mirror the static landing last: its `index.html` is the site root, and no
   // generated file lives there.
-  const siteFiles = await copyLandingSite(opts.siteDir ?? SITE_DIR, outDir, version, appUrl);
+  const siteFiles = await copyLandingSite(opts.siteDir ?? SITE_DIR, outDir, {
+    [VERSION_PLACEHOLDER]: version,
+    [APP_URL_PLACEHOLDER]: appUrl,
+    [APP_HOST_PLACEHOLDER]: new URL(appUrl).host,
+  });
   return { files, version, siteFiles };
 }
 
