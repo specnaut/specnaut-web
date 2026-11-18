@@ -1,13 +1,21 @@
 /**
  * The values a build writes into its hand-written sources.
  *
- * `docs/llms.md` and the static landing carry `__SPECNAUT_…__` placeholders
- * where a value changes with the build (the release, the Cloud origin). Each
- * value is defined here once; `buildValues` maps every placeholder to it, and
- * every source goes through the same map.
+ * `docs/llms.md`, `docs/SKILL.md` and the static landing carry
+ * `__SPECNAUT_…__` placeholders where a value changes with the build (the
+ * release, the Cloud origin) or must be spelled once for every page (the
+ * install command). Each value is defined here once; `buildValues` maps every
+ * placeholder to it, and every source goes through the same map.
  */
 
-export const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
+/**
+ * The release the site is built for. The OpenCode install line pins the
+ * plugin to a release tag (cli#667) and SKILL.md is stamped with it; a tag
+ * written by hand would lag the first release after it. The site rebuilds on
+ * every CLI release and daily, so the placeholder keeps both on the latest
+ * release without anyone editing this repo.
+ */
+const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
 
 /**
  * GitHub Pages custom domain. Emitted as `docs-dist/CNAME` so each deploy
@@ -40,25 +48,46 @@ export function resolveAppUrl(): string {
   return Deno.env.get("SPECNAUT_APP_URL") ?? DEFAULT_APP_URL;
 }
 
-/** Every placeholder the landing's HTML may carry, with this build's value. */
+/**
+ * The canonical installer: the only URL any page, or any agent following
+ * SKILL.md, fetches `install.sh` from. The script verifies the release
+ * binary's SHA-256 before installing it, so a second spelling of this URL is
+ * a second trust root nobody audits — every install line derives from it.
+ */
+const INSTALLER_URL = "https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh";
+
+/** The install line every page shows: the landing (twice), llms.txt and SKILL.md. */
+export const INSTALL_COMMAND = `curl -fsSL ${INSTALLER_URL} | bash`;
+
+/** The documented variants, built from the same base: `install.sh` reads both from its env. */
+export function installVariants(version: string): { pinned: string; prefix: string } {
+  return {
+    pinned: `curl -fsSL ${INSTALLER_URL} | VERSION=v${version} bash`,
+    prefix: `curl -fsSL ${INSTALLER_URL} | PREFIX=$HOME/.local/bin bash`,
+  };
+}
+
+/** Where the install skill is published, under the output directory. A public path: never move it. */
+export const SKILL_PATH = "SKILL.md";
+
+/**
+ * The one line the landing's "Copy prompt" puts on the clipboard. The URL is
+ * written with its scheme so no agent fetches the skill over plain HTTP.
+ */
+const AGENT_PROMPT = `Set up Specnaut in this repository: ${SITE_URL}/${SKILL_PATH}`;
+
+/** Every placeholder a source may carry, with this build's value. */
 export function buildValues(version: string, appUrl: string): Record<string, string> {
+  const { pinned, prefix } = installVariants(version);
   return {
     [VERSION_PLACEHOLDER]: version,
     [APP_URL_PLACEHOLDER]: appUrl,
     [APP_HOST_PLACEHOLDER]: new URL(appUrl).host,
+    __SPECNAUT_INSTALL_COMMAND__: INSTALL_COMMAND,
+    __SPECNAUT_INSTALL_PINNED__: pinned,
+    __SPECNAUT_INSTALL_PREFIX__: prefix,
+    __SPECNAUT_AGENT_PROMPT__: AGENT_PROMPT,
   };
-}
-
-/**
- * The docs source with every `__SPECNAUT_VERSION__` replaced by the release.
- *
- * The OpenCode install line pins the plugin to a release tag (cli#667), and a
- * tag written by hand here would lag the first release after it. The site
- * rebuilds on every CLI release and daily, so the placeholder keeps the
- * published line on the latest release without anyone editing this repo.
- */
-export function withVersion(markdown: string, version: string): string {
-  return markdown.replaceAll(VERSION_PLACEHOLDER, version);
 }
 
 /** `text` with every key of `values` replaced by its value. */

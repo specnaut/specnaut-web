@@ -2,10 +2,11 @@
  * Builds the GitHub Pages site:
  *
  *   docs/site/**   → docs-dist/**               (static landing, copied verbatim;
- *                                                `__SPECNAUT_VERSION__` / `__SPECNAUT_APP_URL__` /
- *                                                `__SPECNAUT_APP_HOST__` substituted in HTML)
+ *                                                every `__SPECNAUT_…__` placeholder
+ *                                                substituted in HTML; see build_values.ts)
  *   docs/llms.md   → docs-dist/docs/index.html  (HTML rendering, GFM, + "Recent releases")
  *                  → docs-dist/llms.txt         (raw Markdown, llmstxt.org convention)
+ *   docs/SKILL.md  → docs-dist/SKILL.md         (the install skill the landing's prompt names)
  *   CLI releases   → docs-dist/changelog/index.html  (every release, newest first)
  *                  → docs-dist/changelog.md     (its Markdown twin, linked from llms.txt)
  *                  → docs-dist/version.json     (the latest release, for `specnaut-guide`)
@@ -14,8 +15,8 @@
  * on every push to main, daily, and on the CLI release's dispatch.
  *
  * The landing at `/` is the human-facing front door; the rendered llms.md
- * docs live at `/docs/`. The `/llms.txt`, `/changelog/` and `/changelog.md`
- * paths are public and linked — they must NEVER move.
+ * docs live at `/docs/`. The `/llms.txt`, `/SKILL.md`, `/changelog/` and
+ * `/changelog.md` paths are public and linked — they must NEVER move.
  */
 import { render } from "@deno/gfm";
 import {
@@ -31,13 +32,15 @@ import {
   CUSTOM_DOMAIN,
   resolveAppUrl,
   SITE_URL,
-  withVersion,
+  SKILL_PATH,
+  substitute,
 } from "./build_values.ts";
 import { copyLandingSite } from "./landing.ts";
 import { pageHtml } from "./page_template.ts";
 import { fetchReleases, REPO_URL, resolveVersion } from "./releases.ts";
 
 const SOURCE = "docs/llms.md";
+const SKILL_SOURCE = "docs/SKILL.md";
 const SITE_DIR = "docs/site";
 const OUT_DIR = "docs-dist";
 const DOCS_DESCRIPTION =
@@ -50,8 +53,10 @@ const TWIN_LINK = `Full release history: [${TWIN_PATH}](${SITE_URL}${TWIN_PATH})
 
 /** What `renderSite` needs besides the release list, resolved by `buildDocs`. */
 export interface SiteInputs {
-  /** The docs source, `__SPECNAUT_VERSION__` already substituted. */
+  /** The docs source, placeholders already substituted. */
   markdown: string;
+  /** The install skill, published as is; placeholders already substituted. */
+  skill: string;
   version: string;
   appUrl: string;
   /** `YYYY-MM-DD`, the build date `version.json` reports. */
@@ -104,6 +109,7 @@ export function renderSite(inputs: SiteInputs, releases: Release[] | null): Reco
   return {
     "docs/index.html": docsPage(inputs, releases),
     "llms.txt": `<!-- Specnaut v${inputs.version} — ${REPO_URL} -->\n\n${llms}`,
+    [SKILL_PATH]: inputs.skill,
     "changelog/index.html": changelogPage(inputs, releases),
     [TWIN_PATH.slice(1)]: changelogMarkdown(releases),
     "CNAME": `${CUSTOM_DOMAIN}\n`,
@@ -124,6 +130,7 @@ async function writeSite(outDir: string, files: Record<string, string>): Promise
 
 export async function buildDocs(opts: {
   source?: string;
+  skillSource?: string;
   siteDir?: string;
   outDir?: string;
   version?: string;
@@ -134,14 +141,15 @@ export async function buildDocs(opts: {
   const outDir = opts.outDir ?? OUT_DIR;
   const version = opts.version ?? await resolveVersion();
   const appUrl = opts.appUrl ?? resolveAppUrl();
-  const markdown = withVersion(await Deno.readTextFile(opts.source ?? SOURCE), version);
+  const values = buildValues(version, appUrl);
+  const markdown = substitute(await Deno.readTextFile(opts.source ?? SOURCE), values);
+  const skill = substitute(await Deno.readTextFile(opts.skillSource ?? SKILL_SOURCE), values);
   const releases = await (opts.fetchReleases ?? fetchReleases)();
   const today = new Date().toISOString().slice(0, 10);
-  const files = renderSite({ markdown, version, appUrl, today }, releases);
+  const files = renderSite({ markdown, skill, version, appUrl, today }, releases);
   await (opts.write ?? writeSite)(outDir, files);
   // Mirror the static landing last: its `index.html` is the site root, and no
   // generated file lives there.
-  const values = buildValues(version, appUrl);
   const siteFiles = await copyLandingSite(opts.siteDir ?? SITE_DIR, outDir, values);
   return { files, version, siteFiles };
 }

@@ -3,7 +3,7 @@
 // build fills in the release it resolved, so the published line cannot lag.
 
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@^1";
-import { withVersion } from "../scripts/build_values.ts";
+import { buildValues, substitute } from "../scripts/build_values.ts";
 
 const SPEC = "specnaut@git+https://github.com/specnaut/specnaut-cli.git";
 const source = await Deno.readTextFile(new URL("../docs/llms.md", import.meta.url));
@@ -15,7 +15,7 @@ Deno.test("the docs pin the OpenCode line through the version placeholder", () =
 });
 
 Deno.test("the build publishes the line pinned to the resolved release", () => {
-  const built = withVersion(source, "9.8.7");
+  const built = substitute(source, buildValues("9.8.7", "https://app.example.test"));
   assertStringIncludes(built, `${SPEC}#v9.8.7"`);
   assert(!built.includes("__SPECNAUT_VERSION__"), "a placeholder reached the published docs");
 });

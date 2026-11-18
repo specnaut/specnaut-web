@@ -91,6 +91,10 @@
                 <span class="btn-icon" aria-hidden="true"></span>
                 <span class="btn-label">Copy install command</span>
               </button>
+              <button type="button" class="btn btn-secondary" data-copy-target="agent-prompt">
+                <span class="btn-icon" aria-hidden="true"></span>
+                <span class="btn-label">Copy prompt</span>
+              </button>
               <a class="btn btn-secondary" href="/docs/">Read the docs</a>
               <a class="btn btn-ghost" href="https://github.com/specnaut/specnaut-cli">
                 GitHub →
@@ -100,11 +104,20 @@
             <pre
               class="codeblock"
               id="install-snippet"
-            ><code>curl -fsSL https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh | bash</code></pre>
+            ><code>__SPECNAUT_INSTALL_COMMAND__</code></pre>
             <p class="cta-note">
               macOS or Linux · verifies SHA256 · drops the binary into <code
               >/usr/local/bin</code>.
             </p>
+            <p class="cta-note prompt-intro" id="agent-prompt-label">
+              Or let your coding agent do it: paste this prompt into any agent, and it installs
+              Specnaut, asking you for each choice.
+            </p>
+            <pre
+              class="codeblock codeblock-wrap"
+              id="agent-prompt"
+              aria-labelledby="agent-prompt-label"
+            ><code>__SPECNAUT_AGENT_PROMPT__</code></pre>
           </div>
 
           <div class="hero-art" aria-hidden="true">
@@ -370,10 +383,13 @@
           <pre
             class="codeblock trust-snippet"
             id="install-snippet-2"
-          ><code>curl -fsSL https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh | bash</code></pre>
+          ><code>__SPECNAUT_INSTALL_COMMAND__</code></pre>
         </div>
       </section>
     </main>
+
+    <!-- Announces a copy's outcome: a button's changed label is not read out on its own. -->
+    <p class="sr-only" id="copy-status" role="status" aria-live="polite"></p>
 
     <footer class="band band-footer">
       <div class="wrap site-footer">
@@ -401,8 +417,10 @@
     // Inline because the page has only a couple of small interactions and
     // a separate script file would just be ceremony.
 
-    // Copy-to-clipboard for the install snippet(s). Delegated, so it covers
-    // every [data-copy-target] button (hero + trust band) with one handler.
+    // Copy-to-clipboard for the install snippets and the agent prompt.
+    // Delegated, so it covers every [data-copy-target] button with one handler.
+    // Each button gets its own label back, and the outcome goes to the
+    // #copy-status live region so a screen reader hears it.
     const ICON_COPY =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="9" y="9" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
     const ICON_CHECK =
@@ -414,6 +432,8 @@
       icon.innerHTML = ICON_COPY;
     }
 
+    const copyStatus = document.getElementById("copy-status");
+
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-copy-target]");
       if (!btn) return;
@@ -422,17 +442,22 @@
       const text = target.innerText.trim();
       const label = btn.querySelector(".btn-label");
       const icon = btn.querySelector(".btn-icon");
+      // Kept from the first click: a second click lands while the label says "Copied".
+      if (label) label.dataset.label ??= label.textContent;
       const restore = () => {
-        if (label) label.textContent = "Copy install command";
+        if (label) label.textContent = label.dataset.label;
         if (icon) icon.innerHTML = ICON_COPY;
+        if (copyStatus) copyStatus.textContent = "";
       };
       navigator.clipboard.writeText(text).then(() => {
         if (label) label.textContent = "Copied";
         if (icon) icon.innerHTML = ICON_CHECK;
+        if (copyStatus) copyStatus.textContent = "Copied to the clipboard.";
         setTimeout(restore, 1500);
       }).catch((err) => {
         console.warn("copy: clipboard write refused", err);
         if (label) label.textContent = "Copy failed — select manually";
+        if (copyStatus) copyStatus.textContent = "Copy failed. Select the text manually.";
         setTimeout(restore, 2500);
       });
     });

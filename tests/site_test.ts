@@ -24,6 +24,7 @@ const RELEASES: Release[] = [
 
 const INPUTS = {
   markdown: "# Invented docs\n\nSome text.",
+  skill: "---\nname: invented\n---\n\n# Invented skill",
   version: "3.1.0",
   appUrl: "https://app.example.test",
   today: "2026-05-03",
@@ -35,6 +36,7 @@ Deno.test("renderSite emits the docs, the changelog page and its twin from one l
   const files = renderSite(INPUTS, RELEASES);
   assertEquals(Object.keys(files).sort(), [
     "CNAME",
+    "SKILL.md",
     "changelog.md",
     "changelog/index.html",
     "docs/index.html",

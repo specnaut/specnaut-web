@@ -37,8 +37,10 @@ for ua in "ClaudeBot/1.0" "GPTBot/1.2" "PerplexityBot/1.0" "CCBot/2.0"; do
 done
 ```
 
-All four return `200`. Run the same check for `/version.json` and the HTML root after any change to
-the serving path.
+All four return `200`. Run the same check for `/version.json`, `/SKILL.md` and the HTML root after
+any change to the serving path. GitHub Pages serves `.md` files as `text/markdown`, which is what
+`/SKILL.md` (the install skill agents fetch) and `/changelog.md` rely on; confirm with
+`curl -sI https://specnaut.com/SKILL.md | grep -i '^content-type:'`.
 
 ### Historical note — the Cloudflare allow-list (#145)
 

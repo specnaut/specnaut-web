@@ -13,6 +13,7 @@ only the public site and docs.
 ```
 docs/
 ├── llms.md                      # main documentation (rendered to /docs/, raw at /llms.txt)
+├── SKILL.md                     # the install skill an agent follows, served at /SKILL.md
 ├── site/                        # marketing landing page
 │   ├── index.html
 │   ├── styles.css
@@ -24,6 +25,8 @@ docs/
 ├── cloud-credentials.md
 └── headless-vm-mode.md
 scripts/build-docs.ts            # the static-site builder (Deno + @deno/gfm)
+scripts/build_values.ts          # every __SPECNAUT_…__ placeholder, incl. the one install command
+scripts/landing.ts               # mirrors docs/site/ and fills its placeholders
 scripts/releases.ts              # every read of the CLI's GitHub Releases
 scripts/changelog.ts             # renders /changelog/, /changelog.md, "Recent releases"
 .github/workflows/pages.yml      # build + deploy to GitHub Pages
@@ -35,11 +38,12 @@ scripts/changelog.ts             # renders /changelog/, /changelog.md, "Recent r
 deno task docs:build      # → docs-dist/ (the published artifact)
 ```
 
-The build renders `docs/llms.md` to HTML, mirrors `docs/site/` verbatim, emits the `CNAME` for the
-custom domain, writes `version.json`, and renders the Changelog (`/changelog/` and its Markdown twin
-`/changelog.md`) from every published CLI release. The displayed Specnaut version is resolved from
-the **latest `specnaut/specnaut-cli` release** at build time (the daily Pages workflow keeps it
-current); a local build falls back to this repo's `deno.json` version when offline, and its
+The build renders `docs/llms.md` to HTML, publishes `docs/SKILL.md` (the install skill the landing's
+"Copy prompt" names, stamped with the CLI version), mirrors `docs/site/` verbatim, emits the `CNAME`
+for the custom domain, writes `version.json`, and renders the Changelog (`/changelog/` and its
+Markdown twin `/changelog.md`) from every published CLI release. The displayed Specnaut version is
+resolved from the **latest `specnaut/specnaut-cli` release** at build time (the daily Pages workflow
+keeps it current); a local build falls back to this repo's `deno.json` version when offline, and its
 Changelog says the release history is unavailable. In CI an unusable API answer fails the build
 instead, so the previous deploy stays online.
 
@@ -54,3 +58,10 @@ build emits into the artifact.
 
 UI work on this site follows the shared
 [Specnaut design system](https://github.com/specnaut/specnaut-monorepo/blob/main/DESIGN-SYSTEM.md).
+
+## The install command and the install skill
+
+The `curl … install.sh | bash` line is written once, in `scripts/build_values.ts`; the landing,
+`llms.md` and `SKILL.md` carry a placeholder the build fills. `docs/SKILL.md` is run by third-party
+agents on users' machines, so review a change to it like code, and audit it whenever a CLI flag it
+names changes: `tests/install_skill_test.ts` lists those flags.

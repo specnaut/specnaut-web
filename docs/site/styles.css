@@ -596,6 +596,17 @@ code {
   }
 }
 
+/* The agent prompt wraps instead of scrolling: it is one sentence read whole,
+   and at a 320px viewport a scrolled line hides the URL that is its point. */
+.codeblock-wrap {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.prompt-intro {
+  margin: var(--space-6) 0 var(--space-3);
+}
+
 .codeblock code {
   background: transparent;
   padding: 0;

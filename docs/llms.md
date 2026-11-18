@@ -19,7 +19,7 @@ convention.
 The fastest path on macOS or Linux:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh | bash
+__SPECNAUT_INSTALL_COMMAND__
 ```
 
 The installer downloads the platform binary, verifies the SHA256 checksum, and places it in
@@ -29,13 +29,13 @@ falls back to `~/.local/bin`.
 Pin a specific version:
 
 ```bash
-curl -fsSL https://.../install.sh | VERSION=v0.7.1 bash
+__SPECNAUT_INSTALL_PINNED__
 ```
 
 Custom install dir:
 
 ```bash
-curl -fsSL https://.../install.sh | PREFIX=$HOME/.local/bin bash
+__SPECNAUT_INSTALL_PREFIX__
 ```
 
 Or via Homebrew (macOS / Linux):
