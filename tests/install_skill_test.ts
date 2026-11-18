@@ -8,41 +8,40 @@
 import { assert, assertEquals, assertMatch, assertStringIncludes } from "jsr:@std/assert@^1";
 import { extract } from "jsr:@std/front-matter@^1/yaml";
 import { buildDocs } from "../scripts/build-docs.ts";
-import {
-  buildValues,
-  INSTALL_COMMAND,
-  installVariants,
-  SITE_URL,
-  substitute,
-} from "../scripts/build_values.ts";
+import { INSTALL_COMMAND, installVariants, SITE_URL } from "../scripts/build_values.ts";
+import { captureSink } from "./_capture_sink.ts";
 
 const VERSION = "9.8.7";
 const APP_URL = "https://app.example.test";
+const OUT = "out";
 const read = (path: string) => Deno.readTextFile(new URL(`../${path}`, import.meta.url));
 
-/** The generated files of a real build, with every write captured instead of made. */
-async function build(): Promise<Record<string, string>> {
-  let written: Record<string, string> = {};
-  await buildDocs({
-    siteDir: "no/such/site-dir",
-    outDir: "no/such/out-dir",
+/**
+ * A real build of every page, the landing included, with every write captured
+ * instead of made: `files` are the generated pages, `landing` what the mirror
+ * of docs/site/ wrote, and `published` every path the artifact would hold.
+ */
+async function build() {
+  let files: Record<string, string> = {};
+  const sink = captureSink();
+  const siteFiles = await buildDocs({
+    siteDir: "docs/site",
+    outDir: OUT,
     version: VERSION,
     appUrl: APP_URL,
     fetchReleases: () => Promise.resolve(null),
-    write: (_outDir, files) => {
-      written = files;
+    write: (_outDir, generated) => {
+      files = generated;
       return Promise.resolve();
     },
-  });
-  return written;
+    siteSink: sink,
+  }).then((r) => r.siteFiles);
+  const landing = sink.texts.get(`${OUT}/index.html`) ?? "";
+  const mirrored = siteFiles.map((p) => p.slice(OUT.length + 1));
+  return { files, landing, published: new Set([...Object.keys(files), ...mirrored]) };
 }
 
-/** The landing as the build publishes it: the same substitution, the real source. */
-async function landing(): Promise<string> {
-  return substitute(await read("docs/site/index.html"), buildValues(VERSION, APP_URL));
-}
-
-const files = await build();
+const { files, landing, published } = await build();
 const skill = files["SKILL.md"];
 
 Deno.test("SKILL.md is published and parses as a skill stamped with the release", () => {
@@ -64,7 +63,7 @@ Deno.test("every install line in SKILL.md, llms.txt and the landing is the singl
     const [where, text] of [
       ["SKILL.md", skill],
       ["llms.txt", files["llms.txt"]],
-      ["index.html", await landing()],
+      ["index.html", landing],
     ]
   ) {
     const lines = [...text.matchAll(/curl [^\n<`]*install\.sh[^\n<`]*/g)].map((m) => m[0]);
@@ -114,25 +113,25 @@ Deno.test("SKILL.md never runs the token command and links out for detail", () =
 });
 
 Deno.test("the hero's copied prompt names a file the build publishes", async () => {
-  const html = await landing();
+  const html = landing;
   assertStringIncludes(html, 'data-copy-target="agent-prompt"');
   const prompt = html.match(/id="agent-prompt"[^>]*>(?:<code>)?([^<]*)</)?.[1];
   assert(prompt, "no #agent-prompt text in the landing");
   const url = prompt.match(/https:\/\/\S+/)?.[0] ?? "";
   assert(url.startsWith(`${SITE_URL}/`), `the prompt names no ${SITE_URL} URL: ${prompt}`);
   const path = url.slice(SITE_URL.length + 1);
-  assert(path in files, `the prompt names ${path}, which the build does not publish`);
+  assert(published.has(path), `the prompt names ${path}, which the build does not publish`);
 });
 
 Deno.test("copying announces its outcome to screen readers", async () => {
-  const html = await landing();
+  const html = landing;
   assertMatch(html, /<[a-z]+ [^>]*id="copy-status"[^>]*aria-live="polite"/);
   assertStringIncludes(html, '<script src="/landing.js" defer>');
   assertStringIncludes(await read("docs/site/landing.js"), 'getElementById("copy-status")');
 });
 
 Deno.test("no placeholder survives into a published file", async () => {
-  for (const [path, text] of [...Object.entries(files), ["index.html", await landing()]]) {
+  for (const [path, text] of [...Object.entries(files), ["index.html", landing]]) {
     assert(!text.includes("__SPECNAUT_"), `${path} keeps a placeholder`);
   }
 });

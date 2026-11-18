@@ -35,7 +35,7 @@ import {
   SKILL_PATH,
   substitute,
 } from "./build_values.ts";
-import { copyLandingSite } from "./landing.ts";
+import { copyLandingSite, type SiteSink } from "./landing.ts";
 import { pageHtml } from "./page_template.ts";
 import { fetchReleases, REPO_URL, resolveVersion } from "./releases.ts";
 
@@ -138,6 +138,8 @@ export interface BuildOptions {
   appUrl?: string;
   fetchReleases?: () => Promise<Release[] | null>;
   write?: (outDir: string, files: Record<string, string>) => Promise<void>;
+  /** Where the landing's mirror goes; the file system unless a test captures it. */
+  siteSink?: SiteSink;
 }
 
 /** The hand-written Markdown sources, every placeholder filled. */
@@ -166,7 +168,8 @@ export async function buildDocs(
   await (opts.write ?? writeSite)(outDir, files);
   // Mirror the static landing last: its `index.html` is the site root, and no
   // generated file lives there.
-  const siteFiles = await copyLandingSite(opts.siteDir ?? SITE_DIR, outDir, values);
+  const siteDir = opts.siteDir ?? SITE_DIR;
+  const siteFiles = await copyLandingSite(siteDir, outDir, values, opts.siteSink);
   return { files, version, siteFiles };
 }
 
