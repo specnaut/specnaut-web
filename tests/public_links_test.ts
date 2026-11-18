@@ -3,7 +3,7 @@
 // allow-list on purpose: a link to a repository not on it fails, so a new
 // repository is refused until someone checks it is public and adds it here.
 
-import { assertEquals } from "jsr:@std/assert@^1";
+import { assert, assertEquals } from "jsr:@std/assert@^1";
 
 const PUBLIC_REPOSITORIES = new Set(["specnaut-cli", "specnaut-web"]);
 
@@ -27,11 +27,15 @@ async function* textFiles(dir: string): AsyncGenerator<string> {
 
 Deno.test("every link into the specnaut organisation names a public repository", async () => {
   const refused: string[] = [];
+  let seen = 0;
   for await (const path of textFiles("")) {
     const text = await Deno.readTextFile(new URL(path, ROOT));
     for (const [link, name] of text.matchAll(ORG_LINK)) {
+      seen++;
       if (!PUBLIC_REPOSITORIES.has(name.replace(/\.git$/, ""))) refused.push(`${path}: ${link}`);
     }
   }
+  // The site links to the CLI's repository, so a walk or a pattern that finds nothing is broken.
+  assert(seen > 0, "no link into the organisation was found");
   assertEquals(refused, [], "links into repositories not on the public allow-list");
 });
