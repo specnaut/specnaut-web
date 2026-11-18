@@ -56,7 +56,7 @@ Deno.test("SKILL.md is published and parses as a skill stamped with the release"
   }
 });
 
-Deno.test("every install line in SKILL.md, llms.txt and the landing is the single source", async () => {
+Deno.test("every install line in SKILL.md, llms.txt and the landing is the single source", () => {
   const allowed = new Set([INSTALL_COMMAND, ...Object.values(installVariants(VERSION))]);
   assertStringIncludes(skill, INSTALL_COMMAND);
   for (
@@ -139,7 +139,7 @@ Deno.test("cloud login is the user's, run from this repository's root", () => {
   assertStringIncludes(skill, "`cd <this repository's root> && specnaut cloud login`");
 });
 
-Deno.test("the hero's copied prompt names a file the build publishes", async () => {
+Deno.test("the hero's copied prompt names a file the build publishes", () => {
   const html = landing;
   assertStringIncludes(html, 'data-copy-target="agent-prompt"');
   const prompt = html.match(/id="agent-prompt"[^>]*>(?:<code>)?([^<]*)</)?.[1];
@@ -166,7 +166,7 @@ Deno.test("copying announces its outcome to screen readers", async () => {
   assertStringIncludes(await read("docs/site/landing.js"), 'getElementById("copy-status")');
 });
 
-Deno.test("no placeholder survives into a published file", async () => {
+Deno.test("no placeholder survives into a published file", () => {
   for (const [path, text] of [...Object.entries(files), ["index.html", landing]]) {
     assert(!text.includes("__SPECNAUT_"), `${path} keeps a placeholder`);
   }
