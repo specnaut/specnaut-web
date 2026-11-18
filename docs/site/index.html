@@ -88,20 +88,7 @@
 
             <div class="cta-row">
               <button type="button" class="btn btn-primary" data-copy-target="install-snippet">
-                <span class="btn-icon" aria-hidden="true"><svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <rect width="13" height="13" x="9" y="9" rx="2" ry="2" />
-                    <path
-                      d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
-                    />
-                  </svg></span>
+                <span class="btn-icon" aria-hidden="true"></span>
                 <span class="btn-label">Copy install command</span>
               </button>
               <a class="btn btn-secondary" href="/docs/">Read the docs</a>
@@ -375,18 +362,7 @@
           </ul>
           <div class="trust-cta">
             <button type="button" class="btn btn-primary" data-copy-target="install-snippet-2">
-              <span class="btn-icon" aria-hidden="true"><svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <rect width="13" height="13" x="9" y="9" rx="2" ry="2" />
-                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                </svg></span>
+              <span class="btn-icon" aria-hidden="true"></span>
               <span class="btn-label">Copy install command</span>
             </button>
             <a class="btn btn-secondary" href="/docs/">Read the docs</a>
@@ -431,6 +407,12 @@
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="9" y="9" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
     const ICON_CHECK =
       '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
+
+    // The copy buttons only work with this script, so it draws their icon:
+    // ICON_COPY is then the icon's one spelling, not a third copy of the markup.
+    for (const icon of document.querySelectorAll("[data-copy-target] .btn-icon")) {
+      icon.innerHTML = ICON_COPY;
+    }
 
     document.addEventListener("click", (e) => {
       const btn = e.target.closest("[data-copy-target]");
