@@ -26,6 +26,13 @@ import {
   type Release,
   TWIN_PATH,
 } from "./changelog.ts";
+import {
+  buildValues,
+  CUSTOM_DOMAIN,
+  resolveAppUrl,
+  SITE_URL,
+  withVersion,
+} from "./build_values.ts";
 import { copyLandingSite } from "./landing.ts";
 import { pageHtml } from "./page_template.ts";
 import { fetchReleases, REPO_URL, resolveVersion } from "./releases.ts";
@@ -33,52 +40,6 @@ import { fetchReleases, REPO_URL, resolveVersion } from "./releases.ts";
 const SOURCE = "docs/llms.md";
 const SITE_DIR = "docs/site";
 const OUT_DIR = "docs-dist";
-const VERSION_PLACEHOLDER = "__SPECNAUT_VERSION__";
-
-/**
- * Cloud app origin for the site's "Cloud →" / "Start free" / sign-in links.
- * Single source of truth — defaults to production and is overridden at build
- * time via the `SPECNAUT_APP_URL` env var. The local docker stack sets it to
- * `http://app.specnaut.localhost` so the sign-in funnel can be exercised end to
- * end locally; production builds leave it unset → output identical to before.
- *
- * `__SPECNAUT_APP_URL__` (full origin, link `href`) and `__SPECNAUT_APP_HOST__`
- * (host only, visible label) are substituted in the static landing's HTML by
- * `copyLandingSite` (`landing.ts`), mirroring the `__SPECNAUT_VERSION__` mechanism.
- */
-const DEFAULT_APP_URL = "https://app.specnaut.com";
-const APP_URL_PLACEHOLDER = "__SPECNAUT_APP_URL__";
-const APP_HOST_PLACEHOLDER = "__SPECNAUT_APP_HOST__";
-
-/** Resolve the Cloud app origin for this build (env override → prod default). */
-function resolveAppUrl(): string {
-  return Deno.env.get("SPECNAUT_APP_URL") ?? DEFAULT_APP_URL;
-}
-
-/**
- * The docs source with every `__SPECNAUT_VERSION__` replaced by the release.
- *
- * The OpenCode install line pins the plugin to a release tag (cli#667), and a
- * tag written by hand here would lag the first release after it. The site
- * rebuilds on every CLI release and daily, so the placeholder keeps the
- * published line on the latest release without anyone editing this repo.
- */
-export function withVersion(markdown: string, version: string): string {
-  return markdown.replaceAll(VERSION_PLACEHOLDER, version);
-}
-
-/**
- * GitHub Pages custom domain. Emitted as `docs-dist/CNAME` so each deploy
- * republishes it; without this, GitHub Pages drops the custom domain on
- * subsequent workflow deploys (build_type=workflow ignores the repo
- * settings UI alone — the artifact's CNAME file is the source of truth).
- *
- * The CNAME on OVH (`specnaut → specnaut.github.io.`) routes traffic here.
- */
-const CUSTOM_DOMAIN = "specnaut.com";
-
-const SITE_URL = `https://${CUSTOM_DOMAIN}`;
-
 const DOCS_DESCRIPTION =
   "Specnaut — enhanced spec-kit CLI with auto-chained workflow, review phase, and backlog. Distributed as a single native binary.";
 const CHANGELOG_DESCRIPTION =
@@ -180,11 +141,8 @@ export async function buildDocs(opts: {
   await (opts.write ?? writeSite)(outDir, files);
   // Mirror the static landing last: its `index.html` is the site root, and no
   // generated file lives there.
-  const siteFiles = await copyLandingSite(opts.siteDir ?? SITE_DIR, outDir, {
-    [VERSION_PLACEHOLDER]: version,
-    [APP_URL_PLACEHOLDER]: appUrl,
-    [APP_HOST_PLACEHOLDER]: new URL(appUrl).host,
-  });
+  const values = buildValues(version, appUrl);
+  const siteFiles = await copyLandingSite(opts.siteDir ?? SITE_DIR, outDir, values);
   return { files, version, siteFiles };
 }
 

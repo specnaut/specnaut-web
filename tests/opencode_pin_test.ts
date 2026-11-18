@@ -3,7 +3,7 @@
 // build fills in the release it resolved, so the published line cannot lag.
 
 import { assert, assertEquals, assertStringIncludes } from "jsr:@std/assert@^1";
-import { withVersion } from "../scripts/build-docs.ts";
+import { withVersion } from "../scripts/build_values.ts";
 
 const SPEC = "specnaut@git+https://github.com/specnaut/specnaut-cli.git";
 const source = await Deno.readTextFile(new URL("../docs/llms.md", import.meta.url));

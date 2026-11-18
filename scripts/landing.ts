@@ -6,6 +6,8 @@
  * HTML files only. Every other file is copied byte for byte.
  */
 
+import { substitute } from "./build_values.ts";
+
 /**
  * Recursively walk `siteDir` and mirror every file into `outDir`, preserving
  * sub-directory structure. In HTML files every key of `values` is replaced by
@@ -55,13 +57,4 @@ export async function copyLandingSite(
   await Deno.mkdir(outDir, { recursive: true });
   await walk(siteDir, "");
   return written;
-}
-
-/** `text` with every key of `values` replaced by its value. */
-export function substitute(text: string, values: Record<string, string>): string {
-  let out = text;
-  for (const [placeholder, value] of Object.entries(values)) {
-    out = out.replaceAll(placeholder, value);
-  }
-  return out;
 }
