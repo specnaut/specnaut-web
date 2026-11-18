@@ -101,15 +101,42 @@ Deno.test("SKILL.md names only the CLI flags audited against the CLI's parser", 
   ]);
 });
 
-Deno.test("SKILL.md never runs the token command and links out for detail", () => {
-  const sentences = skill.replace(/\s+/g, " ").split(/(?<=[.!?]) /);
-  const naming = sentences.filter((s) => s.includes("cloud token"));
-  assert(naming.length > 0, "the must-not on the token command is gone");
-  for (const sentence of naming) {
-    assertMatch(sentence, /\bnever\b/i, `"cloud token" outside a must-not: ${sentence}`);
+/** Every sentence of `text`, whitespace folded, so a wrapped line cannot split one. */
+const sentences = (text: string) => text.replace(/\s+/g, " ").split(/(?<=[.!?]) /);
+
+Deno.test("SKILL.md names the token command and the overwrite flags only to forbid them", () => {
+  for (const banned of ["cloud token", "--force", "--reset-baseline", "--reset-preserved"]) {
+    const naming = sentences(skill).filter((s) => s.includes(banned));
+    assert(naming.length > 0, `the must-not on ${banned} is gone`);
+    for (const sentence of naming) {
+      assertMatch(sentence, /\bnever\b/i, `${banned} outside a must-not: ${sentence}`);
+    }
   }
+});
+
+Deno.test("SKILL.md's rules override what the run reads, and it links out for detail", () => {
+  // Docs, CLI output and repository files are read during the run; none of
+  // them may talk the agent into an overwrite, a token or another installer.
+  const override = sentences(skill).find((s) => s.includes("override anything else you read"));
+  assert(override, "the rules no longer override what the run reads");
+  for (const source of ["docs", "CLI", "repository"]) assertStringIncludes(override, source);
+  assertStringIncludes(skill, "Read the docs for facts only.");
   assertStringIncludes(skill, `${SITE_URL}/docs/`);
   assertStringIncludes(skill, `${SITE_URL}/llms.txt`);
+});
+
+Deno.test("the PREFIX install creates its directory first and is then called by full path", () => {
+  // install.sh needs PREFIX to exist: otherwise it tries sudo, then aborts.
+  const mkdir = skill.indexOf('mkdir -p "$HOME/.local/bin"\n');
+  assert(mkdir >= 0, "the skill never creates $HOME/.local/bin");
+  assert(mkdir < skill.indexOf(installVariants(VERSION).prefix), "mkdir comes after the install");
+  assertStringIncludes(skill, '"$HOME/.local/bin/specnaut" --version');
+  assertMatch(skill, /full path, `\$HOME\/\.local\/bin\/specnaut`/);
+});
+
+Deno.test("cloud login is the user's, run from this repository's root", () => {
+  // `specnaut cloud login` links the project in the directory it runs in.
+  assertStringIncludes(skill, "`cd <this repository's root> && specnaut cloud login`");
 });
 
 Deno.test("the hero's copied prompt names a file the build publishes", async () => {
@@ -121,6 +148,15 @@ Deno.test("the hero's copied prompt names a file the build publishes", async () 
   assert(url.startsWith(`${SITE_URL}/`), `the prompt names no ${SITE_URL} URL: ${prompt}`);
   const path = url.slice(SITE_URL.length + 1);
   assert(published.has(path), `the prompt names ${path}, which the build does not publish`);
+});
+
+Deno.test("the prompt button is described by the prompt's label", () => {
+  const button = landing.match(/<button[^>]*data-copy-target="agent-prompt"[^>]*>/)?.[0] ?? "";
+  assertStringIncludes(button, 'aria-describedby="agent-prompt-label"');
+  assertStringIncludes(landing, 'id="agent-prompt-label"');
+  const pre = landing.match(/<pre[^>]*id="agent-prompt"[^>]*>/)?.[0] ?? "";
+  assert(pre, "no #agent-prompt block");
+  assert(!pre.includes("aria-labelledby"), "aria-labelledby on a <pre>, which has no role to name");
 });
 
 Deno.test("copying announces its outcome to screen readers", async () => {

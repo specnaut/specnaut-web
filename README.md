@@ -16,9 +16,12 @@ docs/
 ├── SKILL.md                     # the install skill an agent follows, served at /SKILL.md
 ├── site/                        # marketing landing page
 │   ├── index.html
-│   ├── styles.css
+│   ├── styles.css               # shared by every page
+│   ├── landing.css              # rules only the landing uses
 │   ├── docs.css                 # rules only the generated pages use
+│   ├── changelog.css            # rules only /changelog/ uses
 │   ├── theme.js                 # the footer theme toggle, shared
+│   ├── landing.js               # the landing's copy buttons and harness rotator
 │   └── assets/                  # og-card + agent sprites
 ├── api/gates.md                 # feature reference
 ├── ops/hosting.md               # how specnaut.com is served + crawler access

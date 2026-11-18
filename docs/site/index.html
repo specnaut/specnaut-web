@@ -93,7 +93,12 @@
                 <span class="btn-icon" aria-hidden="true"></span>
                 <span class="btn-label">Copy install command</span>
               </button>
-              <button type="button" class="btn btn-secondary" data-copy-target="agent-prompt">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                data-copy-target="agent-prompt"
+                aria-describedby="agent-prompt-label"
+              >
                 <span class="btn-icon" aria-hidden="true"></span>
                 <span class="btn-label">Copy prompt</span>
               </button>
@@ -115,11 +120,8 @@
               Or let your coding agent do it: paste this prompt into any agent, and it installs
               Specnaut, asking you for each choice.
             </p>
-            <pre
-              class="codeblock codeblock-wrap"
-              id="agent-prompt"
-              aria-labelledby="agent-prompt-label"
-            ><code>__SPECNAUT_AGENT_PROMPT__</code></pre>
+            <pre class="codeblock codeblock-wrap"
+              id="agent-prompt"><code>__SPECNAUT_AGENT_PROMPT__</code></pre>
           </div>
 
           <div class="hero-art" aria-hidden="true">
