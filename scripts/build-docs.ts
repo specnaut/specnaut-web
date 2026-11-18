@@ -128,7 +128,8 @@ async function writeSite(outDir: string, files: Record<string, string>): Promise
   }
 }
 
-export async function buildDocs(opts: {
+/** What `buildDocs` takes; every field has a production default, overridden by tests. */
+export interface BuildOptions {
   source?: string;
   skillSource?: string;
   siteDir?: string;
@@ -137,13 +138,28 @@ export async function buildDocs(opts: {
   appUrl?: string;
   fetchReleases?: () => Promise<Release[] | null>;
   write?: (outDir: string, files: Record<string, string>) => Promise<void>;
-} = {}): Promise<{ files: Record<string, string>; version: string; siteFiles: string[] }> {
+}
+
+/** The hand-written Markdown sources, every placeholder filled. */
+async function readSources(
+  opts: BuildOptions,
+  values: Record<string, string>,
+): Promise<{ markdown: string; skill: string }> {
+  const read = async (path: string) => substitute(await Deno.readTextFile(path), values);
+  return {
+    markdown: await read(opts.source ?? SOURCE),
+    skill: await read(opts.skillSource ?? SKILL_SOURCE),
+  };
+}
+
+export async function buildDocs(
+  opts: BuildOptions = {},
+): Promise<{ files: Record<string, string>; version: string; siteFiles: string[] }> {
   const outDir = opts.outDir ?? OUT_DIR;
   const version = opts.version ?? await resolveVersion();
   const appUrl = opts.appUrl ?? resolveAppUrl();
   const values = buildValues(version, appUrl);
-  const markdown = substitute(await Deno.readTextFile(opts.source ?? SOURCE), values);
-  const skill = substitute(await Deno.readTextFile(opts.skillSource ?? SKILL_SOURCE), values);
+  const { markdown, skill } = await readSources(opts, values);
   const releases = await (opts.fetchReleases ?? fetchReleases)();
   const today = new Date().toISOString().slice(0, 10);
   const files = renderSite({ markdown, skill, version, appUrl, today }, releases);
