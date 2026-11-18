@@ -127,7 +127,8 @@ Deno.test("the hero's copied prompt names a file the build publishes", async () 
 Deno.test("copying announces its outcome to screen readers", async () => {
   const html = await landing();
   assertMatch(html, /<[a-z]+ [^>]*id="copy-status"[^>]*aria-live="polite"/);
-  assertStringIncludes(html, 'getElementById("copy-status")');
+  assertStringIncludes(html, '<script src="/landing.js" defer>');
+  assertStringIncludes(await read("docs/site/landing.js"), 'getElementById("copy-status")');
 });
 
 Deno.test("no placeholder survives into a published file", async () => {

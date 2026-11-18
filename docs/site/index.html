@@ -27,6 +27,7 @@
     }
     </script>
     <script src="/theme.js" defer></script>
+    <script src="/landing.js" defer></script>
 
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://specnaut.com/" />
@@ -413,84 +414,5 @@
         </button>
       </div>
     </footer>
-
-    <script>
-    // Inline because the page has only a couple of small interactions and
-    // a separate script file would just be ceremony.
-
-    // Copy-to-clipboard for the install snippets and the agent prompt.
-    // Delegated, so it covers every [data-copy-target] button with one handler.
-    // Each button gets its own label back, and the outcome goes to the
-    // #copy-status live region so a screen reader hears it.
-    const ICON_COPY =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="13" height="13" x="9" y="9" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
-    const ICON_CHECK =
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>';
-
-    // The copy buttons only work with this script, so it draws their icon:
-    // ICON_COPY is then the icon's one spelling, not a third copy of the markup.
-    for (const icon of document.querySelectorAll("[data-copy-target] .btn-icon")) {
-      icon.innerHTML = ICON_COPY;
-    }
-
-    const copyStatus = document.getElementById("copy-status");
-
-    document.addEventListener("click", (e) => {
-      const btn = e.target.closest("[data-copy-target]");
-      if (!btn) return;
-      const target = document.getElementById(btn.dataset.copyTarget);
-      if (!target) return;
-      const text = target.innerText.trim();
-      const label = btn.querySelector(".btn-label");
-      const icon = btn.querySelector(".btn-icon");
-      // Kept from the first click: a second click lands while the label says "Copied".
-      if (label) label.dataset.label ??= label.textContent;
-      const restore = () => {
-        if (label) label.textContent = label.dataset.label;
-        if (icon) icon.innerHTML = ICON_COPY;
-        if (copyStatus) copyStatus.textContent = "";
-      };
-      navigator.clipboard.writeText(text).then(() => {
-        if (label) label.textContent = "Copied";
-        if (icon) icon.innerHTML = ICON_CHECK;
-        if (copyStatus) copyStatus.textContent = "Copied to the clipboard.";
-        setTimeout(restore, 1500);
-      }).catch((err) => {
-        console.warn("copy: clipboard write refused", err);
-        if (label) label.textContent = "Copy failed — select manually";
-        if (copyStatus) copyStatus.textContent = "Copy failed. Select the text manually.";
-        setTimeout(restore, 2500);
-      });
-    });
-
-    // Lede harness rotator. Cycles through the supported harness display
-    // names every 2s with a fade transition. Static fallback for reduced-motion.
-    (() => {
-      const rotator = document.querySelector(".harness-rotator");
-      if (!rotator) return;
-      const harnesses = [
-        "Claude Code",
-        "Cursor",
-        "Codex CLI",
-        "GitHub Copilot CLI",
-        "OpenCode",
-        "Antigravity",
-      ];
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
-      if (reduceMotion.matches) {
-        rotator.textContent = "your AI coding harness";
-        return;
-      }
-      let i = 0;
-      setInterval(() => {
-        rotator.classList.add("is-fading");
-        setTimeout(() => {
-          i = (i + 1) % harnesses.length;
-          rotator.textContent = harnesses[i];
-          rotator.classList.remove("is-fading");
-        }, 350);
-      }, 2000);
-    })();
-    </script>
   </body>
 </html>
