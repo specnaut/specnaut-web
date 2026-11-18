@@ -61,8 +61,9 @@ build emits into the artifact.
 
 ## Design system
 
-UI work on this site follows the shared
-[Specnaut design system](https://github.com/specnaut/specnaut-monorepo/blob/main/DESIGN-SYSTEM.md).
+The site's design tokens (colours, spacing, radii, shadows, motion, breakpoints and type) are the
+custom properties at the top of [`docs/site/styles.css`](docs/site/styles.css), shared by every
+page. UI work on this site uses them rather than new literal values.
 
 ## The install command and the install skill
 

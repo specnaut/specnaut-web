@@ -71,10 +71,10 @@ As the chain runs, each checkpoint opens a gate instead of prompting the termina
 
 ## 4. Resolve gates remotely
 
-Open gates surface on the Cloud project (and, once [#18] ships, as a phone push). Answer one and the
-waiting VM observes the resolution and continues — an approved plan or merge gate resumes into the
-next phase; a **rejected** approval halts the run cleanly and reports your note (treat a
-reject-with-note as "revise and re-run" — the chain does not auto-loop).
+Open gates surface on the Cloud project (and, in a later release, as a push notification on your
+phone). Answer one and the waiting VM observes the resolution and continues — an approved plan or
+merge gate resumes into the next phase; a **rejected** approval halts the run cleanly and reports
+your note (treat a reject-with-note as "revise and re-run" — the chain does not auto-loop).
 
 A gate that is never answered ends at the configured `await_timeout_s` with a distinct _unresolved_
 outcome; the checkpoint halts rather than proceeding. **A STOP never auto-approves.**
@@ -98,4 +98,3 @@ terminal interaction**.
 [#357]: https://github.com/specnaut/specnaut-cli/issues/357
 [#358]: https://github.com/specnaut/specnaut-cli/issues/358
 [#359]: https://github.com/specnaut/specnaut-cli/issues/359
-[#18]: https://github.com/specnaut/specnaut-cloud/issues/18
