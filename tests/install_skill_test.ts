@@ -142,7 +142,24 @@ Deno.test("the PREFIX install creates its directory first and is then called by 
   assert(mkdir >= 0, "the skill never creates $HOME/.local/bin");
   assert(mkdir < skill.indexOf(installVariants(VERSION).prefix), "mkdir comes after the install");
   assertStringIncludes(skill, '"$HOME/.local/bin/specnaut" --version');
-  assertMatch(skill, /full path, `\$HOME\/\.local\/bin\/specnaut`/);
+  // Whitespace folded: a rewrapped paragraph is the same instruction.
+  assertMatch(skill.replace(/\s+/g, " "), /full path, `\$HOME\/\.local\/bin\/specnaut`/);
+});
+
+/** The text of the skill's step `n`, up to the next step's heading. */
+const step = (n: number) => skill.slice(skill.indexOf(`## ${n}. `), skill.indexOf(`## ${n + 1}. `));
+
+Deno.test("step 3 calls the binary at the path the installer reports, whichever it ran", () => {
+  // install.sh can land somewhere neither command named: when the default
+  // directory is not writable and sudo fails, it falls back to
+  // $HOME/.local/bin and says so only in its `installed <path>` line.
+  const install = sentences(step(3)).join(" ");
+  assertStringIncludes(install, "`installed <path>`");
+  assertMatch(install, /whichever command you ran/i);
+  assertStringIncludes(install, '"<path>" --version');
+  const check = sentences(step(3)).find((s) => s.includes(`is not v${VERSION}`));
+  assert(check, "no check of the installed version against the release");
+  assertMatch(check, /\bstop\b/, `the version check does not stop the run: ${check}`);
 });
 
 Deno.test("cloud login is the user's, run from this repository's root", () => {
@@ -159,22 +176,6 @@ Deno.test("the hero's copied prompt names a file the build publishes", () => {
   assert(url.startsWith(`${SITE_URL}/`), `the prompt names no ${SITE_URL} URL: ${prompt}`);
   const path = url.slice(SITE_URL.length + 1);
   assert(published.has(path), `the prompt names ${path}, which the build does not publish`);
-});
-
-Deno.test("the prompt button is described by the prompt's label", () => {
-  const button = landing.match(/<button[^>]*data-copy-target="agent-prompt"[^>]*>/)?.[0] ?? "";
-  assertStringIncludes(button, 'aria-describedby="agent-prompt-label"');
-  assertStringIncludes(landing, 'id="agent-prompt-label"');
-  const pre = landing.match(/<pre[^>]*id="agent-prompt"[^>]*>/)?.[0] ?? "";
-  assert(pre, "no #agent-prompt block");
-  assert(!pre.includes("aria-labelledby"), "aria-labelledby on a <pre>, which has no role to name");
-});
-
-Deno.test("copying announces its outcome to screen readers", async () => {
-  const html = landing;
-  assertMatch(html, /<[a-z]+ [^>]*id="copy-status"[^>]*aria-live="polite"/);
-  assertStringIncludes(html, '<script src="/landing.js" defer>');
-  assertStringIncludes(await read("docs/site/landing.js"), 'getElementById("copy-status")');
 });
 
 Deno.test("no placeholder survives into a published file", () => {

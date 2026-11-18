@@ -4,7 +4,7 @@
 // check what a visitor sees and hears after a copy: the button's label and the
 // #copy-status live region, then the label coming back.
 
-import { assert, assertEquals } from "jsr:@std/assert@^1";
+import { assert, assertEquals, assertMatch, assertStringIncludes } from "jsr:@std/assert@^1";
 import { DOMParser, type Element, type HTMLDocument } from "jsr:@b-fuze/deno-dom@^0.1.56";
 import { buildValues, INSTALL_COMMAND } from "../scripts/build_values.ts";
 import { copyLandingSite } from "../scripts/landing.ts";
@@ -91,4 +91,19 @@ Deno.test("the copy writes the snippet's text, not the button's", async () => {
   const page = load({ writeText: (text: string) => Promise.resolve(void written.push(text)) });
   await clickInstallCopy(page);
   assertEquals(written, [INSTALL_COMMAND]);
+});
+
+Deno.test("the prompt button is described by the prompt's label", () => {
+  const button = LANDING.match(/<button[^>]*data-copy-target="agent-prompt"[^>]*>/)?.[0] ?? "";
+  assertStringIncludes(button, 'aria-describedby="agent-prompt-label"');
+  assertStringIncludes(LANDING, 'id="agent-prompt-label"');
+  const pre = LANDING.match(/<pre[^>]*id="agent-prompt"[^>]*>/)?.[0] ?? "";
+  assert(pre, "no #agent-prompt block");
+  assert(!pre.includes("aria-labelledby"), "aria-labelledby on a <pre>, which has no role to name");
+});
+
+Deno.test("copying announces its outcome to screen readers", () => {
+  assertMatch(LANDING, /<[a-z]+ [^>]*id="copy-status"[^>]*aria-live="polite"/);
+  assertStringIncludes(LANDING, '<script src="/landing.js" defer>');
+  assertStringIncludes(SCRIPT, 'getElementById("copy-status")');
 });

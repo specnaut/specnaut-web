@@ -82,11 +82,21 @@ mkdir -p "$HOME/.local/bin"
 __SPECNAUT_INSTALL_PREFIX__
 ```
 
-Run the one the user picks, exactly as shown. With the second, if `$HOME/.local/bin` is not on
-`PATH`: tell the user how to add it (do not edit their shell profile unless they ask), and for the
-rest of this run call the binary by its full path, `$HOME/.local/bin/specnaut`, wherever this skill
-says `specnaut`, starting with `"$HOME/.local/bin/specnaut" --version`. Otherwise, confirm with
-`specnaut --version`.
+Run the one the user picks, exactly as shown. Whichever command you ran, read where the binary went
+from the installer's output, on its line `installed <path>`: it is not always the directory the
+command named. When the default directory is not writable and `sudo` fails, the installer falls back
+to `$HOME/.local/bin` with a warning, and says so only there. That path is the binary for the rest
+of this run.
+
+If `command -v specnaut` does not print that same path (its directory is not on `PATH`, or an older
+`specnaut` comes first on it), tell the user how to put the directory first on `PATH` (do not edit
+their shell profile unless they ask), and for the rest of this run call the binary by its full path
+wherever this skill says `specnaut`. After the second command, for example, that is its full path,
+`$HOME/.local/bin/specnaut`, starting with `"$HOME/.local/bin/specnaut" --version`.
+
+Then run `"<path>" --version`, with the path from the `installed` line. If the version it prints is
+not v__SPECNAUT_VERSION__, the release named in step 2, stop and report both versions to the user:
+the rest of the run must not go on with a version nobody checked.
 
 ## 4. Scaffold the project
 
