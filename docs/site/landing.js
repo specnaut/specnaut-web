@@ -42,15 +42,30 @@ function showOutcome(btn, outcome) {
   }, outcome.ms);
 }
 
+/**
+ * Writes `text` to the clipboard. Where the Clipboard API is missing (a page
+ * served over plain HTTP, a browser or webview without it) the call throws
+ * before any promise exists; that is turned into a rejection, so it ends in the
+ * same copy-failed outcome as a refused write. Called within the click, never
+ * deferred, so the browser still counts it as the user's gesture.
+ */
+function writeClipboard(text) {
+  try {
+    return navigator.clipboard.writeText(text);
+  } catch (err) {
+    return Promise.reject(err);
+  }
+}
+
 // Delegated, so one handler covers every [data-copy-target] button.
 document.addEventListener("click", (e) => {
   const btn = e.target.closest("[data-copy-target]");
   const target = btn && document.getElementById(btn.dataset.copyTarget);
   if (!target) return;
-  navigator.clipboard.writeText(target.innerText.trim()).then(
+  writeClipboard(target.innerText.trim()).then(
     () => showOutcome(btn, COPIED),
     (err) => {
-      console.warn("copy: clipboard write refused", err);
+      console.warn("copy: clipboard write failed", err);
       showOutcome(btn, COPY_FAILED);
     },
   );
