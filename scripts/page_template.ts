@@ -148,14 +148,11 @@ ${o.body}
           · <a href="/llms.txt">llms.txt</a>
           · <a href="${REPO_URL}">github.com/${CLI_REPO}</a>
         </p>
-        <button
-          type="button"
-          class="theme-toggle"
-          id="theme-toggle"
-          aria-label="Toggle dark and light theme"
-        >
+        <!-- No aria-label: the name is the visible word plus a hidden "theme", so it
+             starts with what a voice-control user sees and says (WCAG 2.5.3). -->
+        <button type="button" class="theme-toggle" id="theme-toggle">
           <span class="theme-toggle-icon" aria-hidden="true"></span>
-          <span class="theme-toggle-label">Dark</span>
+          <span class="theme-toggle-label">Dark</span><span class="sr-only"> theme</span>
         </button>
       </div>
     </footer>

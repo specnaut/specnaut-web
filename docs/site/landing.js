@@ -10,9 +10,9 @@ const ICON_CHECK =
 /** What a copy shows on its button and says in the live region, and for how long. */
 const COPIED = { label: "Copied", icon: ICON_CHECK, status: "Copied to the clipboard.", ms: 1500 };
 const COPY_FAILED = {
-  label: "Copy failed — select manually",
+  label: "Copy failed — text selected",
   icon: ICON_COPY,
-  status: "Copy failed. Select the text manually.",
+  status: "Copy failed. The text is selected: copy it from the keyboard or the menu.",
   ms: 2500,
 };
 
@@ -26,6 +26,12 @@ for (const icon of document.querySelectorAll("[data-copy-target] .btn-icon")) {
   icon.innerHTML = ICON_COPY;
 }
 
+/**
+ * Each button's one pending reset. A new outcome cancels it before starting its
+ * own: left running, the first click's timer would cut the second one short.
+ */
+const pendingReset = new WeakMap();
+
 /** Shows `outcome` on `btn` and in the live region, then gives the button its own label back. */
 function showOutcome(btn, outcome) {
   const label = btn.querySelector(".btn-label");
@@ -34,12 +40,29 @@ function showOutcome(btn, outcome) {
   if (label) label.dataset.label ??= label.textContent;
   if (label) label.textContent = outcome.label;
   if (icon) icon.innerHTML = outcome.icon;
-  if (copyStatus) copyStatus.textContent = outcome.status;
-  setTimeout(() => {
-    if (label) label.textContent = label.dataset.label;
-    if (icon) icon.innerHTML = ICON_COPY;
-    if (copyStatus) copyStatus.textContent = "";
-  }, outcome.ms);
+  announce(outcome.status);
+  clearTimeout(pendingReset.get(btn));
+  pendingReset.set(
+    btn,
+    setTimeout(() => {
+      if (label) label.textContent = label.dataset.label;
+      if (icon) icon.innerHTML = ICON_COPY;
+      if (copyStatus) copyStatus.textContent = "";
+    }, outcome.ms),
+  );
+}
+
+/**
+ * Puts `status` in the live region. A screen reader announces a change, so the
+ * region is cleared first and set on the next frame: the same outcome twice in
+ * a row is then two changes, and is heard twice.
+ */
+function announce(status) {
+  if (!copyStatus) return;
+  copyStatus.textContent = "";
+  requestAnimationFrame(() => {
+    copyStatus.textContent = status;
+  });
 }
 
 /**
@@ -66,6 +89,8 @@ document.addEventListener("click", (e) => {
     () => showOutcome(btn, COPIED),
     (err) => {
       console.warn("copy: clipboard write failed", err);
+      // The outcome says the text is selected: the visitor copies it by hand.
+      globalThis.getSelection().selectAllChildren(target);
       showOutcome(btn, COPY_FAILED);
     },
   );
