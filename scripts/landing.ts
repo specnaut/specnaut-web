@@ -6,8 +6,11 @@
  * file is copied byte for byte.
  *
  * An HTML file may pull in a partial with `<!-- include: _landing/hero.html -->`
- * on a line of its own, so no landing source outgrows the file-size limit. Any
- * entry whose name starts with `_` is such a source: it is read, never published.
+ * on a line of its own, so no landing source outgrows the file-size limit.
+ * Partials live in folders whose names start with `_` (`_landing/`): such a
+ * folder is read, never published. A file whose name starts with `_` is
+ * published like any other, so a hosting file such as `_headers` or
+ * `_redirects` reaches the site.
  */
 
 import { substitute } from "./build_values.ts";
@@ -73,7 +76,7 @@ async function isDirectory(path: string): Promise<boolean> {
 /** Mirrors the directory `current`, found at `relative` under the output, recursively. */
 async function walk(mirror: Mirror, current: string, relative: string): Promise<void> {
   for await (const entry of Deno.readDir(current)) {
-    if (entry.name.startsWith("_")) continue;
+    if (entry.isDirectory && entry.name.startsWith("_")) continue;
     const src = `${current}/${entry.name}`;
     const rel = relative ? `${relative}/${entry.name}` : entry.name;
     const dest = `${mirror.outDir}/${rel}`;
@@ -109,11 +112,21 @@ async function assemble(src: string): Promise<string> {
   const dir = src.slice(0, src.lastIndexOf("/"));
   const partials = new Map<string, string>();
   for (const [, path] of html.matchAll(INCLUDE)) {
-    partials.set(path, await Deno.readTextFile(`${dir}/${path}`));
+    partials.set(path, await readPartial(src, `${dir}/${path}`));
   }
   const assembled = html.replace(INCLUDE, (_line, path: string) => partials.get(path)!);
   if (assembled.includes("<!-- include:")) {
     throw new Error(`${src}: an include directive was not expanded`);
   }
   return assembled;
+}
+
+/** The partial at `path`; a missing one names the file that includes it, not just its own path. */
+async function readPartial(src: string, path: string): Promise<string> {
+  try {
+    return await Deno.readTextFile(path);
+  } catch (err) {
+    if (!(err instanceof Deno.errors.NotFound)) throw err;
+    throw new Error(`${src}: includes ${path}, which does not exist`, { cause: err });
+  }
 }

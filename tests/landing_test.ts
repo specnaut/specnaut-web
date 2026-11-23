@@ -10,6 +10,18 @@ import { captureSink } from "./_capture_sink.ts";
 
 const VALUES = buildValues("9.8.7", "https://app.example.test");
 
+/** One id from each partial of the landing: each one present means each one was included. */
+const SECTION_IDS = [
+  "hero-title",
+  "harness-title",
+  "steps-title",
+  "features-title",
+  "agents",
+  "cloud-title",
+  "trust-title",
+  "install-snippet-2",
+];
+
 Deno.test("the mirror fills every placeholder in the landing's HTML", async () => {
   const sink = captureSink();
   await copyLandingSite("docs/site", "out", VALUES, sink);
@@ -26,13 +38,24 @@ Deno.test("the landing is assembled from its partials, which are never published
   const written = await copyLandingSite("docs/site", "out", VALUES, sink);
   const index = sink.texts.get("out/index.html") ?? "";
   assert(!index.includes("<!-- include:"), "an include directive reached the published landing");
-  for (const id of ["hero-title", "harness-title", "steps-title", "features-title"]) {
-    assertStringIncludes(index, `id="${id}"`);
-  }
-  for (const id of ["agents", "cloud-title", "trust-title", "install-snippet-2"]) {
-    assertStringIncludes(index, `id="${id}"`);
-  }
-  assertEquals(written.filter((p) => p.includes("/_")), [], "a partial was published");
+  for (const id of SECTION_IDS) assertStringIncludes(index, `id="${id}"`);
+  assertEquals(written.filter((p) => /\/_[^/]*\//.test(p)), [], "a partial was published");
+});
+
+Deno.test("a folder named with _ is never published; a file named with _ is", async () => {
+  const sink = captureSink();
+  const written = await copyLandingSite("tests/fixtures/hosting-files", "out", VALUES, sink);
+  assertEquals(written.sort(), ["out/_headers", "out/index.html"]);
+  assertEquals(sink.copies.get("out/_headers"), "tests/fixtures/hosting-files/_headers");
+  assertStringIncludes(sink.texts.get("out/index.html") ?? "", '<section id="section">');
+});
+
+Deno.test("a missing partial fails the build naming the file that includes it", async () => {
+  const sink = captureSink();
+  const site = "tests/fixtures/missing-include";
+  const err = await assertRejects(() => copyLandingSite(site, "out", VALUES, sink), Error);
+  assertStringIncludes(err.message, `${site}/index.html`);
+  assertStringIncludes(err.message, `${site}/_parts/absent.html`);
 });
 
 Deno.test("an include left unexpanded fails the build instead of publishing a comment", async () => {
