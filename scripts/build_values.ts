@@ -49,21 +49,29 @@ export function resolveAppUrl(): string {
 }
 
 /**
- * The canonical installer: the only URL any page, or any agent following
- * SKILL.md, fetches `install.sh` from. The script verifies the release
- * binary's SHA-256 before installing it, so a second spelling of this URL is
- * a second trust root nobody audits — every install line derives from it.
+ * The canonical installer: the copy of `install.sh` each CLI release publishes
+ * and attests, the only one any page, or any agent following SKILL.md, fetches.
+ * It verifies the release attestation, or the SHA-256 checksum without `gh`,
+ * before installing, so a second spelling of this URL is a second trust root
+ * nobody audits — every install line derives from it.
  */
-const INSTALLER_URL = "https://raw.githubusercontent.com/specnaut/specnaut-cli/main/install.sh";
+const RELEASES = "https://github.com/specnaut/specnaut-cli/releases";
+export const INSTALLER_URL = `${RELEASES}/latest/download/install.sh`;
+
+/** Every download over HTTPS only, TLS 1.2 or later, a failed status a failure. */
+const CURL = "curl --proto '=https' --tlsv1.2 -fsSL";
 
 /** The install line every page shows: the landing (twice), llms.txt and SKILL.md. */
-export const INSTALL_COMMAND = `curl -fsSL ${INSTALLER_URL} | bash`;
+export const INSTALL_COMMAND = `${CURL} ${INSTALLER_URL} | bash`;
 
-/** The documented variants, built from the same base: `install.sh` reads both from its env. */
+/**
+ * The documented variants. A pin runs that release's own installer, which
+ * installs that release; `install.sh` reads PREFIX from its env.
+ */
 export function installVariants(version: string): { pinned: string; prefix: string } {
   return {
-    pinned: `curl -fsSL ${INSTALLER_URL} | VERSION=v${version} bash`,
-    prefix: `curl -fsSL ${INSTALLER_URL} | PREFIX=$HOME/.local/bin bash`,
+    pinned: `${CURL} ${RELEASES}/download/v${version}/install.sh | bash`,
+    prefix: `${CURL} ${INSTALLER_URL} | PREFIX=$HOME/.local/bin bash`,
   };
 }
 

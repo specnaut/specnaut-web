@@ -22,8 +22,9 @@ directory, each harness and each backlog backend.
 
 ## Rules for the whole run
 
-- **One installer.** Fetch `install.sh` only from the URL in step 3. Never skip, bypass or work
-  around its SHA-256 checksum check. If the download or the check fails, stop and report the error.
+- **One installer.** Fetch `install.sh` only from the URL in step 3. It checks the release's
+  attestation, and falls back to the SHA-256 checksum when `gh` is missing. Never skip, bypass or
+  work around those checks. If the download or a check fails, stop and report the error.
 - **Only the user's choices.** Never pass a flag the user did not choose. A CLI default is not the
   user's choice: ask.
 - **Nothing overwritten.** Never pass `--force`, `--reset-baseline` or `--reset-preserved`. Never
@@ -42,8 +43,8 @@ directory, each harness and each backlog backend.
 
 Tell the user, in a few lines, that you will:
 
-1. install the `specnaut` binary with the official installer, which verifies the release's SHA-256
-   checksum;
+1. install the `specnaut` binary with the official installer, which verifies the release's
+   attestation (or its SHA-256 checksum when `gh` is missing);
 2. run `specnaut init` in this repository with the harness, backlog and spec storage they choose;
 3. verify the result with `specnaut check --project`.
 
@@ -85,8 +86,9 @@ __SPECNAUT_INSTALL_PREFIX__
 Run the one the user picks, exactly as shown. Whichever command you ran, read where the binary went
 from the installer's output, on its line `installed <path>`: it is not always the directory the
 command named. When the default directory is not writable and `sudo` fails, the installer falls back
-to `$HOME/.local/bin` with a warning, and says so only there. That path is the binary for the rest
-of this run.
+to `$HOME/.local/bin` with a warning, and says so only there. That warning also begins with
+`installed to`: it is not the path to use. The final success line, `installed <path>`, is. That path
+is the binary for the rest of this run.
 
 If `command -v specnaut` does not print that same path (its directory is not on `PATH`, or an older
 `specnaut` comes first on it), tell the user how to put the directory first on `PATH` (do not edit

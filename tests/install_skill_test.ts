@@ -59,6 +59,20 @@ Deno.test("SKILL.md is published and parses as a skill stamped with the release"
 Deno.test("every install line in SKILL.md, llms.txt and the landing is the single source", () => {
   const allowed = new Set([INSTALL_COMMAND, ...Object.values(installVariants(VERSION))]);
   assertStringIncludes(skill, INSTALL_COMMAND);
+  assertStringIncludes(
+    INSTALL_COMMAND,
+    "curl --proto '=https' --tlsv1.2 -fsSL https://github.com/specnaut/specnaut-cli/releases/latest/download/install.sh",
+  );
+  for (const line of Object.values(installVariants(VERSION))) {
+    assertStringIncludes(
+      line,
+      "curl --proto '=https' --tlsv1.2 -fsSL https://github.com/specnaut/specnaut-cli/releases/",
+    );
+  }
+  assertStringIncludes(
+    installVariants(VERSION).pinned,
+    `/releases/download/v${VERSION}/install.sh | bash`,
+  );
   for (
     const [where, text] of [
       ["SKILL.md", skill],
@@ -87,7 +101,8 @@ Deno.test("no source spells the installer URL by hand", async () => {
   for (const path of sources) {
     const source = await read(path);
     assert(!source.includes("install.sh |"), `${path} types an install line`);
-    assert(!source.includes("specnaut-cli/main/install.sh"), `${path} types the installer URL`);
+    assert(!source.includes("/download/install.sh"), `${path} types the installer URL`);
+    assert(!source.includes("specnaut-cli/main/install.sh"), `${path} names the copy on main`);
   }
 });
 
@@ -95,7 +110,10 @@ Deno.test("SKILL.md names only the CLI flags audited against the CLI's parser", 
   // Checked against specnaut-cli's src/cli/parser.ts and `specnaut --help` on
   // 2026-11-18. A flag added to the skill, or renamed in the CLI, is audited
   // here first: an agent passes whatever this file names.
-  const flags = new Set(skill.match(/(?<![\w-])--[a-z][a-z-]*/g));
+  // The install lines carry curl's own flags, built and tested above: not the CLI's.
+  const installLines = [INSTALL_COMMAND, ...Object.values(installVariants(VERSION))];
+  const prose = installLines.reduce((text, line) => text.replaceAll(line, ""), skill);
+  const flags = new Set(prose.match(/(?<![\w-])--[a-z][a-z-]*/g));
   assertEquals([...flags].sort(), [
     "--ai",
     "--backlog",
